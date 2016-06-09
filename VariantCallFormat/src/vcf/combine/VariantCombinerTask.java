@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.logging.StreamHandler;
 
 /**
  * Created by uichuimi on 25/05/16.
@@ -67,9 +66,13 @@ public class VariantCombinerTask extends Task<VariantSet> {
                 || sample.getStatus() == Sample.Status.UNAFFECTED && !variant.getSampleInfo().isAffected(sample.getName())
                 || sample.getStatus() == Sample.Status.HOMOZYGOTE && variant.getSampleInfo().isHomozigote(sample.getName())
                 || sample.getStatus() == Sample.Status.HETEROZYGOTE && variant.getSampleInfo().isHeterozygote(sample.getName())
-//                || variant.getSampleInfo().getFormat(sample.getName(), "GT").equals(VariantSet.EMPTY_VALUE)
-                // but only if mist
-                ;
+                || inMist(variant, sample)
+                && (variant.getSampleInfo().getFormat(sample.getName(), "GT").equals(VariantSet.EMPTY_VALUE)
+                || variant.getSampleInfo().getFormat(sample.getName(), "GT").equals("./."));
+    }
+
+    private boolean inMist(Variant variant, Sample sample) {
+        return sample.getMist().isInMistRegion(variant.getChrom(), variant.getPosition());
     }
 
     private VariantSet joinVcfs() {

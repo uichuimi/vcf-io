@@ -19,7 +19,9 @@ package vcf;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -38,9 +40,8 @@ public class VariantSet {
     private final ObservableSet<Variant> variants = FXCollections.observableSet(new TreeSet<>());
     private final VcfHeader header;
 
-//    private File file;
+    //    private File file;
     private Property<Boolean> changed = new SimpleObjectProperty<>(false);
-    private File mistFile;
 
     private Map<String, Map<Integer, Variant>> index = new TreeMap<>();
 
@@ -49,10 +50,6 @@ public class VariantSet {
             if (c.wasAdded()) addToIndex(c.getElementAdded());
             else if (c.wasRemoved()) removeFromIndex(c.getElementRemoved());
         });
-    }
-
-    private void removeFromIndex(Variant variant) {
-        index.get(variant.getChrom()).remove(variant.getPosition());
     }
 
     /**
@@ -69,6 +66,10 @@ public class VariantSet {
      */
     public VariantSet() {
         header = new VcfHeader();
+    }
+
+    private void removeFromIndex(Variant variant) {
+        index.get(variant.getChrom()).remove(variant.getPosition());
     }
 
     private void addToIndex(Variant variant) {
@@ -132,14 +133,6 @@ public class VariantSet {
 
     public void setChanged(boolean changed) {
         this.changed.setValue(changed);
-    }
-
-    public File getMistFile() {
-        return mistFile;
-    }
-
-    public void setMistFile(File mistFile) {
-        this.mistFile = mistFile;
     }
 
     public void addOrUpdate(Variant variant) {
