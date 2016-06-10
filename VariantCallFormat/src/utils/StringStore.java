@@ -53,7 +53,7 @@ public class StringStore {
      * @param value query value
      * @return an already stored String that is equals to value, or value if no equal String is found.
      */
-    public static String getInstance(String value) {
+    public static synchronized String getInstance(String value) {
         if (value == null) {
             Logger.getLogger(StringStore.class.getName()).severe("Entering null in StringStore is " +
                     "illegal");

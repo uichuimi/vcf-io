@@ -18,12 +18,11 @@
 package vcf.combine;
 
 import javafx.concurrent.Task;
-import vcf.Sample;
-import vcf.Variant;
-import vcf.VariantSet;
+import vcf.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -41,52 +40,78 @@ public class VariantCombinerTask extends Task<VariantSet> {
     public VariantCombinerTask(List<Sample> samples, boolean delete) {
         this.samples = samples;
         this.delete = delete;
-        Logger.getLogger(getClass().getName()).addHandler(new TaskHandler());
     }
 
     @Override
     protected VariantSet call() throws Exception {
         total = samples.size();
-        progess = 1;
-        Logger.getLogger(getClass().getName()).info("Joining VCFs");
+        progess = 0;
+        updateMessage("Joining files");
+//        Logger.getLogger(getClass().getName()).info("Joining VCFs");
         final VariantSet joinVcfs = joinVcfs();
         if (delete) deleteInvalidVariants(joinVcfs);
         return joinVcfs;
     }
 
     private void deleteInvalidVariants(VariantSet joinVcfs) {
-        Logger.getLogger(getClass().getName()).info("Deleting invalid variants");
+        updateMessage("Deleting invalid variants");
+//        Logger.getLogger(getClass().getName()).info("Deleting invalid variants");
         joinVcfs.getVariants().removeIf(variant -> samples.stream()
                 .filter(sample -> !valid(variant, sample)).count() > 0);
         Logger.getLogger(getClass().getName()).info("Deleted");
     }
 
     private boolean valid(Variant variant, Sample sample) {
-        return sample.getStatus() == Sample.Status.AFFECTED && variant.getSampleInfo().isAffected(sample.getName())
+        final boolean valid = sample.getStatus() == Sample.Status.AFFECTED && variant.getSampleInfo().isAffected(sample.getName())
                 || sample.getStatus() == Sample.Status.UNAFFECTED && !variant.getSampleInfo().isAffected(sample.getName())
                 || sample.getStatus() == Sample.Status.HOMOZYGOTE && variant.getSampleInfo().isHomozigote(sample.getName())
-                || sample.getStatus() == Sample.Status.HETEROZYGOTE && variant.getSampleInfo().isHeterozygote(sample.getName())
-                || inMist(variant, sample)
-                && (variant.getSampleInfo().getFormat(sample.getName(), "GT").equals(VariantSet.EMPTY_VALUE)
-                || variant.getSampleInfo().getFormat(sample.getName(), "GT").equals("./."));
+                || sample.getStatus() == Sample.Status.HETEROZYGOTE && variant.getSampleInfo().isHeterozygote(sample.getName());
+        if (valid) return true;
+        final boolean inMist = (variant.getSampleInfo().getFormat(sample.getName(), "GT").equals(VariantSet.EMPTY_VALUE)
+                || variant.getSampleInfo().getFormat(sample.getName(), "GT").equals("./.")) && inMist(variant, sample);
+        if (inMist) {
+            variant.getInfo().set("MIST", true);
+            addMistToHeader(variant.getVariantSet().getHeader());
+        }
+        return inMist;
+    }
+
+    private void addMistToHeader(VcfHeader header) {
+        if (!header.hasComplexHeader("INFO", "MIST")) {
+            final Map<String, String> mist = new LinkedHashMap<>();
+            mist.put("ID", "MIST");
+            mist.put("Type", "Flag");
+            mist.put("Number", "0");
+            mist.put("Description", "Some samples fall into a MIST (low DP) region");
+            header.addComplexHeader("INFO", mist);
+        }
     }
 
     private boolean inMist(Variant variant, Sample sample) {
-        return sample.getMist().isInMistRegion(variant.getChrom(), variant.getPosition());
+        return sample.getMist() != null && sample.getMist().isInMistRegion(variant.getChrom(), variant.getPosition());
     }
 
     private VariantSet joinVcfs() {
-        final VariantSet variantSet = new VariantSet();
+        AtomicReference<VariantSet> variantSetReference = new AtomicReference<>();
         // Lets do a super join, so you can have the sum
-        final List<VariantSet> variantSets = new ArrayList<>();
+//        final List<VariantSet> variantSets = new ArrayList<>();
+        final List<File> files = new ArrayList<>();
         samples.forEach(sample -> {
             progess++;
-            if (variantSets.contains(sample.getVariantSet())) return;
-            Logger.getLogger(getClass().getName()).info("Joining " + sample.getName());
-            mergeVcfFiles(variantSet, sample.getVariantSet());
-            variantSets.add(sample.getVariantSet());
+            if (files.contains(sample.getFile())) return;
+            updateMessage("Joining " + sample.getName());
+            updateProgress(progess, total);
+//            Logger.getLogger(getClass().getName()).info("Joining " + sample.getName());
+            final VariantSet variantSet = VariantSetFactory.createFromFile(sample.getFile());
+            if (variantSetReference.get() == null) variantSetReference.set(variantSet);
+            else mergeVcfFiles(variantSetReference.get(), variantSet);
+            files.add(sample.getFile());
+//            if (variantSets.contains(sample.getVariantSet())) return;
+//            Logger.getLogger(getClass().getName()).info("Joining " + sample.getName());
+//            mergeVcfFiles(variantSet, sample.getVariantSet());
+//            variantSets.add(sample.getVariantSet());
         });
-        return variantSet;
+        return variantSetReference.get();
     }
 
     private void mergeVcfFiles(VariantSet target, VariantSet source) {
@@ -124,23 +149,5 @@ public class VariantCombinerTask extends Task<VariantSet> {
                     if (!target.getHeader().hasComplexHeader(type, map.get("ID")))
                         target.getHeader().addComplexHeader(type, map);
                 }));
-    }
-
-    private class TaskHandler extends Handler {
-        @Override
-        public void publish(LogRecord record) {
-            updateMessage(record.getMessage());
-            updateProgress(progess, total);
-        }
-
-        @Override
-        public void flush() {
-
-        }
-
-        @Override
-        public void close() throws SecurityException {
-
-        }
     }
 }

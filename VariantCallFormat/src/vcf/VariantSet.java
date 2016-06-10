@@ -91,14 +91,6 @@ public class VariantSet {
         return variants;
     }
 
-//    public File getFile() {
-//        return file;
-//    }
-//
-//    public void setFile(File file) {
-//        this.file = file;
-//    }
-
     /**
      * Save current data to a file.
      *
@@ -142,6 +134,8 @@ public class VariantSet {
     }
 
     private Variant findVariant(String chrom, int position) {
+//        return variants.stream().filter(variant -> variant.getChrom().equals(chrom) && variant.getPosition() == position)
+//                .findFirst().orElse(null);
         return index.containsKey(chrom) ? index.get(chrom).getOrDefault(position, null) : null;
     }
 

@@ -46,7 +46,7 @@ public class VariantSetFactory {
 
     private static void readLines(final BufferedReader reader, VariantSet variantSet) throws VariantException {
         reader.lines().forEach(line -> {
-            if (line.startsWith("#")) addHeader(variantSet, line);
+            if (line.startsWith("#")) addHeader(variantSet.getHeader(), line);
             else try {
                 variantSet.getVariants().add(VariantFactory.createVariant(line, variantSet));
             } catch (VariantException e) {
@@ -55,35 +55,44 @@ public class VariantSetFactory {
         });
     }
 
-    private static void addHeader(VariantSet variantSet, String line) {
+    private static void addHeader(VcfHeader header, String line) {
         final Matcher metaLine = META_LINE.matcher(line);
-        if (metaLine.matches()) addMetaLine(variantSet, metaLine);
-        else addFormatLine(variantSet, line);
+        if (metaLine.matches()) addMetaLine(header, metaLine);
+        else addFormatLine(header, line);
     }
 
-    private static void addMetaLine(VariantSet variantSet, Matcher metaLine) {
+    private static void addMetaLine(VcfHeader header, Matcher metaLine) {
         final String type = metaLine.group(1);
         final String value = metaLine.group(2);
         final Matcher contentMatcher = META_LINE_CONTENT.matcher(value);
-        if (contentMatcher.matches()) addComplexHeader(variantSet, type, contentMatcher.group(1));
-        else variantSet.getHeader().addSimpleHeader(type, value);
+        if (contentMatcher.matches()) addComplexHeader(header, type, contentMatcher.group(1));
+        else header.addSimpleHeader(type, value);
     }
 
-    private static void addComplexHeader(VariantSet variantSet, String type, String group) {
+    private static void addComplexHeader(VcfHeader header, String type, String group) {
         final Map<String, String> map = MapGenerator.parse(group);
-        variantSet.getHeader().addComplexHeader(type, map);
+        header.addComplexHeader(type, map);
     }
 
-    private static void addFormatLine(VariantSet variantSet, String line) {
+    private static void addFormatLine(VcfHeader header, String line) {
         final Matcher matcher = FIELDS_LINE.matcher(line);
         if (matcher.matches()) {
             final String[] split = line.split("\t");
             int numberOfSamples = split.length - 9;
             if (numberOfSamples > 0)
-                for (int i = 0; i < numberOfSamples; i++) variantSet.getHeader().getSamples().add(split[i + 9]);
+                for (int i = 0; i < numberOfSamples; i++) header.getSamples().add(split[i + 9]);
 //            if (numberOfSamples > 0) samples.addAll(Arrays.asList(split).subList(9, numberOfSamples));
         }
     }
 
 
+    public static VcfHeader readHeader(File file) {
+        final VcfHeader header = new VcfHeader();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            reader.lines().filter(line -> line.startsWith("#")).forEach(line -> addHeader(header, line));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return header;
+    }
 }

@@ -17,12 +17,12 @@
 
 package vcf.combine;
 
+import de.saxsys.mvvmfx.testingutils.jfxrunner.JfxRunner;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
-import vcf.Sample;
-import vcf.Variant;
-import vcf.VariantSet;
-import vcf.VariantSetFactory;
+import org.junit.runner.RunWith;
+import vcf.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -31,29 +31,32 @@ import java.util.List;
 /**
  * Created by uichuimi on 25/05/16.
  */
+@RunWith(JfxRunner.class)
 public class VariantCombinerTaskTest {
 
+    private final static File COMBINE_1 = new File("test/files/Combine1.vcf");
+    private final static File COMBINE_2 = new File("test/files/Combine2.vcf");
     @Test
     public void testIntersectDelete() throws Exception {
         final List<Sample> samples = new ArrayList<>();
-        final VariantSet variantSet = VariantSetFactory.createFromFile(new File("test/files/Combine1.vcf"));
-        final VariantSet variantSet2 = VariantSetFactory.createFromFile(new File("test/files/Combine2.vcf"));
-        variantSet.getHeader().getSamples().stream().map(s -> new Sample(variantSet, s)).forEach(samples::add);
-        variantSet2.getHeader().getSamples().stream().map(s -> new Sample(variantSet2, s)).forEach(samples::add);
+        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
+        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
+        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
+        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
         final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
         final VariantSet start = combineTask.call();
         start.save(new File("output.txt"));
-        Assert.assertEquals(17, start.getVariants().size());
+        Assert.assertEquals(1, start.getVariants().size());
         final Variant variant = start.getVariants().stream().findFirst().get();
-        Assert.assertEquals("26", variant.getInfo().getString("DP"));
+        Assert.assertEquals("10", variant.getInfo().getString("DP"));
     }
     @Test
     public void testIntersectNoDelete() throws Exception {
         final List<Sample> samples = new ArrayList<>();
-        final VariantSet variantSet = VariantSetFactory.createFromFile(new File("test/files/Combine1.vcf"));
-        final VariantSet variantSet2 = VariantSetFactory.createFromFile(new File("test/files/Combine2.vcf"));
-        variantSet.getHeader().getSamples().stream().map(s -> new Sample(variantSet, s)).forEach(samples::add);
-        variantSet2.getHeader().getSamples().stream().map(s -> new Sample(variantSet2, s)).forEach(samples::add);
+        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
+        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
+        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
+        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
         final VariantCombinerTask combineTask = new VariantCombinerTask(samples, false);
         final VariantSet start = combineTask.call();
         start.save(new File("output.txt"));
@@ -65,10 +68,10 @@ public class VariantCombinerTaskTest {
     @Test
     public void testUnaffectedDelete() throws Exception {
         final List<Sample> samples = new ArrayList<>();
-        final VariantSet variantSet = VariantSetFactory.createFromFile(new File("test/files/Combine1.vcf"));
-        final VariantSet variantSet2 = VariantSetFactory.createFromFile(new File("test/files/Combine2.vcf"));
-        variantSet.getHeader().getSamples().stream().map(s -> new Sample(variantSet, s)).forEach(samples::add);
-        variantSet2.getHeader().getSamples().stream().map(s -> new Sample(variantSet2, s)).forEach(samples::add);
+        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
+        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
+        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
+        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
         samples.get(0).statusProperty().setValue(Sample.Status.UNAFFECTED);
         final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
         final VariantSet start = combineTask.call();
@@ -79,41 +82,43 @@ public class VariantCombinerTaskTest {
     @Test
     public void testHomozygoteDelete() throws Exception {
         final List<Sample> samples = new ArrayList<>();
-        final VariantSet variantSet = VariantSetFactory.createFromFile(new File("test/files/Combine1.vcf"));
-        final VariantSet variantSet2 = VariantSetFactory.createFromFile(new File("test/files/Combine2.vcf"));
-        variantSet.getHeader().getSamples().stream().map(s -> new Sample(variantSet, s)).forEach(samples::add);
-        variantSet2.getHeader().getSamples().stream().map(s -> new Sample(variantSet2, s)).forEach(samples::add);
+        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
+        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
+        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
+        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
         samples.get(3).statusProperty().setValue(Sample.Status.HOMOZYGOTE);
         final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
         final VariantSet start = combineTask.call();
         start.save(new File("output.txt"));
-        Assert.assertEquals(17, start.getVariants().size());
+        Assert.assertEquals(1, start.getVariants().size());
     }
 
     @Test
     public void testHeterozygoteDelete() throws Exception {
         final List<Sample> samples = new ArrayList<>();
-        final VariantSet variantSet = VariantSetFactory.createFromFile(new File("test/files/Combine1.vcf"));
-        final VariantSet variantSet2 = VariantSetFactory.createFromFile(new File("test/files/Combine2.vcf"));
-        variantSet.getHeader().getSamples().stream().map(s -> new Sample(variantSet, s)).forEach(samples::add);
-        variantSet2.getHeader().getSamples().stream().map(s -> new Sample(variantSet2, s)).forEach(samples::add);
+        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
+        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
+        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
+        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
         samples.get(1).statusProperty().setValue(Sample.Status.HETEROZYGOTE);
         final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
         final VariantSet start = combineTask.call();
         start.save(new File("output.txt"));
-        Assert.assertEquals(17, start.getVariants().size());
+        Assert.assertEquals(1, start.getVariants().size());
     }
 
-    @Test
+    @Test @Ignore
     public void testBigFiles() throws Exception {
-        final VariantSet variantSet = VariantSetFactory.createFromFile(new File("/media/uichuimi/Elements/GENOME_DATA/WDH/WDH_001/VCF/w001.vcf"));
-        final VariantSet variantSet2 = VariantSetFactory.createFromFile(new File
-                ("/media/uichuimi/Elements/GENOME_DATA/WDH/WDH_002/VCF/w002.vcf"));
+        final File w001 = new File("/media/uichuimi/Elements/GENOME_DATA/WDH/WDH_001/VCF/w001.vcf");
+        final File w002 = new File("/media/uichuimi/Elements/GENOME_DATA/WDH/WDH_002/VCF/w002.vcf");
         final List<Sample> samples = new ArrayList<>();
-        variantSet.getHeader().getSamples().stream().map(s -> new Sample(variantSet, s)).forEach(samples::add);
-        variantSet2.getHeader().getSamples().stream().map(s -> new Sample(variantSet2, s)).forEach(samples::add);
+        VcfHeader header = VariantSetFactory.readHeader(w001);
+        header.getSamples().stream().map(s -> new Sample(w001, s)).forEach(samples::add);
+        VcfHeader header1 = VariantSetFactory.readHeader(w002);
+        header1.getSamples().stream().map(s -> new Sample(w002, s)).forEach(samples::add);
         final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
         final VariantSet start = combineTask.call();
+        Assert.assertEquals(143548, start.getVariants().size());
         start.save(new File("output.txt"));
     }
 

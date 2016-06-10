@@ -20,26 +20,35 @@ package vcf;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * Created by uichuimi on 24/05/16.
  */
 public class Sample {
 
-    public static final String MIST_HEADER = "chrom\texon_start\texon_end\tmist_start\tmist_end\tgene_id\tgene_name\texon_number\texon_id\ttranscript_name\tbiotype\tmatch";
-    private final VariantSet variantSet;
+    private final File file;
     private final String name;
     private Property<Status> status = new SimpleObjectProperty<>(Status.AFFECTED);
     private File mistFile;
+//    private Mist mist;
+    private long size;
     private Mist mist;
 
-    public Sample(VariantSet variantSet, String name) {
-        this.variantSet = variantSet;
+    public Sample(File file, String name) {
+        this.file = file;
         this.name = name;
+        setSize();
+    }
+
+    private void setSize() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))){
+            size = reader.lines().filter(line -> !line.startsWith("#")).count();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public String getName() {
@@ -50,8 +59,13 @@ public class Sample {
         return status;
     }
 
-    public VariantSet getVariantSet() {
-        return variantSet;
+//    public VariantSet getVariantSet() {
+//        return file;
+//    }
+
+
+    public File getFile() {
+        return file;
     }
 
     public Status getStatus() {
@@ -62,36 +76,17 @@ public class Sample {
         return mistFile;
     }
 
-    public void setMistFile(File mistFile) {
-        this.mistFile = mistFile;
-        mist = load(mistFile);
-    }
-
-    private Mist load(File mistFile) {
-        final Mist mist = new Mist();
-        try (BufferedReader reader = new BufferedReader(new FileReader(mistFile))) {
-            reader.lines()
-                    .filter(line -> !line.startsWith("#"))
-                    .filter(line -> !line.equals(MIST_HEADER))
-                    .map(line -> line.split("\t")).forEach
-                    (line
-                    -> {
-                // chrom, exon_start, exon_end, mist_start, mist_end, gene_id, gene_name, exon_number, exon_id,
-                // transcript_name, biotype, match
-                final String chrom = line[0];
-                final int start = Integer.valueOf(line[3]);
-                final int end = Integer.valueOf(line[4]);
-                mist.addRegion(chrom, start, end);
-            });
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return mist;
-    }
-
     public Mist getMist() {
         return mist;
+    }
+
+    public void setMistFile(File mistFile) {
+        this.mistFile = mistFile;
+        mist = MistFactory.load(mistFile);
+    }
+
+    public long getSize() {
+        return size;
     }
 
     public enum Status {

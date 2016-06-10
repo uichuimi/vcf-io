@@ -156,7 +156,7 @@ public class VariantSetFactoryTest {
     @Test
     public void testFormats() {
         final VariantSet variantSet = VariantSetFactory.createFromFile(new File(TEMPORARY_FILES, "Sample1.vcf"));
-        Assert.assertEquals(Arrays.asList("AD", "DP", "GQ", "GT", "PL"), variantSet.getHeader().getIdList("FORMAT"));
+        Assert.assertEquals(Arrays.asList("GT", "AD", "DP", "GQ", "PL"), variantSet.getHeader().getIdList("FORMAT"));
     }
 
     private boolean filesAreEqual(File expected, File file) {

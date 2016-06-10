@@ -26,15 +26,41 @@ import java.util.TreeSet;
  */
 public class Mist {
 
-    private TreeMap<String, BitSet> regions = new TreeMap<>();
+//    private TreeMap<String, BitSet> regions = new TreeMap<>();
+    private TreeMap<String, TreeSet<MistRegion>> treeMap = new TreeMap<>();
 
     public void addRegion(String chrom, int start, int end) {
-        regions.putIfAbsent(chrom, new BitSet());
-        final BitSet positions = regions.get(chrom);
-        positions.set(start, end);
+        treeMap.putIfAbsent(chrom, new TreeSet<>());
+        treeMap.get(chrom).add(new MistRegion(start, end));
+//        regions.putIfAbsent(chrom, new BitSet());
+//        final BitSet positions = regions.get(chrom);
+//        positions.set(start, end);
     }
 
     public boolean isInMistRegion(String chrom, int position) {
-        return regions.containsKey(chrom) && regions.get(chrom).get(position);
+        if (!treeMap.containsKey(chrom)) return false;
+        final TreeSet<MistRegion> mistRegions = treeMap.get(chrom);
+        return mistRegions.stream().anyMatch(mistRegion -> mistRegion.contains(position));
+//        return regions.containsKey(chrom) && regions.get(chrom).get(position);
+    }
+
+    private class MistRegion implements Comparable<MistRegion> {
+        int start;
+        int end;
+
+        MistRegion(int start, int end) {
+            this.start = start;
+            this.end = end;
+        }
+
+        @Override
+        public int compareTo(MistRegion other) {
+            final int compare = Integer.compare(start, other.start);
+            return compare == 0 ? 0 : Integer.compare(end, other.end);
+        }
+
+        public boolean contains(int position) {
+            return start <= position && position <= end;
+        }
     }
 }

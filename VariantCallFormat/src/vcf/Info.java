@@ -20,23 +20,58 @@ package vcf;
 import utils.OS;
 import utils.StringStore;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class Info {
-
-    private final Map<String, Object> values = new HashMap<>();
+    private static String[] keys = new String[0];
+    private Object[] vals = new Object[0];
 
     public void set(String key, Object value) {
-        key = StringStore.getInstance(key);
+        int index = updateKeys(key);
+        insertValue(value, index);
+    }
+
+    private void insertValue(Object value, int index) {
+        if (vals.length < index + 1) resizeVals(index + 1);
         if (value.getClass().equals(String.class)) value = StringStore.getInstance((String) value);
-        values.put(key, value);
+        vals[index] = value;
+    }
+
+    private int updateKeys(String key) {
+        int index = indexOf(key);
+        if (index == -1) {
+            resizeKeys();
+            index = keys.length - 1;
+            keys[index] = StringStore.getInstance(key);
+        }
+        return index;
+    }
+
+    private void resizeVals(int size) {
+        final Object[] newVals = new Object[size];
+        System.arraycopy(vals, 0, newVals, 0, vals.length);
+        vals = newVals;
+    }
+
+    private void resizeKeys() {
+        final String[] newKeys = new String[keys.length + 1];
+        System.arraycopy(keys, 0, newKeys, 0, keys.length);
+        keys = newKeys;
+    }
+
+    private int indexOf(String key) {
+        for (int i = 0; i < keys.length; i++) if (keys[i].equals(key)) return i;
+        return -1;
     }
 
     public Object get(String key) {
-        return values.get(key);
+        for (int i = 0; i < keys.length; i++) if (keys[i].equals(key) && vals.length > i) return vals[i];
+        return null;
     }
 
     public String getString(String key) {
@@ -52,17 +87,20 @@ public class Info {
     }
 
     public boolean hasInfo(String key) {
-        return values.containsKey(key);
+        for (int i = 0; i < keys.length; i++) if (keys[i].equals(key)) return vals.length > i && vals[i] != null;
+        return false;
     }
 
 
     @Override
     public String toString() {
         final List<String> infos = new ArrayList<>();
-        values.forEach((key, value) -> {
-            if (value.getClass().equals(Boolean.class)) infos.add(key);
-            else infos.add(key + "=" + value.toString());
-        });
+        for (int i = 0; i < vals.length; i++) {
+            if (vals[i] != null) {
+                if (vals[i].getClass() == Boolean.class) infos.add(keys[i]);
+                else infos.add(keys[i] + "=" + vals[i].toString());
+            }
+        }
         Collections.sort(infos);
         return OS.asString(";", infos);
     }

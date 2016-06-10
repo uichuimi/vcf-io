@@ -66,7 +66,7 @@ public class VariantFactory {
         if ((field.contains("="))) {
             final String[] pair = field.split("=");
             variant.getInfo().set(pair[0], pair[1]);
-        } else variant.getInfo().set(field, true);
+        } else variant.getInfo().set(field, Boolean.TRUE);
     }
 
     private static void addSamples(Variant variant, String[] line) throws VariantException {

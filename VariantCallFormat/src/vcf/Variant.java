@@ -18,6 +18,7 @@
 package vcf;
 
 import utils.OS;
+import utils.StringStore;
 
 /**
  * Stores a vcf. chrom, position, ref, alt, filter and format are Strings. position is an integer, qual a
@@ -55,13 +56,13 @@ public class Variant implements Comparable<Variant> {
      * @param sampleInfo vcf sample information
      */
     Variant(VariantSet file, String chrom, int position, String id, String ref, String alt, double qual, String filter, Info info, SampleInfo sampleInfo) {
-        this.chrom = chrom;
+        this.chrom = StringStore.getInstance(chrom);
         this.position = position;
-        this.id = id;
-        this.ref = ref;
-        this.alt = alt;
+        this.id = StringStore.getInstance(id);
+        this.ref = StringStore.getInstance(ref);
+        this.alt = StringStore.getInstance(alt);
         this.qual = qual;
-        this.filter = filter;
+        this.filter = StringStore.getInstance(filter);
         this.sampleInfo = sampleInfo;
         this.info = info;
         this.variantSet = file;
@@ -69,10 +70,10 @@ public class Variant implements Comparable<Variant> {
     }
 
     public Variant(String chrom, int position, String ref, String alt) {
-        this.chrom = chrom;
+        this.chrom = StringStore.getInstance(chrom);
         this.position = position;
-        this.ref = ref;
-        this.alt = alt;
+        this.ref = StringStore.getInstance(ref);
+        this.alt = StringStore.getInstance(alt);
         sampleInfo = new SampleInfo(this);
         info = new Info();
         chromIndex = OS.getStandardChromosomes().indexOf(chrom);
@@ -97,7 +98,7 @@ public class Variant implements Comparable<Variant> {
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id = StringStore.getInstance(id);
     }
 
     /**
@@ -187,6 +188,6 @@ public class Variant implements Comparable<Variant> {
     }
 
     public void setFilter(String filter) {
-        this.filter = filter;
+        this.filter = StringStore.getInstance(filter);
     }
 }
