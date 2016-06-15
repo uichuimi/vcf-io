@@ -21,10 +21,11 @@ import javafx.concurrent.Task;
 import vcf.*;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
@@ -47,7 +48,6 @@ public class VariantCombinerTask extends Task<VariantSet> {
         total = samples.size();
         progess = 0;
         updateMessage("Joining files");
-//        Logger.getLogger(getClass().getName()).info("Joining VCFs");
         final VariantSet joinVcfs = joinVcfs();
         if (delete) deleteInvalidVariants(joinVcfs);
         return joinVcfs;
@@ -64,14 +64,14 @@ public class VariantCombinerTask extends Task<VariantSet> {
     private boolean valid(Variant variant, Sample sample) {
         final boolean valid = sample.getStatus() == Sample.Status.AFFECTED && variant.getSampleInfo().isAffected(sample.getName())
                 || sample.getStatus() == Sample.Status.UNAFFECTED && !variant.getSampleInfo().isAffected(sample.getName())
-                || sample.getStatus() == Sample.Status.HOMOZYGOTE && variant.getSampleInfo().isHomozigote(sample.getName())
-                || sample.getStatus() == Sample.Status.HETEROZYGOTE && variant.getSampleInfo().isHeterozygote(sample.getName());
+                || sample.getStatus() == Sample.Status.HOMOZYGOUS && variant.getSampleInfo().isHomozigote(sample.getName())
+                || sample.getStatus() == Sample.Status.HETEROZYGOUS && variant.getSampleInfo().isHeterozygote(sample
+                .getName());
         if (valid) return true;
         final boolean inMist = (variant.getSampleInfo().getFormat(sample.getName(), "GT").equals(VariantSet.EMPTY_VALUE)
                 || variant.getSampleInfo().getFormat(sample.getName(), "GT").equals("./.")) && inMist(variant, sample);
         if (inMist) {
             variant.getInfo().set("MIST", true);
-            addMistToHeader(variant.getVariantSet().getHeader());
         }
         return inMist;
     }
@@ -91,26 +91,39 @@ public class VariantCombinerTask extends Task<VariantSet> {
         return sample.getMist() != null && sample.getMist().isInMistRegion(variant.getChrom(), variant.getPosition());
     }
 
+    private VariantSet join() {
+        final VariantSet variantSet = new VariantSet();
+        final List<VariantSetStream> streams = new ArrayList<>();
+        final List<File> usedFiles = new ArrayList<>();
+        for (Sample sample : samples) {
+            if (usedFiles.contains(sample.getFile())) continue;
+            streams.add(new VariantSetStream(sample));
+            usedFiles.add(sample.getFile());
+        }
+
+        return variantSet;
+    }
+
+    /**
+     * Join all the samples in one big VCF, which contains all the variants present in any sample, regardless its
+     * status.
+     *
+     * @return a VariantSet which contains all the variants from all the Samples
+     */
     private VariantSet joinVcfs() {
-        AtomicReference<VariantSet> variantSetReference = new AtomicReference<>();
-        // Lets do a super join, so you can have the sum
-//        final List<VariantSet> variantSets = new ArrayList<>();
+        final AtomicReference<VariantSet> variantSetReference = new AtomicReference<>();
         final List<File> files = new ArrayList<>();
         samples.forEach(sample -> {
-            progess++;
             if (files.contains(sample.getFile())) return;
             updateMessage("Joining " + sample.getName());
-            updateProgress(progess, total);
-//            Logger.getLogger(getClass().getName()).info("Joining " + sample.getName());
+            updateProgress(progess++, total);
             final VariantSet variantSet = VariantSetFactory.createFromFile(sample.getFile());
+            // First VariantSet will be the reference
             if (variantSetReference.get() == null) variantSetReference.set(variantSet);
             else mergeVcfFiles(variantSetReference.get(), variantSet);
             files.add(sample.getFile());
-//            if (variantSets.contains(sample.getVariantSet())) return;
-//            Logger.getLogger(getClass().getName()).info("Joining " + sample.getName());
-//            mergeVcfFiles(variantSet, sample.getVariantSet());
-//            variantSets.add(sample.getVariantSet());
         });
+        addMistToHeader(variantSetReference.get().getHeader());
         return variantSetReference.get();
     }
 

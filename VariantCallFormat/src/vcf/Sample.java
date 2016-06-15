@@ -20,7 +20,10 @@ package vcf;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
  * Created by uichuimi on 24/05/16.
@@ -31,7 +34,6 @@ public class Sample {
     private final String name;
     private Property<Status> status = new SimpleObjectProperty<>(Status.AFFECTED);
     private File mistFile;
-//    private Mist mist;
     private long size;
     private Mist mist;
 
@@ -42,10 +44,8 @@ public class Sample {
     }
 
     private void setSize() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))){
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             size = reader.lines().filter(line -> !line.startsWith("#")).count();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -59,11 +59,6 @@ public class Sample {
         return status;
     }
 
-//    public VariantSet getVariantSet() {
-//        return file;
-//    }
-
-
     public File getFile() {
         return file;
     }
@@ -72,12 +67,12 @@ public class Sample {
         return status.getValue();
     }
 
-    public File getMistFile() {
-        return mistFile;
+    public void setStatus(Status status) {
+        this.status.setValue(status);
     }
 
-    public Mist getMist() {
-        return mist;
+    public File getMistFile() {
+        return mistFile;
     }
 
     public void setMistFile(File mistFile) {
@@ -85,11 +80,15 @@ public class Sample {
         mist = MistFactory.load(mistFile);
     }
 
+    public Mist getMist() {
+        return mist;
+    }
+
     public long getSize() {
         return size;
     }
 
     public enum Status {
-        UNAFFECTED, AFFECTED, HOMOZYGOTE, HETEROZYGOTE
+        UNAFFECTED, AFFECTED, HOMOZYGOUS, HETEROZYGOUS
     }
 }

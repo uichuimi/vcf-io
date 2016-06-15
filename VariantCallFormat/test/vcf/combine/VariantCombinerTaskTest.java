@@ -19,14 +19,16 @@ package vcf.combine;
 
 import de.saxsys.mvvmfx.testingutils.jfxrunner.JfxRunner;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import vcf.*;
+import vcf.Sample;
+import vcf.VariantSet;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by uichuimi on 25/05/16.
@@ -34,92 +36,108 @@ import java.util.List;
 @RunWith(JfxRunner.class)
 public class VariantCombinerTaskTest {
 
-    private final static File COMBINE_1 = new File("test/files/Combine1.vcf");
-    private final static File COMBINE_2 = new File("test/files/Combine2.vcf");
+    private final static File SP030_VCF = new File("test/files/SP030.vcf");
+    private final static File SP072_VCF = new File("test/files/SP072.vcf");
+    private final static File SP077_VCF = new File("test/files/SP077.vcf");
+    private final static File SP030_MIST = new File("test/files/SP030.mist");
+    private final static File SP072_MIST = new File("test/files/SP072.mist");
+    private final static File SP077_MIST = new File("test/files/SP077.mist");
+    private static final File DA_VCF = new File("test/files/DA.vcf");
+    private static final File DA_MIST = new File("test/files/DA.mist");
+
     @Test
-    public void testIntersectDelete() throws Exception {
+    public void testJoin() {
         final List<Sample> samples = new ArrayList<>();
-        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
-        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
-        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
-        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
-        final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
-        final VariantSet start = combineTask.call();
-        start.save(new File("output.txt"));
-        Assert.assertEquals(1, start.getVariants().size());
-        final Variant variant = start.getVariants().stream().findFirst().get();
-        Assert.assertEquals("10", variant.getInfo().getString("DP"));
-    }
-    @Test
-    public void testIntersectNoDelete() throws Exception {
-        final List<Sample> samples = new ArrayList<>();
-        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
-        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
-        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
-        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
-        final VariantCombinerTask combineTask = new VariantCombinerTask(samples, false);
-        final VariantSet start = combineTask.call();
-        start.save(new File("output.txt"));
-        Assert.assertEquals(20, start.getVariants().size());
-        final Variant variant = start.getVariants().stream().findFirst().get();
-        Assert.assertEquals("26", variant.getInfo().getString("DP"));
+        final Sample sp030 = new Sample(SP030_VCF, "SP030");
+        sp030.setMistFile(SP030_MIST);
+        samples.add(sp030);
+        final Sample sp072 = new Sample(SP072_VCF, "SP072");
+        sp030.setMistFile(SP072_MIST);
+        samples.add(sp072);
+        final Sample sp077 = new Sample(SP077_VCF, "SP077");
+        sp030.setMistFile(SP077_MIST);
+        samples.add(sp077);
+        final VariantSet variantSet = testCombine(samples, false, 94);
+        variantSet.save(new File("SP_30_72_77_sum.vcf"));
     }
 
     @Test
-    public void testUnaffectedDelete() throws Exception {
+    public void testCommonWithoutMist() {
         final List<Sample> samples = new ArrayList<>();
-        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
-        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
-        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
-        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
-        samples.get(0).statusProperty().setValue(Sample.Status.UNAFFECTED);
-        final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
-        final VariantSet start = combineTask.call();
-        start.save(new File("output.txt"));
-        Assert.assertEquals(1, start.getVariants().size());
+        final Sample sp030 = new Sample(SP030_VCF, "SP030");
+        samples.add(sp030);
+        final Sample sp072 = new Sample(SP072_VCF, "SP072");
+        samples.add(sp072);
+        final Sample sp077 = new Sample(SP077_VCF, "SP077");
+        samples.add(sp077);
+        final VariantSet variantSet = testCombine(samples, true, 4);
+        variantSet.save(new File("SP_30_72_77_common.vcf"));
     }
 
     @Test
-    public void testHomozygoteDelete() throws Exception {
+    public void testCommonWithMist() {
         final List<Sample> samples = new ArrayList<>();
-        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
-        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
-        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
-        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
-        samples.get(3).statusProperty().setValue(Sample.Status.HOMOZYGOTE);
-        final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
-        final VariantSet start = combineTask.call();
-        start.save(new File("output.txt"));
-        Assert.assertEquals(1, start.getVariants().size());
+        final Sample sp030 = new Sample(SP030_VCF, "SP030");
+        sp030.setMistFile(SP030_MIST);
+        samples.add(sp030);
+        final Sample sp072 = new Sample(SP072_VCF, "SP072");
+        sp072.setMistFile(SP072_MIST);
+        samples.add(sp072);
+        final Sample sp077 = new Sample(SP077_VCF, "SP077");
+        sp077.setMistFile(SP077_MIST);
+        samples.add(sp077);
+        final VariantSet variantSet = testCombine(samples, true, 13);
+        variantSet.save(new File("SP_30_72_77_common_mist.vcf"));
+
     }
 
     @Test
-    public void testHeterozygoteDelete() throws Exception {
+    public void testWithControlAndMist() {
         final List<Sample> samples = new ArrayList<>();
-        VcfHeader header = VariantSetFactory.readHeader(COMBINE_1);
-        header.getSamples().stream().map(s -> new Sample(COMBINE_1, s)).forEach(samples::add);
-        VcfHeader header1 = VariantSetFactory.readHeader(COMBINE_2);
-        header1.getSamples().stream().map(s -> new Sample(COMBINE_2, s)).forEach(samples::add);
-        samples.get(1).statusProperty().setValue(Sample.Status.HETEROZYGOTE);
-        final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
-        final VariantSet start = combineTask.call();
-        start.save(new File("output.txt"));
-        Assert.assertEquals(1, start.getVariants().size());
+        final Sample sp030 = new Sample(SP030_VCF, "SP030");
+        sp030.setMistFile(SP030_MIST);
+        samples.add(sp030);
+        final Sample sp072 = new Sample(SP072_VCF, "SP072");
+        sp072.setMistFile(SP072_MIST);
+        samples.add(sp072);
+        final Sample sp077 = new Sample(SP077_VCF, "SP077");
+        sp077.setMistFile(SP077_MIST);
+        samples.add(sp077);
+        final Sample da = new Sample(DA_VCF, "DA");
+        da.setMistFile(DA_MIST);
+        da.setStatus(Sample.Status.UNAFFECTED);
+        samples.add(da);
+        final VariantSet variantSet = testCombine(samples, true, 7);
+        variantSet.save(new File("SP_30_72_77_common_mist_minus_DA.vcf"));
     }
 
-    @Test @Ignore
-    public void testBigFiles() throws Exception {
-        final File w001 = new File("/media/uichuimi/Elements/GENOME_DATA/WDH/WDH_001/VCF/w001.vcf");
-        final File w002 = new File("/media/uichuimi/Elements/GENOME_DATA/WDH/WDH_002/VCF/w002.vcf");
+    @Test
+    public void testWithControlWithoutMist() {
         final List<Sample> samples = new ArrayList<>();
-        VcfHeader header = VariantSetFactory.readHeader(w001);
-        header.getSamples().stream().map(s -> new Sample(w001, s)).forEach(samples::add);
-        VcfHeader header1 = VariantSetFactory.readHeader(w002);
-        header1.getSamples().stream().map(s -> new Sample(w002, s)).forEach(samples::add);
-        final VariantCombinerTask combineTask = new VariantCombinerTask(samples, true);
-        final VariantSet start = combineTask.call();
-        Assert.assertEquals(143548, start.getVariants().size());
-        start.save(new File("output.txt"));
+        final Sample sp030 = new Sample(SP030_VCF, "SP030");
+        samples.add(sp030);
+        final Sample sp072 = new Sample(SP072_VCF, "SP072");
+        samples.add(sp072);
+        final Sample sp077 = new Sample(SP077_VCF, "SP077");
+        samples.add(sp077);
+        final Sample da = new Sample(DA_VCF, "DA");
+        da.setStatus(Sample.Status.UNAFFECTED);
+        samples.add(da);
+        final VariantSet variantSet = testCombine(samples, true, 3);
+        variantSet.save(new File("SP_30_72_77_common_minus_DA.vcf"));
+    }
+
+    private VariantSet testCombine(List<Sample> samples, boolean remove, long size) {
+        final VariantCombinerTask combinerTask = new VariantCombinerTask(samples, remove);
+        combinerTask.run();
+        try {
+            final VariantSet variantSet = combinerTask.get();
+            Assert.assertEquals(size, variantSet.getVariants().size());
+            return variantSet;
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return new VariantSet();
     }
 
 }
