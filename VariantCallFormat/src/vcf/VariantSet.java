@@ -133,18 +133,23 @@ public class VariantSet {
         else cloneAndAdd(variant);
     }
 
-    private Variant findVariant(String chrom, int position) {
-//        return variants.stream().filter(variant -> variant.getChrom().equals(chrom) && variant.getPosition() == position)
-//                .findFirst().orElse(null);
+    public Variant findVariant(String chrom, int position) {
         return index.containsKey(chrom) ? index.get(chrom).getOrDefault(position, null) : null;
     }
 
     private void update(Variant target, Variant source) {
-        source.getVariantSet().header.getSamples().forEach(sample -> {
-            final List<String> formatKeys = source.getVariantSet().getHeader().getIdList("FORMAT");
-            formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo()
-                    .getFormat(sample, key)));
-        });
+        copyId(target, source);
+        copySampleInfo(target, source);
+    }
+
+    private void copyId(Variant target, Variant source) {
+        if (target.getId().equals(EMPTY_VALUE) && !source.getId().equals(EMPTY_VALUE)) target.setId(source.getId());
+    }
+
+    private void copySampleInfo(Variant target, Variant source) {
+        final List<String> formatKeys = source.getVariantSet().getHeader().getIdList("FORMAT");
+        source.getVariantSet().header.getSamples().forEach(sample ->
+                formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo().getFormat(sample, key))));
     }
 
     private void cloneAndAdd(Variant variant) {
@@ -181,5 +186,6 @@ public class VariantSet {
         source.getVariantSet().header.getSamples().forEach(sample -> formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo()
                 .getFormat(sample, key))));
     }
+
 
 }

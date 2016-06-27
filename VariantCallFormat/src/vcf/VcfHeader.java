@@ -223,4 +223,11 @@ public class VcfHeader {
     public boolean hasSimpleHeader(String key) {
         return simpleHeaders.containsKey(key);
     }
+
+    public Map<String, String> getComplexHeader(String type, String id) {
+        if (complexHeaders.containsKey(type))
+            for (Map<String, String> map : complexHeaders.get(type))
+                if (map.get("ID").equals(id)) return map;
+        return null;
+    }
 }

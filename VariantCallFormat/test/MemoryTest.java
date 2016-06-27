@@ -39,11 +39,6 @@ public class MemoryTest {
         final long max = Runtime.getRuntime().maxMemory();
         final long free = Runtime.getRuntime().freeMemory();
         System.out.println(total + "\t" + max + "\t" + free + "\t" + (total - free));
-//        System.out.println("Total\t" + total);
-//        System.out.println("Max: " + max);
-//        System.out.println("Free: " + free);
-//        System.out.println("Total - free: " + (total - free));
-//        System.out.println("Max - free: " + (max - free));
     }
 
     @Test
@@ -59,7 +54,6 @@ public class MemoryTest {
         printMemory();
         final long totalMillis = System.currentTimeMillis() - startMillis;
         System.out.println(dateFormat.format(totalMillis));
-
     }
 
 }

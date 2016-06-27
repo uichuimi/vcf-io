@@ -41,34 +41,6 @@ public class Variant implements Comparable<Variant> {
     private String id;
     private int chromIndex;
 
-    /**
-     * This constructor is intended to be used by VariantFactory.
-     *
-     * @param file
-     * @param chrom      chromosome or contig
-     * @param position   genomic position
-     * @param id         usually an rs id
-     * @param ref        reference allele sequence
-     * @param alt        alternative allele sequence
-     * @param qual       quality
-     * @param filter     filter
-     * @param info       vcf info
-     * @param sampleInfo vcf sample information
-     */
-    Variant(VariantSet file, String chrom, int position, String id, String ref, String alt, double qual, String filter, Info info, SampleInfo sampleInfo) {
-        this.chrom = StringStore.getInstance(chrom);
-        this.position = position;
-        this.id = StringStore.getInstance(id);
-        this.ref = StringStore.getInstance(ref);
-        this.alt = StringStore.getInstance(alt);
-        this.qual = qual;
-        this.filter = StringStore.getInstance(filter);
-        this.sampleInfo = sampleInfo;
-        this.info = info;
-        this.variantSet = file;
-        chromIndex = OS.getStandardChromosomes().indexOf(chrom);
-    }
-
     public Variant(String chrom, int position, String ref, String alt) {
         this.chrom = StringStore.getInstance(chrom);
         this.position = position;

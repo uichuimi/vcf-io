@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Creates a VariantSet by reading a text file (usually a .vcf).
  * Created by uichuimi on 25/05/16.
  */
 public class VariantSetFactory {
@@ -37,7 +38,6 @@ public class VariantSetFactory {
         final VariantSet variantSet = new VariantSet();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             readLines(reader, variantSet);
-//            variantSet.setFile(file);
         } catch (Exception e) {
             e.printStackTrace();
         }

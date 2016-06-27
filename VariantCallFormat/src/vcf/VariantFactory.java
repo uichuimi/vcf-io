@@ -51,8 +51,8 @@ public class VariantFactory {
         variant.setId(id);
         variant.setQual(qual);
         variant.setFilter(filter);
-        addSamples(variant, v);
         addInfos(variant, v[7]);
+        addSamples(variant, v);
         return variant;
     }
 
@@ -63,10 +63,33 @@ public class VariantFactory {
     }
 
     private static void setInfo(Variant variant, String field) {
-        if ((field.contains("="))) {
-            final String[] pair = field.split("=");
-            variant.getInfo().set(pair[0], pair[1]);
-        } else variant.getInfo().set(field, Boolean.TRUE);
+        final String[] pair = field.split("=");
+        final String id = pair[0];
+        Object value = getValue(pair);
+        variant.getInfo().set(id, value);
+    }
+
+    private static Object getValue(String[] pair) {
+        return pair.length == 1 ? Boolean.TRUE : pair[1];
+        // Integer and Double occupy more memory than a String (using StringStore) :|
+//            // Highly cost access
+//            final Map<String, String> info = variant.getVariantSet().getHeader().getComplexHeader("INFO", id);
+//            final String type = info.get("Type");
+//            final String number = info.get("Number");
+//            if (number.equals("1"))
+//                switch (type) {
+//                    case "Integer":
+//                        return Integer.valueOf(pair[1]);
+//                    case "Float":
+//                        return Double.valueOf(pair[1]);
+//                    case "Flag":
+//                        // Unreachable
+//                    case "Character":
+//                    case "String":
+//                    default:
+//                        return pair[1];
+//                }
+//            else return pair[1];
     }
 
     private static void addSamples(Variant variant, String[] line) throws VariantException {

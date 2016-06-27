@@ -55,7 +55,6 @@ public class VariantCombinerTask extends Task<VariantSet> {
 
     private void deleteInvalidVariants(VariantSet joinVcfs) {
         updateMessage("Deleting invalid variants");
-//        Logger.getLogger(getClass().getName()).info("Deleting invalid variants");
         joinVcfs.getVariants().removeIf(variant -> samples.stream()
                 .filter(sample -> !valid(variant, sample)).count() > 0);
         Logger.getLogger(getClass().getName()).info("Deleted");
@@ -70,9 +69,7 @@ public class VariantCombinerTask extends Task<VariantSet> {
         if (valid) return true;
         final boolean inMist = (variant.getSampleInfo().getFormat(sample.getName(), "GT").equals(VariantSet.EMPTY_VALUE)
                 || variant.getSampleInfo().getFormat(sample.getName(), "GT").equals("./.")) && inMist(variant, sample);
-        if (inMist) {
-            variant.getInfo().set("MIST", true);
-        }
+        if (inMist) variant.getInfo().set("MIST", true);
         return inMist;
     }
 
@@ -91,22 +88,8 @@ public class VariantCombinerTask extends Task<VariantSet> {
         return sample.getMist() != null && sample.getMist().isInMistRegion(variant.getChrom(), variant.getPosition());
     }
 
-    private VariantSet join() {
-        final VariantSet variantSet = new VariantSet();
-        final List<VariantSetStream> streams = new ArrayList<>();
-        final List<File> usedFiles = new ArrayList<>();
-        for (Sample sample : samples) {
-            if (usedFiles.contains(sample.getFile())) continue;
-            streams.add(new VariantSetStream(sample));
-            usedFiles.add(sample.getFile());
-        }
-
-        return variantSet;
-    }
-
     /**
-     * Join all the samples in one big VCF, which contains all the variants present in any sample, regardless its
-     * status.
+     * Join all the samples in one big VCF, which contains all the variants present in any sample, regardless its status.
      *
      * @return a VariantSet which contains all the variants from all the Samples
      */
@@ -114,13 +97,14 @@ public class VariantCombinerTask extends Task<VariantSet> {
         final AtomicReference<VariantSet> variantSetReference = new AtomicReference<>();
         final List<File> files = new ArrayList<>();
         samples.forEach(sample -> {
-            if (files.contains(sample.getFile())) return;
             updateMessage("Joining " + sample.getName());
+            if (files.contains(sample.getFile())) return;
             updateProgress(progess++, total);
             final VariantSet variantSet = VariantSetFactory.createFromFile(sample.getFile());
             // First VariantSet will be the reference
             if (variantSetReference.get() == null) variantSetReference.set(variantSet);
             else mergeVcfFiles(variantSetReference.get(), variantSet);
+            // avoid loading the same file again
             files.add(sample.getFile());
         });
         addMistToHeader(variantSetReference.get().getHeader());
@@ -149,18 +133,16 @@ public class VariantCombinerTask extends Task<VariantSet> {
     }
 
     private void addSimpleHeaders(VariantSet target, VariantSet soruce) {
-        soruce.getHeader().getSimpleHeaders()
-                .forEach((key, value) -> {
-                    if (!target.getHeader().hasSimpleHeader(key))
-                        target.getHeader().addSimpleHeader(key, value);
-                });
+        soruce.getHeader().getSimpleHeaders().forEach((key, value) -> {
+            if (!target.getHeader().hasSimpleHeader(key))
+                target.getHeader().addSimpleHeader(key, value);
+        });
     }
 
     private void addComplexHeaders(VariantSet target, VariantSet source) {
-        source.getHeader().getComplexHeaders()
-                .forEach((type, mapList) -> mapList.forEach(map -> {
-                    if (!target.getHeader().hasComplexHeader(type, map.get("ID")))
-                        target.getHeader().addComplexHeader(type, map);
-                }));
+        source.getHeader().getComplexHeaders().forEach((type, mapList) -> mapList.forEach(map -> {
+            if (!target.getHeader().hasComplexHeader(type, map.get("ID")))
+                target.getHeader().addComplexHeader(type, map);
+        }));
     }
 }

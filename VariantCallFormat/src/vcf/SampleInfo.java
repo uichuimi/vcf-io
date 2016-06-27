@@ -37,7 +37,7 @@ public class SampleInfo {
         this.variant = variant;
     }
 
-    void setFormat(String sample, String key, String value) {
+    public void setFormat(String sample, String key, String value) {
         sample = StringStore.getInstance(sample);
         key = StringStore.getInstance(key);
         value = StringStore.getInstance(value);

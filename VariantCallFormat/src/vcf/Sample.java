@@ -37,18 +37,25 @@ public class Sample {
     private long size;
     private Mist mist;
 
+    public Sample(File file, String name, long size) {
+        this.file = file;
+        this.name = name;
+        this.size = size;
+    }
+
     public Sample(File file, String name) {
         this.file = file;
         this.name = name;
-        setSize();
+        this.size = getLinesCount();
     }
 
-    private void setSize() {
+    private long getLinesCount() {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            size = reader.lines().filter(line -> !line.startsWith("#")).count();
+            return reader.lines().filter(line -> !line.startsWith("#")).count();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return 0;
     }
 
     public String getName() {
