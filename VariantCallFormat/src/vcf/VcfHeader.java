@@ -44,8 +44,8 @@ public class VcfHeader {
         REQUIRED_KEYS.put("SAMPLE", Collections.singletonList("ID"));
     }
 
-    private final Map<String, List<Map<String, String>>> complexHeaders = new TreeMap<>();
-    private final Map<String, String> simpleHeaders = new TreeMap<>();
+    private final Map<String, List<Map<String, String>>> complexHeaders = new LinkedHashMap<>();
+    private final Map<String, String> simpleHeaders = new LinkedHashMap<>();
     private final List<String> samples = new ArrayList<>();
 
     /**

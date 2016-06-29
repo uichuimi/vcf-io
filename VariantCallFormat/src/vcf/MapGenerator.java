@@ -17,6 +17,7 @@
 
 package vcf;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -45,7 +46,7 @@ public class MapGenerator {
      */
     public synchronized static Map<String, String> parse(String line) {
         MapGenerator.line = line;
-        map = new TreeMap<>();
+        map = new LinkedHashMap<>();
         cursor = 0;
         isKey = true;
         return start();
