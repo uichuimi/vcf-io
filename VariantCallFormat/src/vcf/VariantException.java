@@ -20,7 +20,7 @@ package vcf;
 /**
  * Created by uichuimi on 3/06/16.
  */
-class VariantException extends Exception {
+public class VariantException extends Exception {
 
     VariantException(String message) {
         super(message);

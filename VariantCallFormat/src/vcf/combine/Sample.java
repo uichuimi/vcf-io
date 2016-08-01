@@ -15,7 +15,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vcf;
+package vcf.combine;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -96,6 +96,6 @@ public class Sample {
     }
 
     public enum Status {
-        UNAFFECTED, AFFECTED, HOMOZYGOUS, HETEROZYGOUS
+        WILD, AFFECTED, HOMOZYGOUS, HETEROZYGOUS
     }
 }

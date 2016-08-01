@@ -20,9 +20,9 @@ package vcf;
 import utils.OS;
 import utils.StringStore;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  */
 public class SampleInfo {
 
-    private Map<String, Map<String, String>> content = new TreeMap<>();
+    private Map<String, Map<String, String>> content = new LinkedHashMap<>();
     private Variant variant;
 
     SampleInfo(Variant variant) {
@@ -38,11 +38,9 @@ public class SampleInfo {
     }
 
     public void setFormat(String sample, String key, String value) {
-        sample = StringStore.getInstance(sample);
-        key = StringStore.getInstance(key);
-        value = StringStore.getInstance(value);
-        if (!content.containsKey(sample)) content.put(sample, new TreeMap<>());
-        content.get(sample).put(key, value);
+//        sample = StringStore.getInstance(sample);
+        if (!content.containsKey(sample)) content.put(StringStore.getInstance(sample), new LinkedHashMap<>());
+        content.get(sample).put(StringStore.getInstance(key), StringStore.getInstance(value));
     }
 
     public String getFormat(String sample, String key) {
@@ -59,31 +57,43 @@ public class SampleInfo {
         final StringBuilder builder = new StringBuilder("\t").append(FORMAT);
         for (String sample : samples) {
             final List<String> values = formatKeys.stream()
-                    .map(key -> content.containsKey(sample) ? content.get(sample).getOrDefault(key, VariantSet
-                            .EMPTY_VALUE) : VariantSet.EMPTY_VALUE)
+                    .map(key -> content.containsKey(sample)
+                            ? content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE)
+                            : VariantSet.EMPTY_VALUE)
                     .collect(Collectors.toList());
             builder.append("\t").append(OS.asString(":", values));
         }
         return builder.toString();
     }
 
-    public boolean isHomozigote(String sample) {
+    public boolean isHomozygous(String sample) {
         final String[] gt = getGenotype(sample);
-        return gt != null && !gt[0].matches("[0|.]") && gt[0].equals(gt[1]);
+        return gt != null && !gt[0].matches("[0.]") && gt[0].equals(gt[1]);
     }
 
-    public boolean isHeterozygote(String sample) {
+    public boolean isHeterozygous(String sample) {
         final String[] gt = getGenotype(sample);
-        return gt != null &&  !gt[0].equals(gt[1]);
+        return gt != null && !gt[0].equals(gt[1]);
     }
 
     public boolean isAffected(String sample) {
         final String[] gt = getGenotype(sample);
-        return gt != null && (!gt[0].matches("[0|.]") || !gt[1].matches("[0|.]"));
+        return gt != null && (!gt[0].matches("[0.]") || !gt[1].matches("[0.]"));
     }
 
     private String[] getGenotype(String sample) {
         final String gt = content.containsKey(sample) ? content.get(sample).getOrDefault("GT", null) : null;
-        return gt == null ? null : gt.split("[/|]");
+        if (gt == null) return null;
+        if (gt.equals(VariantSet.EMPTY_VALUE)) return new String[]{".", "."};
+        return gt.split("[/|]");
+    }
+
+    /**
+     * Removes a sample info from variant.
+     *
+     * @param name sample name
+     */
+    public void removeSample(String name) {
+        content.remove(name);
     }
 }

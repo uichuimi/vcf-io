@@ -40,7 +40,6 @@ public class VariantSet {
     private final ObservableSet<Variant> variants = FXCollections.observableSet(new TreeSet<>());
     private final VcfHeader header;
 
-    //    private File file;
     private Property<Boolean> changed = new SimpleObjectProperty<>(false);
 
     private Map<String, Map<Integer, Variant>> index = new TreeMap<>();
@@ -140,6 +139,7 @@ public class VariantSet {
     private void update(Variant target, Variant source) {
         copyId(target, source);
         copySampleInfo(target, source);
+        copyInfo(target, source);
     }
 
     private void copyId(Variant target, Variant source) {
@@ -159,7 +159,7 @@ public class VariantSet {
 
     /**
      * Creates a copy of variant. The copy will have the same chrom, pos, qual, ref, alt, filter and info, but not
-     * sample(FORMAT) info. new variant will have this as vcfFile.
+     * sample(FORMAT) info. new variant will have this as VariantSet.
      *
      * @param source
      * @return
@@ -170,22 +170,32 @@ public class VariantSet {
         target.setQual(source.getQual());
         target.setId(source.getId());
         target.setFilter(source.getFilter());
-        copyInfo(source, target);
-        copyFormat(source, target);
+        copyInfo(target, source);
+        copyFormat(target, source);
         return target;
     }
 
-    private void copyInfo(Variant source, Variant target) {
+    private void copyInfo(Variant target, Variant source) {
         source.getVariantSet().getHeader().getIdList("INFO").forEach(key -> {
             if (source.getInfo().hasInfo(key)) target.getInfo().set(key, source.getInfo().get(key));
         });
     }
 
-    private void copyFormat(Variant source, Variant target) {
+    private void copyFormat(Variant target, Variant source) {
         final List<String> formatKeys = source.getVariantSet().getHeader().getIdList("FORMAT");
         source.getVariantSet().header.getSamples().forEach(sample -> formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo()
                 .getFormat(sample, key))));
     }
 
 
+    /**
+     * Completely removes sample info from VariantSet. Sample info is deleted from every Variant in VariantSet, and
+     * sample name is removed from VariantSetHeader.
+     *
+     * @param name sample name
+     */
+    public void removeSample(String name) {
+        header.getSamples().remove(name);
+        variants.forEach(variant -> variant.getSampleInfo().removeSample(name));
+    }
 }

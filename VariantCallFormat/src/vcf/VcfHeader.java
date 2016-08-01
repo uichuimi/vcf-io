@@ -139,7 +139,7 @@ public class VcfHeader {
                         for (Map.Entry<String, String> pair : map.entrySet()) {
                             if (pair.getKey().equals("ID")) continue;
                             builder.append(",").append(pair.getKey()).append("=");
-                            if (pair.getValue().contains(" "))
+                            if (pair.getKey().equals("Description") || pair.getValue().contains(" "))
                                 builder.append("\"").append(pair.getValue()).append("\"");
                             else builder.append(pair.getValue());
                         }
@@ -187,20 +187,18 @@ public class VcfHeader {
     public void addComplexHeader(String type, Map<String, String> map) {
         createTypeMap(type);
         checkRequiredKeys(type, map);
-        checkUniqueness(type, map);
-        if (type.equals("FORMAT") && map.get("ID").equals("GT")) complexHeaders.get(type).add(0, map);
-        else complexHeaders.get(type).add(map);
+        final Map<String, String> map1 = getComplexHeader(type, map.get("ID"));
+        if (map1 == null) {
+            if (type.equals("FORMAT") && map.get("ID").equals("GT")) complexHeaders.get(type).add(0, map);
+            else complexHeaders.get(type).add(map);
+        } else {
+            map.forEach(map1::put);
+            Logger.getLogger(getClass().getName()).info("Updating " + type + " " + map.get("ID"));
+        }
     }
 
     private void createTypeMap(String type) {
         if (!complexHeaders.containsKey(type)) complexHeaders.put(type, new ArrayList<>());
-    }
-
-    private void checkUniqueness(String type, Map<String, String> map) {
-        if (map.containsKey("ID")) complexHeaders.get(type).forEach(map1 -> {
-            if (map1.get("ID").equals(map.get("ID")))
-                Logger.getLogger(getClass().getName()).warning(type + " already contains a " + map.get("ID") + " line");
-        });
     }
 
     private void checkRequiredKeys(String type, Map<String, String> map) {

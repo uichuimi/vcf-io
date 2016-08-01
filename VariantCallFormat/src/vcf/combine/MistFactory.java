@@ -15,9 +15,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vcf;
-
-import utils.StringStore;
+package vcf.combine;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -15,9 +15,10 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vcf;
+package vcf.combine;
 
-import java.util.BitSet;
+import vcf.Variant;
+
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -26,7 +27,7 @@ import java.util.TreeSet;
  */
 public class Mist {
 
-//    private TreeMap<String, BitSet> regions = new TreeMap<>();
+    //    private TreeMap<String, BitSet> regions = new TreeMap<>();
     private TreeMap<String, TreeSet<MistRegion>> treeMap = new TreeMap<>();
 
     public void addRegion(String chrom, int start, int end) {
@@ -35,6 +36,10 @@ public class Mist {
 //        regions.putIfAbsent(chrom, new BitSet());
 //        final BitSet positions = regions.get(chrom);
 //        positions.set(start, end);
+    }
+
+    public boolean isInMistRegion(Variant variant) {
+        return isInMistRegion(variant.getChrom(), variant.getPosition());
     }
 
     public boolean isInMistRegion(String chrom, int position) {
