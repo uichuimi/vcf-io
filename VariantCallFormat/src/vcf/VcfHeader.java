@@ -18,6 +18,7 @@
 package vcf;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,8 +37,8 @@ public class VcfHeader {
     private static final Map<String, List<String>> REQUIRED_KEYS = new TreeMap<>();
 
     static {
-        REQUIRED_KEYS.put("INFO", Arrays.asList("ID", "Type", "Description", "Number"));
-        REQUIRED_KEYS.put("FORMAT", Arrays.asList("ID", "Type", "Description", "Number"));
+        REQUIRED_KEYS.put("INFO", Arrays.asList("ID", "Number", "Type", "Description"));
+        REQUIRED_KEYS.put("FORMAT", Arrays.asList("ID", "Number", "Type", "Description"));
         REQUIRED_KEYS.put("FILTER", Arrays.asList("ID", "Description"));
         REQUIRED_KEYS.put("ALT", Arrays.asList("ID", "Description"));
         REQUIRED_KEYS.put("contig", Collections.singletonList("ID"));
@@ -131,21 +132,32 @@ public class VcfHeader {
     }
 
     private void appendComplexHeaders(StringBuilder builder) {
-        complexHeaders.entrySet().stream()
-                .forEach(entry -> {
-                    final String type = entry.getKey();
-                    entry.getValue().forEach(map -> {
-                        builder.append("##").append(type).append("=<ID=").append(map.get("ID"));
-                        for (Map.Entry<String, String> pair : map.entrySet()) {
-                            if (pair.getKey().equals("ID")) continue;
-                            builder.append(",").append(pair.getKey()).append("=");
-                            if (pair.getKey().equals("Description") || pair.getValue().contains(" "))
-                                builder.append("\"").append(pair.getValue()).append("\"");
-                            else builder.append(pair.getValue());
-                        }
-                        builder.append(">").append(System.lineSeparator());
+        complexHeaders.forEach((type, headers) ->
+                headers.forEach(map -> {
+                    builder.append("##").append(type).append("=<");
+                    final AtomicBoolean first = new AtomicBoolean(true);
+                    if (REQUIRED_KEYS.containsKey(type))
+                        REQUIRED_KEYS.get(type).forEach(requiredKey ->
+                                appendHeaderKey(builder, first, toString(requiredKey, map.get(requiredKey))));
+                    map.forEach((key, value) -> {
+                        if (!REQUIRED_KEYS.containsKey(type) || !REQUIRED_KEYS.get(type).contains(key))
+                            appendHeaderKey(builder, first, toString(key, value));
                     });
-                });
+                    builder.append(">").append(System.lineSeparator());
+                }));
+    }
+
+    private void appendHeaderKey(StringBuilder builder, AtomicBoolean first, String text) {
+        if (first.compareAndSet(true, false)) builder.append(text);
+        else builder.append(",").append(text);
+    }
+
+    private String toString(String key, String value) {
+        final String v = (key.equals("Description")
+                || value.contains(" ")
+                || value.contains(",")) ? "\"" + value + "\""
+                : value;
+        return key + "=" + v;
     }
 
     private void appendFormatLine(StringBuilder builder) {
@@ -154,7 +166,7 @@ public class VcfHeader {
             builder.append("\tFORMAT");
             samples.forEach(f -> builder.append("\t").append(f));
         }
-        builder.append(System.lineSeparator());
+//        builder.append(System.lineSeparator());
     }
 
     public List<String> getSamples() {

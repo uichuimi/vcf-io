@@ -162,8 +162,8 @@ public class VariantCombiner implements Runnable {
                 .forEach(sample -> target.getHeader().getSamples().add(sample));
     }
 
-    private void addSimpleHeaders(VariantSet target, VariantSet soruce) {
-        soruce.getHeader().getSimpleHeaders().forEach((key, value) -> {
+    private void addSimpleHeaders(VariantSet target, VariantSet source) {
+        source.getHeader().getSimpleHeaders().forEach((key, value) -> {
             if (!target.getHeader().hasSimpleHeader(key))
                 target.getHeader().addSimpleHeader(key, value);
         });

@@ -17,8 +17,9 @@
 
 package vcf;
 
-import utils.OS;
 import utils.StringStore;
+
+import java.util.Locale;
 
 /**
  * Stores a vcf. chrom, position, ref, alt, filter and format are Strings. position is an integer, qual a
@@ -28,27 +29,35 @@ import utils.StringStore;
  */
 public class Variant implements Comparable<Variant> {
 
+    /*
+     * A VCF line can hold more than one variant, for instance A/T,TAC
+     * In this case, some fields have several values separated by comma (,)
+     * Some of these fields are ALT, AC, AF, MLEAF and PL
+     *
+     * 1	11944422	.	TACACACAC	T,TAC	2337.73	.	AC=1,1;AF=0.500,0.500;AN=2;DP=61;ExcessHet=3.0103;FS=0.000;MLEAC=1,1;MLEAF=0.500,0.500;MQ=60.00;QD=30.26;SOR=6.701	GT:AD:DP:GQ:PL	1/2:0,9,48:57:99:2375,1613,1523,302,0,133
+     * 1	11944422	rs33981344	TAC	T	177.73	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-2.379e+00;ClippingRankSum=0.00;DB;DP=26;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQRankSum=0.00;QD=9.87;ReadPosRankSum=1.87;SOR=0.540	GT:AD:DP:GQ:PL	0/1:12,6:22:99:215,0,316
+     * 1	11944422	.	T	TACACACAC	680.73	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-2.124e+00;ClippingRankSum=0.00;DP=62;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=59.79;MQRankSum=0.00;QD=17.02;ReadPosRankSum=-7.720e-01;SOR=0.540	GT:AD:DP:GQ:PL	0/1:26,14:48:99:718,0,1819
+     * 1	11944422	rs112065997	TACACAC	T	1256.73	.	AC=2;AF=1.00;AN=2;DB;DP=38;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=60.00;QD=29.49;SOR=4.615	GT:AD:DP:GQ:PL	1/1:0,28:31:93:1293,93,0
+     *
+     */
 
+    public static final String VOID = ".";
+    private final Coordinate coordinate;
     private final SampleInfo sampleInfo;
     private final Info info;
     private VariantSet variantSet;
-    private String chrom;
     private String ref;
     private String alt;
-    private String filter;
-    private int position;
-    private double qual;
-    private String id;
-    private int chromIndex;
+    private String filter = VOID;
+    private double qual = 0.0;
+    private String id = VOID;
 
     public Variant(String chrom, int position, String ref, String alt) {
-        this.chrom = StringStore.getInstance(chrom);
-        this.position = position;
+        this.coordinate = new Coordinate(chrom, position);
         this.ref = StringStore.getInstance(ref);
         this.alt = StringStore.getInstance(alt);
         sampleInfo = new SampleInfo(this);
         info = new Info();
-        chromIndex = OS.getStandardChromosomes().indexOf(chrom);
     }
 
     /**
@@ -57,7 +66,7 @@ public class Variant implements Comparable<Variant> {
      * @return the chromosome of the vcf
      */
     public String getChrom() {
-        return chrom;
+        return coordinate.getChrom();
     }
 
     /**
@@ -97,7 +106,11 @@ public class Variant implements Comparable<Variant> {
      * @return the position
      */
     public int getPosition() {
-        return position;
+        return coordinate.getPosition();
+    }
+
+    public Coordinate getCoordinate() {
+        return coordinate;
     }
 
     /**
@@ -115,19 +128,15 @@ public class Variant implements Comparable<Variant> {
 
     @Override
     public int compareTo(Variant variant) {
-        // Variants with no standard chromosome goes to the end
-        if (chromIndex != -1 && variant.chromIndex == -1) return -1;
-        if (chromIndex == -1 && variant.chromIndex != -1) return 1;
-        // Non-standard chromosomes are ordered alphabetically
-        int compare = (chromIndex == -1)
-                ? chrom.compareTo(variant.chrom)
-                : Integer.compare(chromIndex, variant.chromIndex);
-        if (compare != 0) return compare;
-        return Integer.compare(position, variant.position);
+        return coordinate.compareTo(variant.coordinate);
     }
 
     public String getFilter() {
         return filter;
+    }
+
+    public void setFilter(String filter) {
+        this.filter = StringStore.getInstance(filter);
     }
 
     public VariantSet getVariantSet() {
@@ -140,12 +149,12 @@ public class Variant implements Comparable<Variant> {
 
     @Override
     public String toString() {
-        return chrom +
-                "\t" + position +
+        return coordinate.getChrom() +
+                "\t" + coordinate.getPosition() +
                 "\t" + id +
                 "\t" + ref +
                 "\t" + alt +
-                "\t" + qual +
+                "\t" + String.format(Locale.ENGLISH, "%.2f", qual) +
                 "\t" + filter +
                 "\t" + info +
                 sampleInfo;
@@ -157,9 +166,5 @@ public class Variant implements Comparable<Variant> {
 
     public Info getInfo() {
         return info;
-    }
-
-    public void setFilter(String filter) {
-        this.filter = StringStore.getInstance(filter);
     }
 }

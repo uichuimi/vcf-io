@@ -109,6 +109,7 @@ public class VariantSet {
         if (file.exists() && !file.delete()) System.err.println("No access on " + file);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(header.toString());
+            writer.newLine();
             for (Variant variant : variants) {
                 writer.write(variant.toString());
                 writer.newLine();

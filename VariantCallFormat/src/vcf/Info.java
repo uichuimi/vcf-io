@@ -23,6 +23,7 @@ import utils.StringStore;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
@@ -98,6 +99,8 @@ public class Info {
         for (int i = 0; i < vals.length; i++) {
             if (vals[i] != null) {
                 if (vals[i].getClass() == Boolean.class) infos.add(keys[i]);
+                else if (vals[i].getClass() == Double.class)
+                    infos.add(keys[i] + "=" + String.format(Locale.ENGLISH, "%.3f", (double) vals[i]));
                 else infos.add(keys[i] + "=" + vals[i].toString());
             }
         }

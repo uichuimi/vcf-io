@@ -30,8 +30,8 @@ import java.util.regex.Pattern;
  */
 public class VariantSetFactory {
 
-    private static final Pattern META_LINE = Pattern.compile("##([^=]+)=(.+)");
-    private static final Pattern META_LINE_CONTENT = Pattern.compile("<(.*)>");
+    private static final Pattern HEADER_LINE = Pattern.compile("##([^=]+)=(.+)");
+    private static final Pattern COMPLEX_HEADER = Pattern.compile("<(.*)>");
     private static final Pattern FIELDS_LINE = Pattern.compile("#CHROM(.*)");
 
     public static VariantSet createFromFile(File file) {
@@ -56,7 +56,7 @@ public class VariantSetFactory {
     }
 
     private static void addHeader(VcfHeader header, String line) {
-        final Matcher metaLine = META_LINE.matcher(line);
+        final Matcher metaLine = HEADER_LINE.matcher(line);
         if (metaLine.matches()) addMetaLine(header, metaLine);
         else addFormatLine(header, line);
     }
@@ -64,7 +64,7 @@ public class VariantSetFactory {
     private static void addMetaLine(VcfHeader header, Matcher metaLine) {
         final String type = metaLine.group(1);
         final String value = metaLine.group(2);
-        final Matcher contentMatcher = META_LINE_CONTENT.matcher(value);
+        final Matcher contentMatcher = COMPLEX_HEADER.matcher(value);
         if (contentMatcher.matches()) addComplexHeader(header, type, contentMatcher.group(1));
         else header.addSimpleHeader(type, value);
     }
