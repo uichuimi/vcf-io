@@ -17,13 +17,11 @@
 
 package vcf;
 
-import utils.OS;
 import utils.StringStore;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
@@ -84,12 +82,19 @@ public class Info {
     }
 
     public Boolean getBoolean(String key) {
-        return (boolean) get(key);
+        final Boolean val = (Boolean) get(key);
+        return val == null ? false : val;
     }
 
     public boolean hasInfo(String key) {
         for (int i = 0; i < keys.length; i++) if (keys[i].equals(key)) return vals.length > i && vals[i] != null;
         return false;
+    }
+
+    public Object[] getArray(String key) {
+        final Object value = get(key);
+        if (ValueUtils.isArray(value)) return (Object[]) value;
+        else return new Object[]{value};
     }
 
 
@@ -99,13 +104,11 @@ public class Info {
         for (int i = 0; i < vals.length; i++) {
             if (vals[i] != null) {
                 if (vals[i].getClass() == Boolean.class) infos.add(keys[i]);
-                else if (vals[i].getClass() == Double.class)
-                    infos.add(keys[i] + "=" + String.format(Locale.ENGLISH, "%.3f", (double) vals[i]));
-                else infos.add(keys[i] + "=" + vals[i].toString());
+                else infos.add(keys[i] + "=" + ValueUtils.getString(vals[i]));
             }
         }
         Collections.sort(infos);
-        return OS.asString(";", infos);
+        return String.join(";", infos);
     }
 
 }

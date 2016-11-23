@@ -85,7 +85,6 @@ public class VariantSetFactory {
         }
     }
 
-
     public static VcfHeader readHeader(File file) {
         final VcfHeader header = new VcfHeader();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {

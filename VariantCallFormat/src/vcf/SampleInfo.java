@@ -17,12 +17,9 @@
 
 package vcf;
 
-import utils.OS;
 import utils.StringStore;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -30,7 +27,10 @@ import java.util.stream.Collectors;
  */
 public class SampleInfo {
 
-    private Map<String, Map<String, String>> content = new LinkedHashMap<>();
+    /**
+     * A matrix containing FORMAT columns. To access a cell: <strong>content.get(sample).get(format)</strong>.
+     */
+    private Map<String, Map<String, Object>> content = new LinkedHashMap<>();
     private Variant variant;
 
     SampleInfo(Variant variant) {
@@ -40,30 +40,63 @@ public class SampleInfo {
     public void setFormat(String sample, String key, String value) {
 //        sample = StringStore.getInstance(sample);
         if (!content.containsKey(sample)) content.put(StringStore.getInstance(sample), new LinkedHashMap<>());
-        content.get(sample).put(StringStore.getInstance(key), StringStore.getInstance(value));
+        final String type = variant.getVariantSet().getHeader().hasComplexHeader("FORMAT", key)
+                ? variant.getVariantSet().getHeader().getComplexHeader("FORMAT", key).get("Type")
+                : "String";
+        content.get(sample).put(StringStore.getInstance(key), ValueUtils.getValue(value, type));
     }
 
+    /**
+     * Get the value of the key FORMAT for sample. If sample or key do not exist, then the VariantSet.EMPTY_VALUE (.) is
+     * returned.
+     *
+     * @param sample name of the sample: one of the vcf samples
+     * @param key    FORMAT id
+     * @return the value of key for the given sample or VariantSet.EMPTY_VALUE if not present
+     */
     public String getFormat(String sample, String key) {
+        return content.containsKey(sample)
+                ? ValueUtils.getString(content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE))
+                : VariantSet.EMPTY_VALUE;
+    }
+
+    /**
+     * Get the value of the key FORMAT for sample. If sample or key do not exist, then the VariantSet.EMPTY_VALUE (.) is
+     * returned.
+     *
+     * @param sample name of the sample: one of the vcf samples
+     * @param key    FORMAT id
+     * @return the value of key for the given sample or VariantSet.EMPTY_VALUE if not present
+     */
+    public Object getRichFormat(String sample, String key) {
         return content.containsKey(sample) ? content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE) : VariantSet.EMPTY_VALUE;
     }
 
     @Override
     public String toString() {
         if (content.isEmpty()) return "";
-        final List<String> formatKeys = variant.getVariantSet().getHeader().getIdList("FORMAT");
-        if (formatKeys.isEmpty()) return "";
+        final List<String> usedTags = getUsedTags();
+        if (usedTags.isEmpty()) return "";
         final List<String> samples = variant.getVariantSet().getHeader().getSamples();
-        final String FORMAT = OS.asString(":", formatKeys);
+        final String FORMAT = String.join(":", usedTags);
         final StringBuilder builder = new StringBuilder("\t").append(FORMAT);
         for (String sample : samples) {
-            final List<String> values = formatKeys.stream()
-                    .map(key -> content.containsKey(sample)
-                            ? content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE)
-                            : VariantSet.EMPTY_VALUE)
+            final List<String> values = usedTags.stream()
+                    .map(key -> getFormat(sample, key))
                     .collect(Collectors.toList());
-            builder.append("\t").append(OS.asString(":", values));
+            builder.append("\t").append(String.join(":", values));
         }
         return builder.toString();
+    }
+
+    private List<String> getUsedTags() {
+        final Set<String> usedTags = new LinkedHashSet<>();
+        content.forEach((sample, map) ->
+                map.forEach((tag, value) -> {
+                    if (value != null && !value.equals("."))
+                        usedTags.add(tag);
+                }));
+        return new ArrayList<>(usedTags);
     }
 
     public boolean isHomozygous(String sample) {
@@ -82,7 +115,7 @@ public class SampleInfo {
     }
 
     private String[] getGenotype(String sample) {
-        final String gt = content.containsKey(sample) ? content.get(sample).getOrDefault("GT", null) : null;
+        final String gt = getFormat(sample, "GT");
         if (gt == null) return null;
         if (gt.equals(VariantSet.EMPTY_VALUE)) return new String[]{".", "."};
         return gt.split("[/|]");

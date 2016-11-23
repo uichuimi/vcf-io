@@ -27,17 +27,20 @@ public class Coordinate implements Comparable<Coordinate> {
         // Variants with no standard chromosome goes to the end
         if (chromIndex != -1 && other.chromIndex == -1) return -1;
         if (chromIndex == -1 && other.chromIndex != -1) return 1;
-        // Non-standard chromosomes are ordered alphabetically
         int compare = (chromIndex == -1)
-                ? chrom.compareTo(other.chrom)
-                : Integer.compare(chromIndex, other.chromIndex);
-        if (compare != 0) return compare;
-        return Integer.compare(position, other.position);
+                ? chrom.compareTo(other.chrom) // Non-standard -> alphabetic order
+                : Integer.compare(chromIndex, other.chromIndex); // Standard
+        return compare == 0 ? Integer.compare(position, other.position) : compare;
     }
 
     @Override
     public boolean equals(Object obj) {
         return obj.getClass() == Coordinate.class && (obj == this || compareTo((Coordinate) obj) == 0);
+    }
+
+    @Override
+    public int hashCode() {
+        return chrom.hashCode() + Integer.hashCode(position);
     }
 
     public String getChrom() {
@@ -46,5 +49,10 @@ public class Coordinate implements Comparable<Coordinate> {
 
     public int getPosition() {
         return position;
+    }
+
+    @Override
+    public String toString() {
+        return chrom + ":" + position;
     }
 }

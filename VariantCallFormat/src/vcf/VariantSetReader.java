@@ -16,7 +16,7 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 
     private final VariantSet container;
     private final BufferedReader reader;
-    public Variant nextVariant;
+    private Variant nextVariant;
 
     public VariantSetReader(File file) throws FileNotFoundException {
         container = new VariantSet(VariantSetFactory.readHeader(file));

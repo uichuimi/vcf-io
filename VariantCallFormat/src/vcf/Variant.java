@@ -19,8 +19,6 @@ package vcf;
 
 import utils.StringStore;
 
-import java.util.Locale;
-
 /**
  * Stores a vcf. chrom, position, ref, alt, filter and format are Strings. position is an integer, qual a
  * double. Info is stored as a map of key==value. If value is null, key is treated as a flag.
@@ -34,6 +32,7 @@ public class Variant implements Comparable<Variant> {
      * In this case, some fields have several values separated by comma (,)
      * Some of these fields are ALT, AC, AF, MLEAF and PL
      *
+     * SQZ102
      * 1	11944422	.	TACACACAC	T,TAC	2337.73	.	AC=1,1;AF=0.500,0.500;AN=2;DP=61;ExcessHet=3.0103;FS=0.000;MLEAC=1,1;MLEAF=0.500,0.500;MQ=60.00;QD=30.26;SOR=6.701	GT:AD:DP:GQ:PL	1/2:0,9,48:57:99:2375,1613,1523,302,0,133
      * 1	11944422	rs33981344	TAC	T	177.73	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-2.379e+00;ClippingRankSum=0.00;DB;DP=26;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQRankSum=0.00;QD=9.87;ReadPosRankSum=1.87;SOR=0.540	GT:AD:DP:GQ:PL	0/1:12,6:22:99:215,0,316
      * 1	11944422	.	T	TACACACAC	680.73	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-2.124e+00;ClippingRankSum=0.00;DP=62;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=59.79;MQRankSum=0.00;QD=17.02;ReadPosRankSum=-7.720e-01;SOR=0.540	GT:AD:DP:GQ:PL	0/1:26,14:48:99:718,0,1819
@@ -42,20 +41,29 @@ public class Variant implements Comparable<Variant> {
      */
 
     public static final String VOID = ".";
+    private static final String VALUE_SEPARATOR = ",";
     private final Coordinate coordinate;
     private final SampleInfo sampleInfo;
     private final Info info;
     private VariantSet variantSet;
     private String ref;
-    private String alt;
-    private String filter = VOID;
-    private double qual = 0.0;
-    private String id = VOID;
+    private Object alt;
+    private String filter;
+    private Double qual;
+    private Object id;
 
+    /**
+     * Alt may
+     *
+     * @param chrom
+     * @param position
+     * @param ref
+     * @param alt      a String
+     */
     public Variant(String chrom, int position, String ref, String alt) {
         this.coordinate = new Coordinate(chrom, position);
         this.ref = StringStore.getInstance(ref);
-        this.alt = StringStore.getInstance(alt);
+        this.alt = ValueUtils.getValue(alt, "string");
         sampleInfo = new SampleInfo(this);
         info = new Info();
     }
@@ -75,11 +83,15 @@ public class Variant implements Comparable<Variant> {
      * @return the ID of the vcf
      */
     public String getId() {
-        return id;
+        return ValueUtils.getString(id);
     }
 
     public void setId(String id) {
-        this.id = StringStore.getInstance(id);
+        this.id = ValueUtils.getValue(id, "text");
+    }
+
+    public String[] getIdArray() {
+        return ValueUtils.isArray(id) ? (String[]) id : new String[]{(String) id};
     }
 
     /**
@@ -97,7 +109,16 @@ public class Variant implements Comparable<Variant> {
      * @return the alt value
      */
     public String getAlt() {
-        return alt;
+        return ValueUtils.getString(alt);
+    }
+
+    /**
+     * Gets the alt field as an array of Strings.
+     *
+     * @return alt as <code>"A"</code> or <code>String[]{"A", "AC"}</code>
+     */
+    public Object[] getAltArray() {
+        return ValueUtils.isArray(alt) ? (Object[]) alt : new String[]{(String) alt};
     }
 
     /**
@@ -118,11 +139,11 @@ public class Variant implements Comparable<Variant> {
      *
      * @return the quality
      */
-    public double getQual() {
+    public Double getQual() {
         return qual;
     }
 
-    public void setQual(double qual) {
+    public void setQual(Double qual) {
         this.qual = qual;
     }
 
@@ -151,10 +172,10 @@ public class Variant implements Comparable<Variant> {
     public String toString() {
         return coordinate.getChrom() +
                 "\t" + coordinate.getPosition() +
-                "\t" + id +
+                "\t" + ValueUtils.getString(id) +
                 "\t" + ref +
-                "\t" + alt +
-                "\t" + String.format(Locale.ENGLISH, "%.2f", qual) +
+                "\t" + ValueUtils.getString(alt) +
+                "\t" + ValueUtils.getString(qual) +
                 "\t" + filter +
                 "\t" + info +
                 sampleInfo;
@@ -167,4 +188,5 @@ public class Variant implements Comparable<Variant> {
     public Info getInfo() {
         return info;
     }
+
 }

@@ -43,13 +43,6 @@ public class OS {
         return configPath;
     }
 
-    public static String asString(String separator, List<String> values) {
-        if (values.isEmpty()) return "";
-        final StringBuilder builder = new StringBuilder(values.get(0));
-        for (int i = 1; i < values.size(); i++) builder.append(separator).append(values.get(i));
-        return builder.toString();
-    }
-
     public static List<String> getStandardChromosomes() {
         return standardChromosomes;
     }
@@ -60,15 +53,15 @@ public class OS {
      * The framework is based on http://stackoverflow.com/a/12733172/1614775
      * But that gets it right for only one of the four cases.
      *
-     * @param aclass A class residing in the required jar.
+     * @param clazz A class residing in the required jar.
      * @return A File object for the directory in which the jar file resides.
      * During testing with NetBeans, the result is ./build/classes/,
      * which is the directory containing what will be in the jar.
      */
-    private static File getJarDir(Class aclass) {
+    private static File getJarDir(Class clazz) {
 
-        final URL url1 = getClassUrl(aclass);
-        final String extURL = toExternalUrl(aclass, url1);
+        final URL url1 = getClassUrl(clazz);
+        final String extURL = toExternalUrl(clazz, url1);
         URL url = toUrl(extURL);
         if (url == null) url = url1;
         try {

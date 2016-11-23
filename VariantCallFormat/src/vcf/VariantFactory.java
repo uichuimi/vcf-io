@@ -17,6 +17,10 @@
 
 package vcf;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.logging.Logger;
+
 /**
  * Factory to create Variants. Use method <code>createVariant(line, file)</code> to get a new Variant. Line should be
  * a String corresponding to a VCF line in a text VCF file.
@@ -24,6 +28,8 @@ package vcf;
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class VariantFactory {
+
+    private static final Set<String> warnings = new LinkedHashSet<>();
 
     /**
      * Generates a new Variant using line to populate.
@@ -40,11 +46,11 @@ public class VariantFactory {
         final String ref = v[3];
         final String alt = v[4];
         final String filter = v[6];
-        double qual;
+        Double qual;
         try {
             qual = Double.valueOf(v[5]);
         } catch (Exception ignored) {
-            qual = 0;
+            qual = null;
         }
         final Variant variant = new Variant(chrom, pos, ref, alt);
         variant.setVariantSet(variantSet);
@@ -65,31 +71,24 @@ public class VariantFactory {
     private static void setInfo(Variant variant, String field) {
         final String[] pair = field.split("=");
         final String id = pair[0];
-        Object value = getValue(pair);
-        variant.getInfo().set(id, value);
-    }
+        final String type;
+        if (variant.getVariantSet().getHeader().hasComplexHeader("INFO", id)) {
+            type = variant.getVariantSet().getHeader().getComplexHeader("INFO", id).get("Type");
+        } else {
+            type = "String";
+            final String warning = id + " not found in INFO headers, assuming Type=String";
+            if (!warnings.contains(warning)) Logger.getLogger(VariantFactory.class.getName()).warning(warning);
+            warnings.add(warning);
+        }
+        if (pair.length == 1) {
+            if (!type.equals("Flag")) {
+                Logger.getLogger(VariantFactory.class.getName()).severe(type + " INFO has no value: " + field);
+            } else variant.getInfo().set(id, true);
+        } else {
+            Object value = ValueUtils.getValue(pair[1], type);
+            variant.getInfo().set(id, value);
+        }
 
-    private static Object getValue(String[] pair) {
-        return pair.length == 1 ? Boolean.TRUE : pair[1];
-        // Integer and Double occupy more memory than a String (using StringStore) :|
-//            // Highly cost access
-//            final Map<String, String> info = variant.getVariantSet().getHeader().getComplexHeader("INFO", id);
-//            final String type = info.get("Type");
-//            final String number = info.get("Number");
-//            if (number.equals("1"))
-//                switch (type) {
-//                    case "Integer":
-//                        return Integer.valueOf(pair[1]);
-//                    case "Float":
-//                        return Double.valueOf(pair[1]);
-//                    case "Flag":
-//                        // Unreachable
-//                    case "Character":
-//                    case "String":
-//                    default:
-//                        return pair[1];
-//                }
-//            else return pair[1];
     }
 
     private static void addSamples(Variant variant, String[] line) throws VariantException {
