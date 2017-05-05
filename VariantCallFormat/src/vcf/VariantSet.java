@@ -119,14 +119,6 @@ public class VariantSet {
         }
     }
 
-    public Property<Boolean> changedProperty() {
-        return changed;
-    }
-
-    public void setChanged(boolean changed) {
-        this.changed.setValue(changed);
-    }
-
     public void addOrUpdate(Variant variant) {
         final Variant find = findVariant(variant.getChrom(), variant.getPosition());
         if (find != null) update(find, variant);
@@ -148,8 +140,8 @@ public class VariantSet {
     }
 
     private void copySampleInfo(Variant target, Variant source) {
-        final List<String> formatKeys = source.getVariantSet().getHeader().getIdList("FORMAT");
-        source.getVariantSet().header.getSamples().forEach(sample ->
+        final List<String> formatKeys = source.getVcfHeader().getIdList("FORMAT");
+        source.getVcfHeader().getSamples().forEach(sample ->
                 formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo().getFormat(sample, key))));
     }
 
@@ -167,7 +159,7 @@ public class VariantSet {
      */
     private Variant clone(Variant source) {
         final Variant target = new Variant(source.getChrom(), source.getPosition(), source.getRef(), source.getAlt());
-        target.setVariantSet(this);
+        target.setVcfHeader(getHeader());
         target.setQual(source.getQual());
         target.setId(source.getId());
         target.setFilter(source.getFilter());
@@ -177,14 +169,14 @@ public class VariantSet {
     }
 
     private void copyInfo(Variant target, Variant source) {
-        source.getVariantSet().getHeader().getIdList("INFO").forEach(key -> {
+        source.getVcfHeader().getIdList("INFO").forEach(key -> {
             if (source.getInfo().hasInfo(key)) target.getInfo().set(key, source.getInfo().get(key));
         });
     }
 
     private void copyFormat(Variant target, Variant source) {
-        final List<String> formatKeys = source.getVariantSet().getHeader().getIdList("FORMAT");
-        source.getVariantSet().header.getSamples().forEach(sample -> formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo()
+        final List<String> formatKeys = source.getVcfHeader().getIdList("FORMAT");
+        source.getVcfHeader().getSamples().forEach(sample -> formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo()
                 .getFormat(sample, key))));
     }
 

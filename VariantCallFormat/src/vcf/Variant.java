@@ -17,6 +17,7 @@
 
 package vcf;
 
+
 import utils.StringStore;
 
 /**
@@ -40,12 +41,10 @@ public class Variant implements Comparable<Variant> {
      *
      */
 
-    public static final String VOID = ".";
-    private static final String VALUE_SEPARATOR = ",";
     private final Coordinate coordinate;
     private final SampleInfo sampleInfo;
     private final Info info;
-    private VariantSet variantSet;
+    private VcfHeader vcfHeader;
     private String ref;
     private Object alt;
     private String filter;
@@ -53,7 +52,7 @@ public class Variant implements Comparable<Variant> {
     private Object id;
 
     /**
-     * Alt may
+     * Alt may be a String separated by ,
      *
      * @param chrom
      * @param position
@@ -64,6 +63,15 @@ public class Variant implements Comparable<Variant> {
         this.coordinate = new Coordinate(chrom, position);
         this.ref = StringStore.getInstance(ref);
         this.alt = ValueUtils.getValue(alt, "string");
+        sampleInfo = new SampleInfo(this);
+        info = new Info();
+    }
+
+    public Variant(String chrom, int position, String ref, String alt, VcfHeader header) {
+        this.coordinate = new Coordinate(chrom, position);
+        this.ref = StringStore.getInstance(ref);
+        this.alt = ValueUtils.getValue(alt, "string");
+        this.vcfHeader = header;
         sampleInfo = new SampleInfo(this);
         info = new Info();
     }
@@ -160,12 +168,12 @@ public class Variant implements Comparable<Variant> {
         this.filter = StringStore.getInstance(filter);
     }
 
-    public VariantSet getVariantSet() {
-        return variantSet;
+    public VcfHeader getVcfHeader() {
+        return vcfHeader;
     }
 
-    public void setVariantSet(VariantSet variantSet) {
-        this.variantSet = variantSet;
+    public void setVcfHeader(VcfHeader vcfHeader) {
+        this.vcfHeader = vcfHeader;
     }
 
     @Override
@@ -176,7 +184,7 @@ public class Variant implements Comparable<Variant> {
                 "\t" + ref +
                 "\t" + ValueUtils.getString(alt) +
                 "\t" + ValueUtils.getString(qual) +
-                "\t" + filter +
+                "\t" + ValueUtils.getString(filter) +
                 "\t" + info +
                 sampleInfo;
     }

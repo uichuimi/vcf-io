@@ -27,8 +27,8 @@ import java.util.List;
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class Info {
-    private static String[] keys = new String[0];
-    private Object[] vals = new Object[0];
+    private static String[] keys = {};
+    private Object[] vals = {};
 
     public void set(String key, Object value) {
         int index = updateKeys(key);
@@ -37,8 +37,27 @@ public class Info {
 
     private void insertValue(Object value, int index) {
         if (vals.length < index + 1) resizeVals(index + 1);
-        if (value.getClass().equals(String.class)) value = StringStore.getInstance((String) value);
+        value = pack(value);
+        if (value.equals(".")) return;
         vals[index] = value;
+    }
+
+    /**
+     * Retrieves the StringStore value for String and String[] values.
+     *
+     * @param value any value
+     * @return the StringStore value if it is a String or String[]. The same value if any other.
+     */
+    private Object pack(Object value) {
+        if (value.getClass().equals(String.class)) {
+            value = StringStore.getInstance((String) value);
+        } else if (Object[].class.isAssignableFrom(value.getClass())) {
+            final Object[] array = (Object[]) value;
+            if (String.class.isAssignableFrom(array[0].getClass())) {
+                for (int i = 0; i < array.length; i++) array[i] = StringStore.getInstance((String) array[i]);
+            }
+        }
+        return value;
     }
 
     private int updateKeys(String key) {

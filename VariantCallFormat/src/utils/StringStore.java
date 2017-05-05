@@ -18,7 +18,6 @@
 package utils;
 
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 /**
  * Too many Strings on your application? Most of them are repeated constantly? StringStore ensures you that a String
@@ -29,7 +28,7 @@ import java.util.logging.Logger;
  * <code>myString = StringStore.getString(myString)</code>
  * <p>
  * StringStore should be used only with non-mutable Strings. If you modify one String, others pointing to the same
- * object will be also being modified.
+ * object will be also modified.
  *
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
@@ -52,13 +51,11 @@ public class StringStore {
      *
      * @param value query value
      * @return an already stored String that is equals to value, or value if no equal String is found.
+     * @throws NullPointerException if value is null
      */
-    public static synchronized String getInstance(String value) {
-        if (value == null) {
-            Logger.getLogger(StringStore.class.getName()).severe("Entering null in StringStore is " +
-                    "illegal");
-//            value = VariantSet.EMPTY_VALUE;
-        }
+    public static synchronized String getInstance(String value) throws NullPointerException {
+        if (value == null)
+            throw new NullPointerException("Entering null in " + StringStore.class.getSimpleName() + " is illegal");
         final int index = Arrays.binarySearch(LIST, 0, size, value);
         if (index >= 0) return LIST[index];
         insert(value, -index - 1);

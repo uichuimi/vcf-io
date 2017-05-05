@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public class InfoTest {
 
-    final Info info = new Info();
+    private final Info info = new Info();
     private final Map<String, Object> someInfo = new HashMap<>();
 
 

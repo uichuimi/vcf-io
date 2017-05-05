@@ -4,7 +4,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import vcf.Variant;
 import vcf.VariantSet;
-import vcf.VariantSetFactory;
+import vcf.io.VariantSetFactory;
 import vcf.VcfHeader;
 
 import java.io.File;

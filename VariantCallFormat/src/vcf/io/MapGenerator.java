@@ -15,11 +15,10 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vcf;
+package vcf.io;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Returns a LinkedHashMap with the content of the line parsed. So "ID=AC,Number=A,Type=Integer"
@@ -99,7 +98,6 @@ public class MapGenerator {
 
     private static void putQuotedValue() {
         // If isKey is false, something went wrong
-        // Text in quotes
         // token is the text between quotes
         // place cursor at next position after end quote
         int endQuotePosition = line.indexOf(QUOTE, cursor + 1);

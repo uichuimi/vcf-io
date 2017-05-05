@@ -17,6 +17,8 @@
 
 package vcf;
 
+import vcf.io.MapGenerator;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -193,10 +195,10 @@ public class VcfHeader {
      *
      * @param type type of header. One of FILTER, INFO, FORMAT, contig, SAMPLE, PEDIGREE, ALT
      * @param map  type=value with the content of the header
-     * @throws VcfException when header is not added due to malformed header: id est, required type no present or
-     *                      inconsistency in values
+     * @throws VariantException when header is not added due to malformed header: id est, required type no present or
+     *                          inconsistency in values
      */
-    public void addComplexHeader(String type, Map<String, String> map) {
+    public void addComplexHeader(String type, Map<String, String> map) throws VariantException {
         createTypeMap(type);
         checkRequiredKeys(type, map);
         final Map<String, String> map1 = getComplexHeader(type, map.get("ID"));
@@ -213,10 +215,10 @@ public class VcfHeader {
         if (!complexHeaders.containsKey(type)) complexHeaders.put(type, new ArrayList<>());
     }
 
-    private void checkRequiredKeys(String type, Map<String, String> map) {
+    private void checkRequiredKeys(String type, Map<String, String> map) throws VariantException {
         if (REQUIRED_KEYS.containsKey(type))
             for (String key : REQUIRED_KEYS.get(type))
-                if (!map.containsKey(key)) throw new VcfException("INFO headers must contain '" + key + "' key");
+                if (!map.containsKey(key)) throw new VariantException("INFO headers must contain '" + key + "' key");
     }
 
     public void addSimpleHeader(String key, String value) {

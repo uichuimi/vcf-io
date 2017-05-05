@@ -20,9 +20,9 @@ package vcf;
 /**
  * Created by uichuimi on 3/06/16.
  */
-public class VariantException extends Exception {
+public class VariantException extends RuntimeException {
 
-    VariantException(String message) {
+    public VariantException(String message) {
         super(message);
     }
 }

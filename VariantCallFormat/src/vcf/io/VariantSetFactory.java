@@ -15,7 +15,11 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vcf;
+package vcf.io;
+
+import vcf.VariantException;
+import vcf.VariantSet;
+import vcf.VcfHeader;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,7 +52,7 @@ public class VariantSetFactory {
         reader.lines().forEach(line -> {
             if (line.startsWith("#")) addHeader(variantSet.getHeader(), line);
             else try {
-                variantSet.getVariants().add(VariantFactory.createVariant(line, variantSet));
+                variantSet.getVariants().add(VariantFactory.createVariant(line, variantSet.getHeader()));
             } catch (VariantException e) {
                 e.printStackTrace();
             }
@@ -71,7 +75,11 @@ public class VariantSetFactory {
 
     private static void addComplexHeader(VcfHeader header, String type, String group) {
         final Map<String, String> map = MapGenerator.parse(group);
-        header.addComplexHeader(type, map);
+        try {
+            header.addComplexHeader(type, map);
+        } catch (VariantException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void addFormatLine(VcfHeader header, String line) {
@@ -88,7 +96,12 @@ public class VariantSetFactory {
     public static VcfHeader readHeader(File file) {
         final VcfHeader header = new VcfHeader();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            reader.lines().filter(line -> line.startsWith("#")).forEach(line -> addHeader(header, line));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("#")) addHeader(header, line);
+                else break;
+            }
+//            reader.lines().filter(line -> line.startsWith("#")).forEach(line -> addHeader(header, line));
         } catch (Exception e) {
             e.printStackTrace();
         }

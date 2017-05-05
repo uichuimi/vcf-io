@@ -17,24 +17,9 @@
 
 package utils;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.Assert.*;
-
 /**
  * Created by uichuimi on 25/05/16.
  */
 public class OSTest {
-    @Test
-    public void asString() throws Exception {
-        final List<String> values = Arrays.asList("a", "b", "c");
-        Assert.assertEquals("a,b,c", OS.asString(",", values));
-        Assert.assertEquals("a", OS.asString(";", Collections.singletonList("a")));
-    }
 
 }

@@ -29,7 +29,7 @@ import java.util.TreeMap;
 public class VariantSetTest {
 
 
-    @Test(expected = VcfException.class)
+    @Test(expected = VariantException.class)
     public void testAddIncompleteInfoHeader() {
         final VariantSet variantSet = new VariantSet();
         final Map<String, String> map = new TreeMap<>();
@@ -54,7 +54,7 @@ public class VariantSetTest {
         Assert.assertEquals(1, variantSet.getHeader().getComplexHeaders().get("INFO").size());
     }
 
-    @Test(expected = VcfException.class)
+    @Test(expected = VariantException.class)
     public void testAddIncompleteFormatHeader() {
         final VariantSet variantSet = new VariantSet();
         final Map<String, String> map = new TreeMap<>();

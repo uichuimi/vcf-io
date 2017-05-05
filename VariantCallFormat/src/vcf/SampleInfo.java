@@ -27,23 +27,54 @@ import java.util.stream.Collectors;
  */
 public class SampleInfo {
 
+    private static Map<String, Integer> sampleIndex;
     /**
-     * A matrix containing FORMAT columns. To access a cell: <strong>content.get(sample).get(format)</strong>.
+     * A matrix containing FORMAT columns. To access a cell: <strong>content[sampleIndex.get(sample)].get(format)
+     * </strong>.
      */
-    private Map<String, Map<String, Object>> content = new LinkedHashMap<>();
+    private LinkedHashMap<String, Object>[] content = new LinkedHashMap[]{};
     private Variant variant;
 
     SampleInfo(Variant variant) {
         this.variant = variant;
+        if (variant.getVcfHeader() != null) {
+            final List<String> samples = variant.getVcfHeader().getSamples();
+            if (sampleIndex == null) {
+                sampleIndex = new HashMap<>();
+                int i = 0;
+                for (String sample : samples) sampleIndex.put(sample, i++);
+            }
+            content = new LinkedHashMap[samples.size()];
+            for (int i = 0; i < samples.size(); i++)
+                content[i] = new LinkedHashMap<>();
+        }
     }
 
     public void setFormat(String sample, String key, String value) {
-//        sample = StringStore.getInstance(sample);
-        if (!content.containsKey(sample)) content.put(StringStore.getInstance(sample), new LinkedHashMap<>());
-        final String type = variant.getVariantSet().getHeader().hasComplexHeader("FORMAT", key)
-                ? variant.getVariantSet().getHeader().getComplexHeader("FORMAT", key).get("Type")
+        Integer index = getSampleIndex(sample);
+        if (index == null) return;
+        while (index >= content.length) increaseContent();
+        if (content[index] == null) content[index] = new LinkedHashMap<>();
+        final LinkedHashMap<String, Object> map = content[index];
+        final String type = variant.getVcfHeader().hasComplexHeader("FORMAT", key)
+                ? variant.getVcfHeader().getComplexHeader("FORMAT", key).get("Type")
                 : "String";
-        content.get(sample).put(StringStore.getInstance(key), ValueUtils.getValue(value, type));
+        map.put(StringStore.getInstance(key), ValueUtils.getValue(value, type));
+    }
+
+    private Integer getSampleIndex(String sample) {
+        Integer index = sampleIndex.get(sample);
+        if (index == null && variant.getVcfHeader().getSamples().contains(sample)) {
+            sampleIndex.put(sample, sampleIndex.size());
+            index = sampleIndex.size() - 1;
+        }
+        return index;
+    }
+
+    private void increaseContent() {
+        final LinkedHashMap[] maps = new LinkedHashMap[content.length + 1];
+        System.arraycopy(content, 0, maps, 0, content.length);
+        content = maps;
     }
 
     /**
@@ -55,9 +86,15 @@ public class SampleInfo {
      * @return the value of key for the given sample or VariantSet.EMPTY_VALUE if not present
      */
     public String getFormat(String sample, String key) {
-        return content.containsKey(sample)
-                ? ValueUtils.getString(content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE))
-                : VariantSet.EMPTY_VALUE;
+        final Integer index = getSampleIndex(sample);
+        if (index == null) return VariantSet.EMPTY_VALUE;
+        if (content == null || index >= content.length) return VariantSet.EMPTY_VALUE;
+        final LinkedHashMap<String, Object> map = content[index];
+        if (content[index] == null) return VariantSet.EMPTY_VALUE;
+        return ValueUtils.getString(map.getOrDefault(key, VariantSet.EMPTY_VALUE));
+//        return content.containsKey(sample)
+//                ? ValueUtils.getString(content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE))
+//                : VariantSet.EMPTY_VALUE;
     }
 
     /**
@@ -69,15 +106,19 @@ public class SampleInfo {
      * @return the value of key for the given sample or VariantSet.EMPTY_VALUE if not present
      */
     public Object getRichFormat(String sample, String key) {
-        return content.containsKey(sample) ? content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE) : VariantSet.EMPTY_VALUE;
+        final Integer index = getSampleIndex(sample);
+        if (index == null) return VariantSet.EMPTY_VALUE;
+        final LinkedHashMap<String, Object> map = content[index];
+        return map.getOrDefault(key, VariantSet.EMPTY_VALUE);
+//        return content.containsKey(sample) ? content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE) : VariantSet.EMPTY_VALUE;
     }
 
     @Override
     public String toString() {
-        if (content.isEmpty()) return "";
+//        if (content.isEmpty()) return "";
         final List<String> usedTags = getUsedTags();
         if (usedTags.isEmpty()) return "";
-        final List<String> samples = variant.getVariantSet().getHeader().getSamples();
+        final List<String> samples = variant.getVcfHeader().getSamples();
         final String FORMAT = String.join(":", usedTags);
         final StringBuilder builder = new StringBuilder("\t").append(FORMAT);
         for (String sample : samples) {
@@ -91,11 +132,13 @@ public class SampleInfo {
 
     private List<String> getUsedTags() {
         final Set<String> usedTags = new LinkedHashSet<>();
-        content.forEach((sample, map) ->
+        for (LinkedHashMap<String, Object> map : content) {
+            if (map != null)
                 map.forEach((tag, value) -> {
                     if (value != null && !value.equals("."))
                         usedTags.add(tag);
-                }));
+                });
+        }
         return new ArrayList<>(usedTags);
     }
 
@@ -127,6 +170,9 @@ public class SampleInfo {
      * @param name sample name
      */
     public void removeSample(String name) {
-        content.remove(name);
+        final Integer index = getSampleIndex(name);
+        if (index == null) return;
+        content[index] = null;
+//        content.remove(name);
     }
 }

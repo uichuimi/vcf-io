@@ -23,8 +23,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by uichuimi on 28/04/16.
@@ -32,8 +30,6 @@ import java.util.List;
 public class OS {
 
     private final static File configPath;
-    private static List<String> standardChromosomes = Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-            "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "Y", "MT");
 
     static {
         configPath = new File(getJarDir(OS.class), "config");
@@ -42,11 +38,6 @@ public class OS {
     public static File getConfigPath() {
         return configPath;
     }
-
-    public static List<String> getStandardChromosomes() {
-        return standardChromosomes;
-    }
-
 
     /**
      * Compute the absolute file path to the jar file.

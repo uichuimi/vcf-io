@@ -1,4 +1,7 @@
-package vcf;
+package vcf.io;
+
+import vcf.Variant;
+import vcf.VcfHeader;
 
 import java.io.*;
 
@@ -11,7 +14,7 @@ import java.io.*;
 public class VariantSetWriter implements AutoCloseable {
 
     private final BufferedWriter writer;
-    private VariantSet variantSet;
+    private VcfHeader vcfHeader;
     private boolean headerWritten;
 
 
@@ -38,7 +41,7 @@ public class VariantSetWriter implements AutoCloseable {
     }
 
     public void setHeader(VcfHeader header) {
-        variantSet = new VariantSet(header);
+        vcfHeader = header;
     }
 
     /**
@@ -48,7 +51,7 @@ public class VariantSetWriter implements AutoCloseable {
      */
     public void writeHeader() throws IOException {
         if (!headerWritten) {
-            writer.write(variantSet.getHeader().toString());
+            writer.write(vcfHeader.toString());
             writer.newLine();
             headerWritten = true;
         }
@@ -63,16 +66,17 @@ public class VariantSetWriter implements AutoCloseable {
      */
     public void write(Variant variant) throws IOException {
         writeHeader();
-        final VariantSet vs = variant.getVariantSet();
+        final VcfHeader vs = variant.getVcfHeader();
         // Temporarily change the VariantSet of the variant to correctly print INFO and FORMAT values
-        variant.setVariantSet(this.variantSet);
+        variant.setVcfHeader(this.vcfHeader);
         writer.write(variant.toString());
         writer.newLine();
-        variant.setVariantSet(vs);
+        variant.setVcfHeader(vs);
     }
 
     @Override
     public void close() throws Exception {
+        writer.flush();
         writer.close();
     }
 }

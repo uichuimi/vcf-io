@@ -1,4 +1,6 @@
-package vcf;
+package vcf.io;
+
+import vcf.*;
 
 import java.io.*;
 import java.util.Iterator;
@@ -14,12 +16,12 @@ import java.util.stream.StreamSupport;
 public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 
 
-    private final VariantSet container;
+    private final VcfHeader header;
     private final BufferedReader reader;
     private Variant nextVariant;
 
     public VariantSetReader(File file) throws FileNotFoundException {
-        container = new VariantSet(VariantSetFactory.readHeader(file));
+        header = VariantSetFactory.readHeader(file);
         reader = new BufferedReader(new FileReader(file));
     }
 
@@ -34,7 +36,7 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
     }
 
     public VcfHeader header() {
-        return container.getHeader();
+        return header;
     }
 
     @Override
@@ -45,7 +47,7 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
                 String line = reader.readLine();
                 while (line != null && line.startsWith("#")) line = reader.readLine();
                 if (line == null) return false;
-                nextVariant = VariantFactory.createVariant(line, container);
+                nextVariant = VariantFactory.createVariant(line, header);
                 return true;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);

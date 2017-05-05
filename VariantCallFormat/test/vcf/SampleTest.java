@@ -17,17 +17,14 @@
 
 package vcf;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.io.File;
+import org.junit.Ignore;
 
 /**
  * Created by uichuimi on 24/05/16.
  */
 public class SampleTest {
 
-    @Test
+    @Ignore
     public void test() {
 //        final VariantSet file = VariantSetFactory.createFromFile(new File("test/files/Sample2.vcf"));
 //        final Sample sample = new Sample(file, file.getHeader().getSamples().get(0));

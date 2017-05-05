@@ -1,37 +1,18 @@
-/*
- * Copyright (c) UICHUIMI 2016
- *
- * This file is part of VariantCallFormat.
- *
- * VariantCallFormat is free software: you can redistribute it and/or modify it under the terms of the
- * GNU General Public License as published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
- *
- * VariantCallFormat is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with Foobar.
- * If not, see <http://www.gnu.org/licenses/>.
- */
-
 package vcf.combine;
 
 import de.saxsys.mvvmfx.testingutils.jfxrunner.JfxRunner;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import vcf.Sample;
 import vcf.VariantSet;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Created by uichuimi on 25/05/16.
+ * Created by uichuimi on 12/07/16.
  */
 @RunWith(JfxRunner.class)
 public class VariantCombinerTaskTest {
@@ -42,11 +23,9 @@ public class VariantCombinerTaskTest {
     private final static File SP030_MIST = new File("test/files/SP030.mist");
     private final static File SP072_MIST = new File("test/files/SP072.mist");
     private final static File SP077_MIST = new File("test/files/SP077.mist");
-    private static final File DA_VCF = new File("test/files/DA.vcf");
-    private static final File DA_MIST = new File("test/files/DA.mist");
 
     @Test
-    public void testJoin() {
+    public void testWithJfxPlatform() {
         final List<Sample> samples = new ArrayList<>();
         final Sample sp030 = new Sample(SP030_VCF, "SP030");
         sp030.setMistFile(SP030_MIST);
@@ -57,87 +36,13 @@ public class VariantCombinerTaskTest {
         final Sample sp077 = new Sample(SP077_VCF, "SP077");
         sp030.setMistFile(SP077_MIST);
         samples.add(sp077);
-        final VariantSet variantSet = testCombine(samples, false, 94);
-        variantSet.save(new File("SP_30_72_77_sum.vcf"));
-    }
-
-    @Test
-    public void testCommonWithoutMist() {
-        final List<Sample> samples = new ArrayList<>();
-        final Sample sp030 = new Sample(SP030_VCF, "SP030");
-        samples.add(sp030);
-        final Sample sp072 = new Sample(SP072_VCF, "SP072");
-        samples.add(sp072);
-        final Sample sp077 = new Sample(SP077_VCF, "SP077");
-        samples.add(sp077);
-        final VariantSet variantSet = testCombine(samples, true, 4);
-        variantSet.save(new File("SP_30_72_77_common.vcf"));
-    }
-
-    @Test
-    public void testCommonWithMist() {
-        final List<Sample> samples = new ArrayList<>();
-        final Sample sp030 = new Sample(SP030_VCF, "SP030");
-        sp030.setMistFile(SP030_MIST);
-        samples.add(sp030);
-        final Sample sp072 = new Sample(SP072_VCF, "SP072");
-        sp072.setMistFile(SP072_MIST);
-        samples.add(sp072);
-        final Sample sp077 = new Sample(SP077_VCF, "SP077");
-        sp077.setMistFile(SP077_MIST);
-        samples.add(sp077);
-        final VariantSet variantSet = testCombine(samples, true, 13);
-        variantSet.save(new File("SP_30_72_77_common_mist.vcf"));
-
-    }
-
-    @Test
-    public void testWithControlAndMist() {
-        final List<Sample> samples = new ArrayList<>();
-        final Sample sp030 = new Sample(SP030_VCF, "SP030");
-        sp030.setMistFile(SP030_MIST);
-        samples.add(sp030);
-        final Sample sp072 = new Sample(SP072_VCF, "SP072");
-        sp072.setMistFile(SP072_MIST);
-        samples.add(sp072);
-        final Sample sp077 = new Sample(SP077_VCF, "SP077");
-        sp077.setMistFile(SP077_MIST);
-        samples.add(sp077);
-        final Sample da = new Sample(DA_VCF, "DA");
-        da.setMistFile(DA_MIST);
-        da.setStatus(Sample.Status.UNAFFECTED);
-        samples.add(da);
-        final VariantSet variantSet = testCombine(samples, true, 7);
-        variantSet.save(new File("SP_30_72_77_common_mist_minus_DA.vcf"));
-    }
-
-    @Test
-    public void testWithControlWithoutMist() {
-        final List<Sample> samples = new ArrayList<>();
-        final Sample sp030 = new Sample(SP030_VCF, "SP030");
-        samples.add(sp030);
-        final Sample sp072 = new Sample(SP072_VCF, "SP072");
-        samples.add(sp072);
-        final Sample sp077 = new Sample(SP077_VCF, "SP077");
-        samples.add(sp077);
-        final Sample da = new Sample(DA_VCF, "DA");
-        da.setStatus(Sample.Status.UNAFFECTED);
-        samples.add(da);
-        final VariantSet variantSet = testCombine(samples, true, 3);
-        variantSet.save(new File("SP_30_72_77_common_minus_DA.vcf"));
-    }
-
-    private VariantSet testCombine(List<Sample> samples, boolean remove, long size) {
-        final VariantCombinerTask combinerTask = new VariantCombinerTask(samples, remove);
-        combinerTask.run();
+        final VariantCombinerTask task = new VariantCombinerTask(samples, false);
         try {
-            final VariantSet variantSet = combinerTask.get();
-            Assert.assertEquals(size, variantSet.getVariants().size());
-            return variantSet;
+            task.run();
+            final VariantSet variantSet = task.get();
+            Assert.assertEquals(94, variantSet.getVariants().size());
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
-        return new VariantSet();
     }
-
 }

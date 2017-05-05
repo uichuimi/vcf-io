@@ -1,35 +1,33 @@
 package vcf;
 
-import utils.OS;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by uichuimi on 4/10/16.
  */
 public class Coordinate implements Comparable<Coordinate> {
 
+    private final static List<String> CHROMOSOMES = new ArrayList<>(Arrays.asList("1", "2", "3", "4", "5", "6",
+            "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "Y", "MT"));
 
     private final int chromIndex;
-    private final String chrom;
     private final int position;
 
     public Coordinate(String chrom, int position) {
-        this.chrom = chrom;
         this.position = position;
         this.chromIndex = getChromIndex(chrom);
     }
 
     private int getChromIndex(String chrom) {
-        return OS.getStandardChromosomes().indexOf(chrom);
+        if (!CHROMOSOMES.contains(chrom)) CHROMOSOMES.add(chrom);
+        return CHROMOSOMES.indexOf(chrom);
     }
 
     @Override
     public int compareTo(Coordinate other) {
-        // Variants with no standard chromosome goes to the end
-        if (chromIndex != -1 && other.chromIndex == -1) return -1;
-        if (chromIndex == -1 && other.chromIndex != -1) return 1;
-        int compare = (chromIndex == -1)
-                ? chrom.compareTo(other.chrom) // Non-standard -> alphabetic order
-                : Integer.compare(chromIndex, other.chromIndex); // Standard
+        final int compare = Integer.compare(chromIndex, other.chromIndex);
         return compare == 0 ? Integer.compare(position, other.position) : compare;
     }
 
@@ -40,11 +38,11 @@ public class Coordinate implements Comparable<Coordinate> {
 
     @Override
     public int hashCode() {
-        return chrom.hashCode() + Integer.hashCode(position);
+        return Integer.hashCode(chromIndex) + Integer.hashCode(position);
     }
 
     public String getChrom() {
-        return chrom;
+        return CHROMOSOMES.get(chromIndex);
     }
 
     public int getPosition() {
@@ -53,6 +51,6 @@ public class Coordinate implements Comparable<Coordinate> {
 
     @Override
     public String toString() {
-        return chrom + ":" + position;
+        return getChrom() + ":" + position;
     }
 }

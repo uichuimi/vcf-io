@@ -1,8 +1,9 @@
 package vcf;
 
-import utils.StringStore;
-
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -12,6 +13,8 @@ public class ValueUtils {
 
     private static final String NULL_VALUE = ".";
     private static final String VALUE_SEPARATOR = ",";
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.###",
+            DecimalFormatSymbols.getInstance(Locale.US));
 
     /**
      * Get the most precise value for the String passed by argument.
@@ -57,7 +60,7 @@ public class ValueUtils {
      * </table>
      * <p>
      * If type is not recognized, String or String[] will be returned.
-     *
+     * <p>
      * An array is returned when sep is found in value. value is split by sep and each element is converted with
      * <code>getValue()</code>
      *
@@ -71,25 +74,30 @@ public class ValueUtils {
             return Arrays.stream(value.split(sep))
                     .map(val -> getValue(val, type, sep, nullValue)).collect(Collectors.toList()).toArray();
         else
-            switch (type.toLowerCase()) {
-                case "integer":
-                case "int":
-                    return Integer.valueOf(value);
-                case "long":
-                    return Long.valueOf(value);
-                case "float":
-                case "double":
-                    return Double.valueOf(value);
-                case "boolean":
-                case "flag":
-                    return value.matches("(?iu)yes|true|ok");
-                case "string":
-                case "text":
-                case "character":
-                case "char":
-                default:
-                    return StringStore.getInstance(value);
+            try {
+                switch (type.toLowerCase()) {
+                    case "integer":
+                    case "int":
+                        return Integer.valueOf(value);
+                    case "long":
+                        return Long.valueOf(value);
+                    case "float":
+                    case "double":
+                        return Double.valueOf(value);
+                    case "boolean":
+                    case "flag":
+                        return value.matches("(?iu)yes|true|ok");
+                    case "string":
+                    case "text":
+                    case "character":
+                    case "char":
+                    default:
+                        return value;
+                }
+            } catch (Exception ex) {
+                return value;
             }
+
     }
 
     /**
@@ -107,6 +115,8 @@ public class ValueUtils {
         return value == null ? NULL_VALUE
                 : isArray(value)
                 ? String.join(sep, Arrays.stream((Object[]) value).map(String::valueOf).collect(Collectors.toList()))
+                : Double.class.isAssignableFrom(value.getClass())
+                ? DECIMAL_FORMAT.format(value)
                 : String.valueOf(value);
     }
 
