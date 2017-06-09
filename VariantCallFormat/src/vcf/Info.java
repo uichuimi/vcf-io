@@ -42,6 +42,11 @@ public class Info {
         vals[index] = value;
     }
 
+    public void remove(String key) {
+        for (int i = 0; i < keys.length; i++)
+            if (keys[i].equals(key) && vals.length > i) vals[i] = null;
+    }
+
     /**
      * Retrieves the StringStore value for String and String[] values.
      *
@@ -54,7 +59,8 @@ public class Info {
         } else if (Object[].class.isAssignableFrom(value.getClass())) {
             final Object[] array = (Object[]) value;
             if (String.class.isAssignableFrom(array[0].getClass())) {
-                for (int i = 0; i < array.length; i++) array[i] = StringStore.getInstance((String) array[i]);
+                for (int i = 0; i < array.length; i++)
+                    array[i] = StringStore.getInstance((String) array[i]);
             }
         }
         return value;
@@ -88,7 +94,8 @@ public class Info {
     }
 
     public Object get(String key) {
-        for (int i = 0; i < keys.length; i++) if (keys[i].equals(key) && vals.length > i) return vals[i];
+        for (int i = 0; i < keys.length; i++)
+            if (keys[i].equals(key) && vals.length > i) return vals[i];
         return null;
     }
 
@@ -106,7 +113,8 @@ public class Info {
     }
 
     public boolean hasInfo(String key) {
-        for (int i = 0; i < keys.length; i++) if (keys[i].equals(key)) return vals.length > i && vals[i] != null;
+        for (int i = 0; i < keys.length; i++)
+            if (keys[i].equals(key)) return vals.length > i && vals[i] != null;
         return false;
     }
 
