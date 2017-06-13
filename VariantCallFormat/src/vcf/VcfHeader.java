@@ -76,7 +76,8 @@ public class VcfHeader {
         final String key = metaLine.group(1);
         final String value = metaLine.group(2);
         final Matcher contentMatcher = META_LINE_CONTENT.matcher(value);
-        if (contentMatcher.matches()) addComplexHeader(key, contentMatcher.group(1));
+        if (contentMatcher.matches())
+            addComplexHeader(key, contentMatcher.group(1));
         else addSingleHeader(key, value);
     }
 
@@ -90,7 +91,8 @@ public class VcfHeader {
     }
 
     private boolean headerContainsId(String key, List<Map<String, String>> headers) {
-        for (Map<String, String> header : headers) if (header.get("ID").equals(key)) return true;
+        for (Map<String, String> header : headers)
+            if (header.get("ID").equals(key)) return true;
         return false;
     }
 
@@ -103,7 +105,8 @@ public class VcfHeader {
         if (matcher.matches()) {
             final String[] split = line.split("\t");
             int numberOfSamples = split.length - 9;
-            if (numberOfSamples > 0) for (int i = 0; i < numberOfSamples; i++) samples.add(split[i + 9]);
+            if (numberOfSamples > 0) for (int i = 0; i < numberOfSamples; i++)
+                samples.add(split[i + 9]);
 //            if (numberOfSamples > 0) samples.addAll(Arrays.asList(split).subList(9, numberOfSamples));
         }
     }
@@ -126,10 +129,12 @@ public class VcfHeader {
         simpleHeaders.entrySet().stream()
                 .filter(entry -> !entry.getKey().equals("fileformat"))
                 .forEach(entry -> {
-                    builder.append("##").append(entry.getKey()).append("=");
-                    if (entry.getValue().contains(" ")) builder.append("\"").append(entry.getValue()).append("\"");
-                    else builder.append(entry.getValue());
-                    builder.append(System.lineSeparator());
+                    builder.append("##").append(entry.getKey())
+                            .append("=")
+                            .append(entry.getValue())
+                            .append(System.lineSeparator());
+//                    if (entry.getValue().contains(" ")) builder.append("\"").append(entry.getValue()).append("\"");
+//                    builder.append(System.lineSeparator());
                 });
     }
 
@@ -140,10 +145,10 @@ public class VcfHeader {
                     final AtomicBoolean first = new AtomicBoolean(true);
                     if (REQUIRED_KEYS.containsKey(type))
                         REQUIRED_KEYS.get(type).forEach(requiredKey ->
-                                appendHeaderKey(builder, first, toString(requiredKey, map.get(requiredKey))));
+                                appendHeaderKey(builder, first, stringifyComplex(requiredKey, map.get(requiredKey))));
                     map.forEach((key, value) -> {
                         if (!REQUIRED_KEYS.containsKey(type) || !REQUIRED_KEYS.get(type).contains(key))
-                            appendHeaderKey(builder, first, toString(key, value));
+                            appendHeaderKey(builder, first, stringifyComplex(key, value));
                     });
                     builder.append(">").append(System.lineSeparator());
                 }));
@@ -154,10 +159,11 @@ public class VcfHeader {
         else builder.append(",").append(text);
     }
 
-    private String toString(String key, String value) {
-        final String v = (key.equals("Description")
+    private String stringifyComplex(String key, String value) {
+        final String v = !(value.startsWith("\"") && value.endsWith("\""))
+                && ((key.equals("Description")
                 || value.contains(" ")
-                || value.contains(",")) ? "\"" + value + "\""
+                || value.contains(","))) ? "\"" + value + "\""
                 : value;
         return key + "=" + v;
     }
@@ -203,7 +209,8 @@ public class VcfHeader {
         checkRequiredKeys(type, map);
         final Map<String, String> map1 = getComplexHeader(type, map.get("ID"));
         if (map1 == null) {
-            if (type.equals("FORMAT") && map.get("ID").equals("GT")) complexHeaders.get(type).add(0, map);
+            if (type.equals("FORMAT") && map.get("ID").equals("GT"))
+                complexHeaders.get(type).add(0, map);
             else complexHeaders.get(type).add(map);
         } else {
             map.forEach(map1::put);
@@ -212,13 +219,15 @@ public class VcfHeader {
     }
 
     private void createTypeMap(String type) {
-        if (!complexHeaders.containsKey(type)) complexHeaders.put(type, new ArrayList<>());
+        if (!complexHeaders.containsKey(type))
+            complexHeaders.put(type, new ArrayList<>());
     }
 
     private void checkRequiredKeys(String type, Map<String, String> map) throws VariantException {
         if (REQUIRED_KEYS.containsKey(type))
             for (String key : REQUIRED_KEYS.get(type))
-                if (!map.containsKey(key)) throw new VariantException("INFO headers must contain '" + key + "' key");
+                if (!map.containsKey(key))
+                    throw new VariantException("INFO headers must contain '" + key + "' key");
     }
 
     public void addSimpleHeader(String key, String value) {

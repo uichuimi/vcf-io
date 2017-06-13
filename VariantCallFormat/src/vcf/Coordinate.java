@@ -12,7 +12,7 @@ public class Coordinate implements Comparable<Coordinate> {
     private final static List<String> CHROMOSOMES = new ArrayList<>(Arrays.asList("1", "2", "3", "4", "5", "6",
             "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "Y", "MT"));
 
-    private final int chromIndex;
+    private int chromIndex;
     private final int position;
 
     public Coordinate(String chrom, int position) {
@@ -52,5 +52,9 @@ public class Coordinate implements Comparable<Coordinate> {
     @Override
     public String toString() {
         return getChrom() + ":" + position;
+    }
+
+    public void setContig(String contig) {
+        this.chromIndex = getChromIndex(contig);
     }
 }

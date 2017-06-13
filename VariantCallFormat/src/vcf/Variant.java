@@ -160,6 +160,14 @@ public class Variant implements Comparable<Variant> {
         return coordinate.compareTo(variant.coordinate);
     }
 
+    /**
+     * Changes the contig. Be sure you explicitly reorder the variants in your
+     * dataset after changing the name of the contigs.
+     * @param chrom
+     */
+    public void setChrom(String chrom) {
+        coordinate.setContig(chrom);
+    }
     public String getFilter() {
         return filter;
     }
