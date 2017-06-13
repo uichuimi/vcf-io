@@ -32,7 +32,7 @@ import java.util.*;
 /**
  * Stores in memory a Vcf file data. Variant Call Format (VCF) Version 4.2.
  *
- * @author Lorente Arencibia, Pascual <pasculorente@gmail.com>
+ * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class VariantSet {
 

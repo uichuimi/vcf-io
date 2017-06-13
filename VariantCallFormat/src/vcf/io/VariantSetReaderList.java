@@ -20,8 +20,7 @@ import java.util.stream.IntStream;
  * Sample code:
  * </p>
  * <code>
- * <pre>
- * try (VariantSetReaderList readerList = new VariantSetReaderList(new LinkedList<>(files))) {
+ * try (VariantSetReaderList readerList = new VariantSetReaderList(new LinkedList&lt;&gt;(files))) {
  *   while (readerList.hasNext()) {
  *     final List&lt;Variant&gt; variants = readerList.next();
  *     for (Variant variant : variants) {
@@ -29,20 +28,17 @@ import java.util.stream.IntStream;
  *     }
  *   }
  * }
- * </pre>
  * </code>
  * <p>
  * If you are not using each variant individually, maybe you want to use the merged version:
  * </p>
  * <code>
- * <pre>
- * try (VariantSetReaderList readerList = new VariantSetReaderList(new LinkedList<>(files))) {
+ * try (VariantSetReaderList readerList = new VariantSetReaderList(new LinkedList&lt;&gt;(files))) {
  *   while (readerList.hasNext()) {
  *     final Variant variant = readerList.nextMerged();
  *     // do something with the variant
  *   }
  * }
- * </pre>
  * </code>
  * When using the merged version, a merged header is created by joining all the vcf headers, avoiding redundant lines.
  * To merge variants, the first variant is used as base. Then, for each other, the ID is updated and the INFO and

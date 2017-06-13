@@ -40,7 +40,7 @@ public class MapGenerator {
     private static boolean isKey;
 
     /**
-     * @param line line to map, without ##INFO neither ##FORMAT neither &lt neither &gt
+     * @param line line to map, without ##INFO neither ##FORMAT neither &lt; neither &gt;
      * @return a map with the content of the line
      */
     public synchronized static Map<String, String> parse(String line) {

@@ -33,6 +33,7 @@ public class ValueUtils {
      * create:
      * <p>
      * <table border=1>
+     *     <caption>Types table</caption>
      * <tr>
      * <th>Source type</th>
      * <th>Java type</th>

@@ -20,6 +20,7 @@ package vcf;
 import utils.StringStore;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,6 +43,11 @@ public class Info {
         vals[index] = value;
     }
 
+    /**
+     * Removes a value from this INFO.
+     *
+     * @param key the key of the INFO field to remove
+     */
     public void remove(String key) {
         for (int i = 0; i < keys.length; i++)
             if (keys[i].equals(key) && vals.length > i) vals[i] = null;
@@ -93,23 +99,72 @@ public class Info {
         return -1;
     }
 
+    /**
+     * Gets the value corresponding to this key as it is stored
+     *
+     * @param key key
+     * @return the value associated to key or null if not found
+     */
     public Object get(String key) {
         for (int i = 0; i < keys.length; i++)
             if (keys[i].equals(key) && vals.length > i) return vals[i];
         return null;
     }
 
+    /**
+     * Gets the value corresponding to this key as String, calling toString
+     * if it is not a native String
+     *
+     * @param key key
+     * @return the value associated to key as a String or null if not found
+     */
     public String getString(String key) {
-        return (String) get(key);
+        final Object value = get(key);
+        if (value == null) return null;
+        if (String.class.isAssignableFrom(value.getClass()))
+            return (String) value;
+        if (Object[].class.isAssignableFrom(value.getClass()))
+            return Arrays.toString((Object[]) value);
+        return value.toString();
     }
 
+    /**
+     * Gets the value corresponding to this key as Number.
+     *
+     * @param key key
+     * @return the value associated to key as a Number or null if not found
+     * @throws ClassCastException if not a number
+     */
     public Number getNumber(String key) {
-        return (Number) get(key);
+        final Object value = get(key);
+        if (value == null) return null;
+        return (Number) value;
     }
 
+    /**
+     * Gets the value corresponding to this key as Double.
+     *
+     * @param key key
+     * @return the value associated to key as a Double or null if not found
+     * @throws ClassCastException if not a Double
+     */
+    public Double getDouble(String key) {
+        final Object value = get(key);
+        if (value == null) return null;
+        return (Double) value;
+    }
+
+    /**
+     * Gets the value corresponding to this key as Boolean.
+     *
+     * @param key key
+     * @return the value associated to key as a Boolean or false if not found
+     * @throws ClassCastException if not a boolean
+     */
     public Boolean getBoolean(String key) {
-        final Boolean val = (Boolean) get(key);
-        return val == null ? false : val;
+        final Object value = get(key);
+        if (value == null) return false;
+        return (Boolean) value;
     }
 
     public boolean hasInfo(String key) {
@@ -118,8 +173,18 @@ public class Info {
         return false;
     }
 
+    /**
+     * Returns the value associated to key as an array. If value is an array,
+     * it is returned as is, else, it is returned a new array with a single
+     * element.
+     *
+     * @param key the key
+     * @return null if there is no value. The array stored in key, or a new
+     * array with a single element.
+     */
     public Object[] getArray(String key) {
         final Object value = get(key);
+        if (value == null) return null;
         if (ValueUtils.isArray(value)) return (Object[]) value;
         else return new Object[]{value};
     }

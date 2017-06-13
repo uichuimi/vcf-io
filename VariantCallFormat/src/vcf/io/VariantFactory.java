@@ -107,8 +107,7 @@ public class VariantFactory {
         final int pos = Integer.valueOf(v[1]);
         final String ref = v[3];
         final String alt = v[4];
-        final Variant variant = new Variant(chrom, pos, ref, alt);
-        variant.setVcfHeader(header);
+        final Variant variant = new Variant(chrom, pos, ref, alt, header);
         if (loadId) variant.setId(v[2]);
         if (loadFilter) variant.setFilter(v[6]);
         if (loadQual) {

@@ -16,7 +16,7 @@ import java.util.stream.StreamSupport;
 public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> {
 
     private final VcfHeader memoryHeader;
-    private final VcfHeader readHeader;
+    private final VcfHeader fileHeader;
     private final BufferedReader reader;
     private Variant nextVariant;
     private boolean loadId;
@@ -31,7 +31,7 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
      * @throws FileNotFoundException
      */
     public CustomVariantSetReader(File file) throws FileNotFoundException {
-        readHeader = (VariantSetFactory.readHeader(file));
+        fileHeader = VariantSetFactory.readHeader(file);
         memoryHeader = VariantSetFactory.readHeader(file);
         memoryHeader.getSamples().clear();
         memoryHeader.getComplexHeaders().put("INFO", new LinkedList<>());
@@ -58,6 +58,16 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
         return memoryHeader;
     }
 
+    /**
+     * Returns the header read from file, which contains all possible INFO,
+     * FORMAT and sample values
+     *
+     * @return the read file header
+     */
+    public VcfHeader fileHeader() {
+        return fileHeader;
+    }
+
     @Override
     public boolean hasNext() {
         if (nextVariant != null) return true;
@@ -67,7 +77,7 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
                 while (line != null && line.startsWith("#"))
                     line = reader.readLine();
                 if (line == null) return false;
-                nextVariant = VariantFactory.createVariant(line, memoryHeader, readHeader, loadId, loadQual, loadFilter);
+                nextVariant = VariantFactory.createVariant(line, memoryHeader, fileHeader, loadId, loadQual, loadFilter);
                 return true;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -123,7 +133,7 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
      * @param sample a sample you want to load its genotype.
      */
     public void addSample(String sample) {
-        if (readHeader.getSamples().contains(sample) && !memoryHeader.getSamples().contains(sample))
+        if (fileHeader.getSamples().contains(sample) && !memoryHeader.getSamples().contains(sample))
             memoryHeader.getSamples().add(sample);
     }
 
@@ -180,8 +190,8 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
      * @param key
      */
     private void addComplexHeader(String type, String key) {
-        if (readHeader.hasComplexHeader(type, key))
-            memoryHeader.addComplexHeader(type, readHeader.getComplexHeader(type, key));
+        if (fileHeader.hasComplexHeader(type, key))
+            memoryHeader.addComplexHeader(type, fileHeader.getComplexHeader(type, key));
     }
 
     /**
@@ -191,6 +201,6 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
      * @param key
      */
     private void removeComplexHeader(String type, String key) {
-        memoryHeader.getComplexHeaders().get(type).remove(readHeader.getComplexHeader(type, key));
+        memoryHeader.getComplexHeaders().get(type).remove(fileHeader.getComplexHeader(type, key));
     }
 }
