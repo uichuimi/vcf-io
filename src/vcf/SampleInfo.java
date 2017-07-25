@@ -88,7 +88,8 @@ public class SampleInfo {
     public String getFormat(String sample, String key) {
         final Integer index = getSampleIndex(sample);
         if (index == null) return VariantSet.EMPTY_VALUE;
-        if (content == null || index >= content.length) return VariantSet.EMPTY_VALUE;
+        if (content == null || index >= content.length)
+            return VariantSet.EMPTY_VALUE;
         final LinkedHashMap<String, Object> map = content[index];
         if (content[index] == null) return VariantSet.EMPTY_VALUE;
         return ValueUtils.getString(map.getOrDefault(key, VariantSet.EMPTY_VALUE));
@@ -142,28 +143,6 @@ public class SampleInfo {
         return new ArrayList<>(usedTags);
     }
 
-    public boolean isHomozygous(String sample) {
-        final String[] gt = getGenotype(sample);
-        return gt != null && !gt[0].matches("[0.]") && gt[0].equals(gt[1]);
-    }
-
-    public boolean isHeterozygous(String sample) {
-        final String[] gt = getGenotype(sample);
-        return gt != null && !gt[0].equals(gt[1]);
-    }
-
-    public boolean isAffected(String sample) {
-        final String[] gt = getGenotype(sample);
-        return gt != null && (!gt[0].matches("[0.]") || !gt[1].matches("[0.]"));
-    }
-
-    private String[] getGenotype(String sample) {
-        final String gt = getFormat(sample, "GT");
-        if (gt == null) return null;
-        if (gt.equals(VariantSet.EMPTY_VALUE)) return new String[]{".", "."};
-        return gt.split("[/|]");
-    }
-
     /**
      * Removes a sample info from variant.
      *
@@ -174,5 +153,23 @@ public class SampleInfo {
         if (index == null) return;
         content[index] = null;
 //        content.remove(name);
+    }
+
+    /**
+     * Generates a Genotype by using the GT field associated to sample.
+     *
+     * @param sample sample
+     * @return the Genotype of this sample at this variant. UNCALLED for .
+     */
+    public Genotype getGenotype(String sample) {
+        final String gt = getFormat(sample, "GT");
+        if (gt == null) return Genotype.UNCALLED;
+        if (gt.equals(VariantSet.EMPTY_VALUE)) return Genotype.UNCALLED;
+        final String[] alleles = gt.split("[/|]");
+        if (alleles[0].equals("0") && alleles[1].equals("0"))
+            return Genotype.WILD;
+        if (alleles[0].equals(alleles[1]))
+            return Genotype.HOMOZYGOUS;
+        return Genotype.HETEROZYGOUS;
     }
 }
