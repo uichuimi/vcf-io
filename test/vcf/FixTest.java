@@ -1,6 +1,6 @@
 package vcf;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import vcf.io.VariantSetFactory;
 
 import java.io.File;
@@ -13,7 +13,7 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class FixTest {
 
-    @Ignore
+    @Disabled
     public void testFix() {
         final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:**.vcf");
         final FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {

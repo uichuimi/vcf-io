@@ -1,27 +1,29 @@
 package vcf.io;
 
+import vcf.ComplexHeaderLine;
 import vcf.Variant;
 import vcf.VariantException;
 import vcf.VcfHeader;
 
-import java.io.*;
-import java.util.*;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * By default, variants will only load chromosome, reference and alternative
  * Created by uichuimi on 20/12/16.
  */
-public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> {
+public class CustomVariantSetReader extends VariantSetReader
+        implements AutoCloseable, Iterator<Variant> {
 
-    private final VcfHeader memoryHeader;
-    private final VcfHeader fileHeader;
-    private final BufferedReader reader;
-    private Variant nextVariant;
-    private boolean loadId;
-    private boolean loadQual;
-    private boolean loadFilter;
+    private final VcfHeader customReader;
+    private boolean loadId = false;
+    private boolean loadQual = false;
+    private boolean loadFilter = false;
 
     /**
      * Creates a VariantSet reader that will only read chrom, pos, id, ref,
@@ -31,22 +33,16 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
      * @throws FileNotFoundException
      */
     public CustomVariantSetReader(File file) throws FileNotFoundException {
-        fileHeader = VariantSetFactory.readHeader(file);
-        memoryHeader = VariantSetFactory.readHeader(file);
-        memoryHeader.getSamples().clear();
-        memoryHeader.getComplexHeaders().put("INFO", new LinkedList<>());
-        memoryHeader.getComplexHeaders().put("FORMAT", new LinkedList<>());
-        reader = new BufferedReader(new FileReader(file));
-    }
-
-    public Stream<Variant> variants() {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
-                Spliterator.NONNULL | Spliterator.ORDERED), true);
+        super(file);
+        customReader = VariantSetFactory.readHeader(file);
+        customReader.getSamples().clear();
+        customReader.getHeaderLines().removeAll(customReader.getComplexHeaders("INFO"));
+        customReader.getHeaderLines().removeAll(customReader.getComplexHeaders("FORMAT"));
     }
 
     @Override
-    public void close() throws IOException {
-        reader.close();
+    protected Variant createVariant(String line) {
+        return VariantFactory.createVariant(line, customReader, header, loadId, loadQual, loadFilter);
     }
 
     /**
@@ -54,47 +50,8 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
      *
      * @return
      */
-    public VcfHeader header() {
-        return memoryHeader;
-    }
-
-    /**
-     * Returns the header read from file, which contains all possible INFO,
-     * FORMAT and sample values
-     *
-     * @return the read file header
-     */
-    public VcfHeader fileHeader() {
-        return fileHeader;
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (nextVariant != null) return true;
-        else {
-            try {
-                String line = reader.readLine();
-                while (line != null && line.startsWith("#"))
-                    line = reader.readLine();
-                if (line == null) return false;
-                nextVariant = VariantFactory.createVariant(line, memoryHeader, fileHeader, loadId, loadQual, loadFilter);
-                return true;
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            } catch (VariantException e) {
-                e.printStackTrace();
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public Variant next() {
-        if (hasNext()) {
-            final Variant variant = nextVariant;
-            nextVariant = null;
-            return variant;
-        } else throw new NoSuchElementException();
+    public VcfHeader getCustomHeader() {
+        return customReader;
     }
 
     /**
@@ -133,8 +90,8 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
      * @param sample a sample you want to load its genotype.
      */
     public void addSample(String sample) {
-        if (fileHeader.getSamples().contains(sample) && !memoryHeader.getSamples().contains(sample))
-            memoryHeader.getSamples().add(sample);
+        if (header.getSamples().contains(sample) && !customReader.getSamples().contains(sample))
+            customReader.getSamples().add(sample);
     }
 
     /**
@@ -143,7 +100,7 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
      * @param sample the name of the sample to not be loaded
      */
     public void removeSample(String sample) {
-        memoryHeader.getSamples().remove(sample);
+        customReader.getSamples().remove(sample);
     }
 
     /**
@@ -186,21 +143,26 @@ public class CustomVariantSetReader implements AutoCloseable, Iterator<Variant> 
     /**
      * Copies a complex header from disk file to memory VcfHeader
      *
-     * @param type
      * @param key
+     * @param id
      */
-    private void addComplexHeader(String type, String key) {
-        if (fileHeader.hasComplexHeader(type, key))
-            memoryHeader.addComplexHeader(type, fileHeader.getComplexHeader(type, key));
+    private void addComplexHeader(String key, String id) {
+        final ComplexHeaderLine complexHeader = header.getComplexHeader(key, id);
+        if (complexHeader == null)
+            return;
+        customReader.getHeaderLines().add(complexHeader);
     }
 
     /**
      * Removes a complex header from memory VcfHeader
      *
-     * @param type
      * @param key
+     * @param id
      */
-    private void removeComplexHeader(String type, String key) {
-        memoryHeader.getComplexHeaders().get(type).remove(fileHeader.getComplexHeader(type, key));
+    private void removeComplexHeader(String key, String id) {
+        final ComplexHeaderLine complexHeader = header.getComplexHeader(key, id);
+        if (complexHeader == null)
+            return;
+        customReader.getHeaderLines().remove(complexHeader);
     }
 }

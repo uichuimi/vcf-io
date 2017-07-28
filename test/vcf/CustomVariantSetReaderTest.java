@@ -1,6 +1,6 @@
 package vcf;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import vcf.io.CustomVariantSetReader;
 
 import java.io.File;
@@ -11,7 +11,7 @@ import java.io.IOException;
  */
 public class CustomVariantSetReaderTest {
 
-    @Ignore
+    @Disabled
     public void test() {
         final File file = new File("test/files/SP030.vcf");
         try (CustomVariantSetReader reader = new CustomVariantSetReader(file)) {

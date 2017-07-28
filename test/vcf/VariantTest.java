@@ -17,13 +17,14 @@
 
 package vcf;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import vcf.io.VariantSetFactory;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Created by uichuimi on 26/05/16.
@@ -77,36 +78,41 @@ public class VariantTest {
      */
 
     @Test
-    public void testVcfFile() {
-        for (Variant variant : file.getVariants()) Assert.assertEquals(file.getHeader(), variant.getVcfHeader());
+    void testVcfFile() {
+        for (Variant variant : file.getVariants())
+            assertEquals(file.getHeader(), variant.getVcfHeader());
     }
 
     @Test
-    public void testChrom() {
+    void testChrom() {
         final String[] chroms = {"1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "7", "7", "7"};
         int i = 0;
-        for (Variant variant : file.getVariants()) Assert.assertEquals(chroms[i++], variant.getChrom());
+        for (Variant variant : file.getVariants())
+            assertEquals(chroms[i++], variant.getChrom());
     }
 
     @Test
-    public void testPos() {
+    void testPos() {
         final int[] pos = {13273, 69511, 133160, 139213, 139233, 651149, 715348, 752566, 752721, 752894, 754182, 754192, 150968234, 150972189, 150979714};
         int i = 0;
-        for (Variant variant : file.getVariants()) Assert.assertEquals(pos[i++], variant.getPosition());
+        for (Variant variant : file.getVariants())
+            assertEquals(pos[i++], variant.getPosition());
     }
 
     @Test
-    public void testId() {
+    void testId() {
         final String[] values = {".", "rs75062661", ".", ".", ".", ".", "rs3131984", "rs3094315", "rs3131972", "rs3131971", "rs3131969", "rs3131968", ".", ".", "."};
         int i = 0;
-        for (Variant variant : file.getVariants()) Assert.assertEquals(values[i++], variant.getId());
+        for (Variant variant : file.getVariants())
+            assertEquals(values[i++], variant.getId());
     }
 
     @Test
     public void testRef() {
         final String[] values = {"G", "A", "G", "A", "C", "C", "T", "G", "A", "T", "A", "A", "C", "G", "T"};
         int i = 0;
-        for (Variant variant : file.getVariants()) Assert.assertEquals(values[i++], variant.getRef());
+        for (Variant variant : file.getVariants())
+            assertEquals(values[i++], variant.getRef());
     }
 
     @Test
@@ -114,7 +120,8 @@ public class VariantTest {
         final Object[] values = {"C", "G", "A", "G,C", "A", "T", "G", "A", "G", "C", "G", "G", "T",
                 "A", "A"};
         int i = 0;
-        for (Variant variant : file.getVariants()) Assert.assertEquals(values[i++], variant.getAlt());
+        for (Variant variant : file.getVariants())
+            assertEquals(values[i++], variant.getAlt());
     }
 
     @Test
@@ -122,14 +129,17 @@ public class VariantTest {
         final Object[] quals = {124.77, 1592.77, 118.77, 67.77, 69.77, 40.74, 85.28, 190.84, 1228.77, 440.77, 62.74,
                 null, 58.28, 667.77, 75.78};
         int i = 0;
-        for (Variant variant : file.getVariants()) Assert.assertEquals(quals[i++], variant.getQual());
+        for (Variant variant : file.getVariants())
+            assertEquals(quals[i++], variant.getQual());
     }
 
     @Test
     public void testFilter() {
-        final String[] values = {".", ".", ".", ".", ".", ".", ".", ".", ".", "PASS", ".", ".", ".", ".", "."};
+        final String[] values = {null, null, null, null, null, null, null, null,
+                null, "PASS", null, null, null, null, null};
         int i = 0;
-        for (Variant variant : file.getVariants()) Assert.assertEquals(values[i++], variant.getFilter());
+        for (Variant variant : file.getVariants())
+            assertEquals(values[i++], variant.getFilter());
     }
 
     @Test
@@ -142,15 +152,17 @@ public class VariantTest {
                 null, null});
         for (Map.Entry<String, Object[]> entry : values.entrySet()) {
             int i = 0;
-            for (Variant variant : file.getVariants())
-                Assert.assertEquals(String.format("at line %d for ID=%s", i, entry.getKey()), entry.getValue()[i++],
-                        variant.getInfo().get(entry.getKey()));
+            for (Variant variant : file.getVariants()) {
+                final String message = String.format("at line %d for ID=%s", i, entry.getKey());
+                assertEquals(entry.getValue()[i++],
+                        variant.getInfo().get(entry.getKey()), message);
+            }
         }
         int i = 0;
         final Boolean[] db = new Boolean[]{false, true, false, false, false, false, true, true, true, true, true, true, false,
                 false, false};
         for (Variant variant : file.getVariants()) {
-            Assert.assertEquals(String.format("at line %d for ID=DB", i), db[i++], variant.getInfo().getBoolean("DB"));
+            assertEquals(db[i++], variant.getInfo().getBoolean("DB"), String.format("at line %d for ID=DB", i));
         }
     }
 
@@ -164,62 +176,61 @@ public class VariantTest {
         values.put("PL", new String[]{"153,0,428", "1621,176,0", "147,0,89", "96,0,334", "98,0,308", "68,6,0", "113,9,0", "219,18,0", "1257,114,0", "469,45,0", "90,6,0", "90,6,0", "86,9,0", "696,0,1021", "104,0,25"});
         for (Map.Entry<String, Object[]> entry : values.entrySet()) {
             int i = 0;
-            for (Variant variant : file.getVariants())
-                Assert.assertEquals(entry.getValue()[i++], variant.getSampleInfo().getFormat("sample01", entry.getKey()));
+            for (Variant variant : file.getVariants()) {
+                final String message = String.format("line %d, key %s", i, entry.getKey());
+                assertEquals(entry.getValue()[i++], variant.getSampleInfo().getFormat("sample01", entry.getKey()), message);
+            }
         }
     }
 
     @Test
     public void testSetId() {
         // Given
-        final Variant variant = new Variant("1", 14, "A", "T");
+        final Variant variant = new Variant("1", 14, "A", "T", null);
         // When
         variant.setId("rs00002");
         // Then
-        Assert.assertEquals("rs00002", variant.getId());
+        assertEquals("rs00002", variant.getId());
     }
 
     @Test
     public void testSetQual() {
         // Given
-        final Variant variant = new Variant("1", 14, "A", "T");
+        final Variant variant = new Variant("1", 14, "A", "T", null);
         // When
         variant.setQual(123.45);
         // Then
-        Assert.assertEquals(123.45, variant.getQual(), 0.001);
+        assertEquals(123.45, variant.getQual(), 0.001);
     }
 
     @Test
     public void testCompare() {
 //        for (int i = 0; i < file.getVariants().size() - 1; i++) {
-//            Assert.assertEquals(-1, file.getVariants().get(i).compareTo(file.getVariants().get(i + 1)));
+//            assertEquals(-1, file.getVariants().get(i).compareTo(file.getVariants().get(i + 1)));
 //        }
     }
 
     @Test
     public void testAddInfo() {
-        final Variant variant = new Variant("1", 14, "A", "T");
+        final Variant variant = new Variant("1", 14, "A", "T", null);
         variant.getInfo().set("DP", "23");
-        Assert.assertEquals("23", variant.getInfo().get("DP"));
+        assertEquals("23", variant.getInfo().get("DP"));
     }
 
     @Test
     public void testModifySamples() {
-        final Variant variant = new Variant("1", 15000, "A", "C,T");
-        variant.setVcfHeader(file.getHeader());
-        variant.getSampleInfo().setFormat("pepe", "GT", "0/0");
-        Assert.assertEquals(".", variant.getSampleInfo().getFormat("pepe", "GT"));
+        final Variant variant = new Variant("1", 15000, "A", "C,T", file.getHeader());
+//        variant.getSampleInfo().setFormat("pepe", "GT", "0/0");
+        assertEquals(null, variant.getSampleInfo().getFormat("pepe", "GT"));
         variant.getVcfHeader().getSamples().add("pepe");
         variant.getSampleInfo().setFormat("pepe", "GT", "0/1");
-        Assert.assertEquals("0/1", variant.getSampleInfo().getFormat("pepe", "GT"));
+        assertEquals("0/1", variant.getSampleInfo().getFormat("pepe", "GT"));
     }
 
     @Test
     public void testGenotype() {
         final Variant variant = file.getVariants().stream().findFirst().get();
-        Assert.assertTrue(variant.getSampleInfo().isHeterozygous("sample01"));
-        Assert.assertFalse(variant.getSampleInfo().isHomozygous("sample01"));
-        Assert.assertTrue(variant.getSampleInfo().isAffected("sample01"));
+        assertEquals(Genotype.HETEROZYGOUS, variant.getSampleInfo().getGenotype("sample01"));
     }
 
 }

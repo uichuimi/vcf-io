@@ -27,75 +27,48 @@ import java.util.stream.Collectors;
  */
 public class SampleInfo {
 
-    private static Map<String, Integer> sampleIndex;
+    private final List<SampleEntry> entries = new ArrayList<>();
     /**
      * A matrix containing FORMAT columns. To access a cell: <strong>content[sampleIndex.get(sample)].get(format)
      * </strong>.
      */
-    private LinkedHashMap<String, Object>[] content = new LinkedHashMap[]{};
     private Variant variant;
 
     SampleInfo(Variant variant) {
         this.variant = variant;
-        if (variant.getVcfHeader() != null) {
-            final List<String> samples = variant.getVcfHeader().getSamples();
-            if (sampleIndex == null) {
-                sampleIndex = new HashMap<>();
-                int i = 0;
-                for (String sample : samples) sampleIndex.put(sample, i++);
-            }
-            content = new LinkedHashMap[samples.size()];
-            for (int i = 0; i < samples.size(); i++)
-                content[i] = new LinkedHashMap<>();
-        }
     }
 
     public void setFormat(String sample, String key, String value) {
-        Integer index = getSampleIndex(sample);
-        if (index == null) return;
-        while (index >= content.length) increaseContent();
-        if (content[index] == null) content[index] = new LinkedHashMap<>();
-        final LinkedHashMap<String, Object> map = content[index];
-        final String type = variant.getVcfHeader().hasComplexHeader("FORMAT", key)
-                ? variant.getVcfHeader().getComplexHeader("FORMAT", key).get("Type")
-                : "String";
-        map.put(StringStore.getInstance(key), ValueUtils.getValue(value, type));
+        final SampleEntry entry = getorCreateEntry(sample);
+        entry.set(key, value);
     }
 
-    private Integer getSampleIndex(String sample) {
-        Integer index = sampleIndex.get(sample);
-        if (index == null && variant.getVcfHeader().getSamples().contains(sample)) {
-            sampleIndex.put(sample, sampleIndex.size());
-            index = sampleIndex.size() - 1;
+    private SampleEntry getorCreateEntry(String sample) {
+        SampleEntry entry = getEntry(sample);
+        if (entry == null) {
+            entry = new SampleEntry(sample, variant.getAlleles().length);
+            entries.add(entry);
         }
-        return index;
+        return entry;
     }
 
-    private void increaseContent() {
-        final LinkedHashMap[] maps = new LinkedHashMap[content.length + 1];
-        System.arraycopy(content, 0, maps, 0, content.length);
-        content = maps;
-    }
 
     /**
-     * Get the value of the key FORMAT for sample. If sample or key do not exist, then the VariantSet.EMPTY_VALUE (.) is
-     * returned.
+     * Get the value of the key FORMAT for sample. If sample or key do not
+     * exist, then return null.
      *
      * @param sample name of the sample: one of the vcf samples
      * @param key    FORMAT id
      * @return the value of key for the given sample or VariantSet.EMPTY_VALUE if not present
      */
     public String getFormat(String sample, String key) {
-        final Integer index = getSampleIndex(sample);
-        if (index == null) return VariantSet.EMPTY_VALUE;
-        if (content == null || index >= content.length)
-            return VariantSet.EMPTY_VALUE;
-        final LinkedHashMap<String, Object> map = content[index];
-        if (content[index] == null) return VariantSet.EMPTY_VALUE;
-        return ValueUtils.getString(map.getOrDefault(key, VariantSet.EMPTY_VALUE));
-//        return content.containsKey(sample)
-//                ? ValueUtils.getString(content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE))
-//                : VariantSet.EMPTY_VALUE;
+        final SampleEntry entry = getEntry(sample);
+        if (entry == null)
+            return null;
+        final Object value = entry.get(key);
+        return value == null
+                ? null
+                : ValueUtils.getString(value);
     }
 
     /**
@@ -107,16 +80,13 @@ public class SampleInfo {
      * @return the value of key for the given sample or VariantSet.EMPTY_VALUE if not present
      */
     public Object getRichFormat(String sample, String key) {
-        final Integer index = getSampleIndex(sample);
-        if (index == null) return VariantSet.EMPTY_VALUE;
-        final LinkedHashMap<String, Object> map = content[index];
-        return map.getOrDefault(key, VariantSet.EMPTY_VALUE);
-//        return content.containsKey(sample) ? content.get(sample).getOrDefault(key, VariantSet.EMPTY_VALUE) : VariantSet.EMPTY_VALUE;
+        final SampleEntry entry = getEntry(sample);
+        return entry == null ? null : entry.get(key);
     }
 
     @Override
     public String toString() {
-//        if (content.isEmpty()) return "";
+        if (entries.isEmpty()) return "";
         final List<String> usedTags = getUsedTags();
         if (usedTags.isEmpty()) return "";
         final List<String> samples = variant.getVcfHeader().getSamples();
@@ -133,13 +103,8 @@ public class SampleInfo {
 
     private List<String> getUsedTags() {
         final Set<String> usedTags = new LinkedHashSet<>();
-        for (LinkedHashMap<String, Object> map : content) {
-            if (map != null)
-                map.forEach((tag, value) -> {
-                    if (value != null && !value.equals("."))
-                        usedTags.add(tag);
-                });
-        }
+        for (SampleEntry entry : entries)
+            usedTags.addAll(entry.map.keySet());
         return new ArrayList<>(usedTags);
     }
 
@@ -147,12 +112,14 @@ public class SampleInfo {
      * Removes a sample info from variant.
      *
      * @param name sample name
+     * @deprecated it is not a good practise to remove samples from a variant.
+     * If you are removing to create a new Vcf, consider cloning the variant.
      */
+    @Deprecated
     public void removeSample(String name) {
-        final Integer index = getSampleIndex(name);
-        if (index == null) return;
-        content[index] = null;
-//        content.remove(name);
+        final SampleEntry entry = getEntry(name);
+        if (name != null)
+            entries.remove(entry);
     }
 
     /**
@@ -171,5 +138,32 @@ public class SampleInfo {
         if (alleles[0].equals(alleles[1]))
             return Genotype.HOMOZYGOUS;
         return Genotype.HETEROZYGOUS;
+    }
+
+    private SampleEntry getEntry(String sample) {
+        for (SampleEntry entry : entries)
+            if (entry.sample.equals(sample))
+                return entry;
+        return null;
+    }
+
+    private class SampleEntry {
+        public Map<String, Object> map = new LinkedHashMap<>();
+        public String sample;
+
+        public SampleEntry(String sample, int length) {
+            this.sample = sample;
+        }
+
+        public void set(String key, String value) {
+            final String type = variant.getVcfHeader().hasComplexHeader("FORMAT", key)
+                    ? variant.getVcfHeader().getComplexHeader("FORMAT", key).getValue("Type")
+                    : "String";
+            map.put(StringStore.getInstance(key), ValueUtils.getValue(value, type));
+        }
+
+        public Object get(String key) {
+            return map.get(key);
+        }
     }
 }

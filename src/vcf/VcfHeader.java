@@ -17,13 +17,7 @@
 
 package vcf;
 
-import vcf.io.MapGenerator;
-
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -33,222 +27,129 @@ import java.util.stream.Collectors;
  */
 public class VcfHeader {
 
-    private static final Pattern META_LINE = Pattern.compile("##([^=]+)=(.+)");
-    private static final Pattern META_LINE_CONTENT = Pattern.compile("<(.*)>");
-    private static final Pattern FIELDS_LINE = Pattern.compile("#CHROM(.*)");
-    private static final Map<String, List<String>> REQUIRED_KEYS = new TreeMap<>();
+    private final static List<String> REQUIRED_COLUMNS =
+            Arrays.asList("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO");
 
-    static {
-        REQUIRED_KEYS.put("INFO", Arrays.asList("ID", "Number", "Type", "Description"));
-        REQUIRED_KEYS.put("FORMAT", Arrays.asList("ID", "Number", "Type", "Description"));
-        REQUIRED_KEYS.put("FILTER", Arrays.asList("ID", "Description"));
-        REQUIRED_KEYS.put("ALT", Arrays.asList("ID", "Description"));
-        REQUIRED_KEYS.put("contig", Collections.singletonList("ID"));
-        REQUIRED_KEYS.put("SAMPLE", Collections.singletonList("ID"));
-    }
-
-    private final Map<String, List<Map<String, String>>> complexHeaders = new LinkedHashMap<>();
-    private final Map<String, String> simpleHeaders = new LinkedHashMap<>();
     private final List<String> samples = new ArrayList<>();
+    private final LinkedList<HeaderLine> headerLines = new LinkedList<>();
+    private Map<String, List<String>> cache = new LinkedHashMap<>();
 
     /**
-     * By default, VcfHeaders have VCFv4.2 format
+     * An empty VcfHeader. Remember that fileformat must be the first HeaderLine.
      */
     public VcfHeader() {
-        addSimpleHeader("fileformat", "VCFv4.2");
     }
 
     /**
-     * Adds a header line
-     *
-     * @param line
-     * @deprecated use addSimpleHeader and addComplexHeader instead. Parsing of lines should be done out of
-     * VcfHeader, as with VariantSetFactory.
+     * Creates a Vcf file with specified fileformat
      */
-    @Deprecated
-    public void addHeader(String line) {
-        final Matcher metaLine = META_LINE.matcher(line);
-        if (metaLine.matches()) addMetaLine(metaLine);
-        else addFormatLine(line);
+    public VcfHeader(String fileformat) {
+        headerLines.add(new SimpleHeaderLine("fileformat", fileformat));
     }
 
-    private void addMetaLine(Matcher metaLine) {
-        final String key = metaLine.group(1);
-        final String value = metaLine.group(2);
-        final Matcher contentMatcher = META_LINE_CONTENT.matcher(value);
-        if (contentMatcher.matches())
-            addComplexHeader(key, contentMatcher.group(1));
-        else addSingleHeader(key, value);
-    }
 
-    private void addComplexHeader(String key, String value) {
-        complexHeaders.putIfAbsent(key, new ArrayList<>());
-        final List<Map<String, String>> headers = complexHeaders.get(key);
-        final Map<String, String> map = MapGenerator.parse(value);
-        if (!headerContainsId(key, headers)) {
-            headers.add(map);
-        }
-    }
-
-    private boolean headerContainsId(String key, List<Map<String, String>> headers) {
-        for (Map<String, String> header : headers)
-            if (header.get("ID").equals(key)) return true;
-        return false;
-    }
-
-    private void addSingleHeader(String key, String value) {
-        simpleHeaders.putIfAbsent(key, value);
-    }
-
-    private void addFormatLine(String line) {
-        final Matcher matcher = FIELDS_LINE.matcher(line);
-        if (matcher.matches()) {
-            final String[] split = line.split("\t");
-            int numberOfSamples = split.length - 9;
-            if (numberOfSamples > 0) for (int i = 0; i < numberOfSamples; i++)
-                samples.add(split[i + 9]);
-//            if (numberOfSamples > 0) samples.addAll(Arrays.asList(split).subList(9, numberOfSamples));
-        }
-    }
-
-    public Map<String, List<Map<String, String>>> getComplexHeaders() {
-        return complexHeaders;
+    public List<ComplexHeaderLine> getComplexHeaders() {
+        return headerLines.stream()
+                .filter(headerLine -> headerLine.getClass() == ComplexHeaderLine.class)
+                .map(headerLine -> (ComplexHeaderLine) headerLine)
+                .collect(Collectors.toList());
     }
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("##fileformat=").append(simpleHeaders.get("fileformat")).append(System.lineSeparator());
-        appendSingleHeaders(builder);
-        appendComplexHeaders(builder);
-        appendFormatLine(builder);
-        return builder.toString();
+        final StringJoiner joiner = new StringJoiner(System.lineSeparator());
+        headerLines.forEach(headerLine -> joiner.add(headerLine.toString()));
+        joiner.add(getColumnsLine());
+        return joiner.toString();
     }
 
-    private void appendSingleHeaders(StringBuilder builder) {
-        simpleHeaders.entrySet().stream()
-                .filter(entry -> !entry.getKey().equals("fileformat"))
-                .forEach(entry -> {
-                    builder.append("##").append(entry.getKey())
-                            .append("=")
-                            .append(entry.getValue())
-                            .append(System.lineSeparator());
-//                    if (entry.getValue().contains(" ")) builder.append("\"").append(entry.getValue()).append("\"");
-//                    builder.append(System.lineSeparator());
-                });
-    }
-
-    private void appendComplexHeaders(StringBuilder builder) {
-        complexHeaders.forEach((type, headers) ->
-                headers.forEach(map -> {
-                    builder.append("##").append(type).append("=<");
-                    final AtomicBoolean first = new AtomicBoolean(true);
-                    if (REQUIRED_KEYS.containsKey(type))
-                        REQUIRED_KEYS.get(type).forEach(requiredKey ->
-                                appendHeaderKey(builder, first, stringifyComplex(requiredKey, map.get(requiredKey))));
-                    map.forEach((key, value) -> {
-                        if (!REQUIRED_KEYS.containsKey(type) || !REQUIRED_KEYS.get(type).contains(key))
-                            appendHeaderKey(builder, first, stringifyComplex(key, value));
-                    });
-                    builder.append(">").append(System.lineSeparator());
-                }));
-    }
-
-    private void appendHeaderKey(StringBuilder builder, AtomicBoolean first, String text) {
-        if (first.compareAndSet(true, false)) builder.append(text);
-        else builder.append(",").append(text);
-    }
-
-    private String stringifyComplex(String key, String value) {
-        final String v = !(value.startsWith("\"") && value.endsWith("\""))
-                && ((key.equals("Description")
-                || value.contains(" ")
-                || value.contains(","))) ? "\"" + value + "\""
-                : value;
-        return key + "=" + v;
-    }
-
-    private void appendFormatLine(StringBuilder builder) {
-        builder.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO");
+    private String getColumnsLine() {
+        final StringJoiner joiner = new StringJoiner("\t");
+        REQUIRED_COLUMNS.forEach(joiner::add);
         if (!samples.isEmpty()) {
-            builder.append("\tFORMAT");
-            samples.forEach(f -> builder.append("\t").append(f));
+            joiner.add("FORMAT");
+            samples.forEach(joiner::add);
         }
-//        builder.append(System.lineSeparator());
+        return "#" + joiner.toString();
     }
 
     public List<String> getSamples() {
         return samples;
     }
 
-    public List<String> getIdList(String type) {
-        final List<Map<String, String>> list = complexHeaders.get(type);
-        if (list == null) return Collections.emptyList();
-        return list.stream().map(map -> map.get("ID")).collect(Collectors.toList());
+    /**
+     * Get a list with the IDs of the ComplexHeaderLines of type key
+     *
+     * @param key the type of ComplexHeaderLines
+     * @return a list with all the IDs of type key
+     */
+    public List<String> getIdList(String key) {
+        if (cache.containsKey(key))
+            return cache.get(key);
+        final List<String> list = headerLines.stream()
+                .filter(header -> header.getClass() == ComplexHeaderLine.class)
+                .map(header -> (ComplexHeaderLine) header)
+                .filter(header -> header.getKey().equals(key))
+                .map(header -> header.getValue("ID"))
+                .collect(Collectors.toList());
+        cache.put(key, list);
+        return list;
     }
 
     public int indexOf(String sample) {
         return samples.indexOf(sample);
     }
 
-    public Map<String, String> getSimpleHeaders() {
-        return simpleHeaders;
-    }
-
-
-    /**
-     * Adds a new complex header. If there is another header of the same type with the same ID, it is updated.
-     *
-     * @param type type of header. One of FILTER, INFO, FORMAT, contig, SAMPLE, PEDIGREE, ALT
-     * @param map  type=value with the content of the header
-     * @throws VariantException when header is not added due to malformed header: id est, required type no present or
-     *                          inconsistency in values
-     */
-    public void addComplexHeader(String type, Map<String, String> map) throws VariantException {
-        createTypeMap(type);
-        checkRequiredKeys(type, map);
-        final Map<String, String> map1 = getComplexHeader(type, map.get("ID"));
-        if (map1 == null) {
-            if (type.equals("FORMAT") && map.get("ID").equals("GT"))
-                complexHeaders.get(type).add(0, map);
-            else complexHeaders.get(type).add(map);
-        } else {
-            map.forEach(map1::put);
-            Logger.getLogger(getClass().getName()).info("Updating " + type + " " + map.get("ID"));
-        }
-    }
-
-    private void createTypeMap(String type) {
-        if (!complexHeaders.containsKey(type))
-            complexHeaders.put(type, new ArrayList<>());
-    }
-
-    private void checkRequiredKeys(String type, Map<String, String> map) throws VariantException {
-        if (REQUIRED_KEYS.containsKey(type))
-            for (String key : REQUIRED_KEYS.get(type))
-                if (!map.containsKey(key))
-                    throw new VariantException("INFO headers must contain '" + key + "' key");
-    }
-
-    public void addSimpleHeader(String key, String value) {
-        simpleHeaders.put(key, value);
+    public List<SimpleHeaderLine> getSimpleHeaders() {
+        return headerLines.stream()
+                .filter(hLine -> hLine.getClass() == SimpleHeaderLine.class)
+                .map(headerLine -> (SimpleHeaderLine) headerLine)
+                .collect(Collectors.toList());
     }
 
     public boolean hasComplexHeader(String type, String id) {
-        if (complexHeaders.containsKey(type))
-            for (Map map : complexHeaders.get(type))
-                if (map.get("ID").equals(id)) return true;
-        return false;
+        return getComplexHeader(type, id) != null;
     }
 
     public boolean hasSimpleHeader(String key) {
-        return simpleHeaders.containsKey(key);
+        return headerLines.stream()
+                .filter(hLine -> hLine.getClass() == SimpleHeaderLine.class)
+                .map(headerLine -> (SimpleHeaderLine) headerLine)
+                .anyMatch(headerLine -> headerLine.getKey().equals(key));
     }
 
-    public Map<String, String> getComplexHeader(String type, String id) {
-        if (complexHeaders.containsKey(type))
-            for (Map<String, String> map : complexHeaders.get(type))
-                if (map.get("ID").equals(id)) return map;
-        return null;
+    /**
+     * Gets the first SimpleHeaderLine that has key
+     *
+     * @param key key of the SimpleHeaderLine to match
+     * @return the first found SimpleHeaderLine
+     */
+    public SimpleHeaderLine getSimpleHeader(String key) {
+        return headerLines.stream()
+                .filter(hLine -> hLine.getClass() == SimpleHeaderLine.class)
+                .map(headerLine -> (SimpleHeaderLine) headerLine)
+                .filter(headerLine -> headerLine.getKey().equals(key))
+                .findFirst().orElse(null);
+    }
+
+    public ComplexHeaderLine getComplexHeader(String key, String id) {
+        return headerLines.stream()
+                .filter(header -> header.getClass() == ComplexHeaderLine.class)
+                .map(header -> (ComplexHeaderLine) header)
+                .filter(header -> header.getKey().equals(key))
+                .filter(header -> header.getValue("ID").equals(id))
+                .findFirst().orElse(null);
+    }
+
+    public LinkedList<HeaderLine> getHeaderLines() {
+        return headerLines;
+    }
+
+    public List<ComplexHeaderLine> getComplexHeaders(String key) {
+        return headerLines.stream()
+                .filter(header -> header.getClass() == ComplexHeaderLine.class)
+                .map(header -> (ComplexHeaderLine) header)
+                .filter(header -> header.getKey().equals(key))
+                .collect(Collectors.toList());
     }
 }

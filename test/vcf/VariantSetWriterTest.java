@@ -1,6 +1,6 @@
 package vcf;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import vcf.io.VariantSetReader;
 import vcf.io.VariantSetWriter;
 

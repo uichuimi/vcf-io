@@ -1,6 +1,6 @@
 package vcf;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import vcf.io.VariantSetReader;
 
 import java.io.File;
@@ -16,8 +16,8 @@ public class VariantSetReaderTest {
         final File file = new File("test/files/MultiSample.vcf");
         try (VariantSetReader reader = new VariantSetReader(file)) {
             final VcfHeader header = reader.header();
-            System.out.println(header);
-            reader.variants().forEach(System.out::println);
+//            System.out.println(header);
+//            reader.variants().forEach(System.out::println);
         } catch (IOException e) {
             e.printStackTrace();
         }

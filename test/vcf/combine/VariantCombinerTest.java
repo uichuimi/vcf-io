@@ -17,8 +17,9 @@
 
 package vcf.combine;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import vcf.Genotype;
 import vcf.VariantSet;
 import vcf.VcfHeader;
 import vcf.io.VariantSetFactory;
@@ -44,7 +45,7 @@ public class VariantCombinerTest {
 
     private static final File[] ALL_VCF = new File[]{SP030_VCF, SP072_VCF, SP077_VCF, DA_VCF};
 
-    @Ignore
+    @Disabled
     public void testJoin() {
         final List<Sample> samples = new ArrayList<>();
         final Sample sp030 = new Sample(SP030_VCF, "SP030");
@@ -60,7 +61,7 @@ public class VariantCombinerTest {
 //        variantSet.save(new File("SP_30_72_77_sum.vcf"));
     }
 
-    @Ignore
+    @Disabled
     public void testCommonWithoutMist() {
         final List<Sample> samples = new ArrayList<>();
         final Sample sp030 = new Sample(SP030_VCF, "SP030");
@@ -73,7 +74,7 @@ public class VariantCombinerTest {
 //        variantSet.save(new File("SP_30_72_77_common.vcf"));
     }
 
-    @Ignore
+    @Disabled
     public void testCommonWithMist() {
         final List<Sample> samples = new ArrayList<>();
         final Sample sp030 = new Sample(SP030_VCF, "SP030");
@@ -91,7 +92,7 @@ public class VariantCombinerTest {
     }
 
     @Test
-    public void testWithControlAndMist() {
+    void testWithControlAndMist() {
         final List<Sample> samples = new ArrayList<>();
         final Sample sp030 = new Sample(SP030_VCF, "SP030");
         sp030.setMistFile(SP030_MIST);
@@ -104,14 +105,14 @@ public class VariantCombinerTest {
         samples.add(sp077);
         final Sample da = new Sample(DA_VCF, "DA");
         da.setMistFile(DA_MIST);
-        da.setStatus(Sample.Status.WILD);
+        da.setGenotype(Genotype.WILD);
         samples.add(da);
         final VariantSet variantSet = testCombine(samples, true, 7);
 //        variantSet.save(new File("SP_30_72_77_common_mist_minus_DA.vcf"));
     }
 
     @Test
-    public void testWithControlWithoutMist() {
+    void testWithControlWithoutMist() {
         final List<Sample> samples = new ArrayList<>();
         final Sample sp030 = new Sample(SP030_VCF, "SP030");
         samples.add(sp030);
@@ -120,49 +121,35 @@ public class VariantCombinerTest {
         final Sample sp077 = new Sample(SP077_VCF, "SP077");
         samples.add(sp077);
         final Sample da = new Sample(DA_VCF, "DA");
-        da.setStatus(Sample.Status.WILD);
+        da.setGenotype(Genotype.WILD);
         samples.add(da);
         final VariantSet variantSet = testCombine(samples, true, 3);
 //        variantSet.save(new File("SP_30_72_77_common_minus_DA.vcf"));
     }
 
     @Test
-    public void testUniqueFileWithSeveralSamples() {
+    void testUniqueFileWithSeveralSamples() {
         final List<Sample> samples = new ArrayList<>();
-        final File file = new File("test/files/something.vcf");
-        VcfHeader header = VariantSetFactory.readHeader(file);
+        final File file = new File("test/files/MultiSample.vcf");
+        final VcfHeader header = VariantSetFactory.readHeader(file);
         header.getSamples().forEach(s -> samples.add(new Sample(file, s)));
-        samples.get(2).setStatus(Sample.Status.WILD);
+        samples.get(2).setGenotype(Genotype.WILD);
         testCombine(samples, true, 12767);
 
     }
 
-    @Test
-    public void testBigFiles() {
-        final File WDH003 = new File("/media/uichuimi/Elements/GENOME_DATA/WDH/WDH_003_EX51/VCF/WDH_003.vcf");
-        final File HCF001 = new File("/media/uichuimi/Elements/GENOME_DATA/HCF/EX51_HCF_01/VCF/HCF_001.vep.vcf");
-        final File HCF002 = new File("/media/uichuimi/Elements/GENOME_DATA/HCF/EX51_HCF_02/VCF/HCF_002.vep.vcf");
-        final List<Sample> samples = new ArrayList<>();
-        samples.add(new Sample(WDH003, "WDH_003"));
-        samples.add(new Sample(HCF001, "HCF_001"));
-        samples.add(new Sample(HCF002, "HCF_002"));
-        final VariantSet variantSet = testCombine(samples, true, 83310);
-        variantSet.save(new File("WDH001_and_HCF001002.vcf"));
-    }
-
     private VariantSet testCombine(List<Sample> samples, boolean remove, long expectedSize) {
-        final VariantCombiner combinerTask = new VariantCombiner(samples, remove);
-        combinerTask.run();
-        final VariantSet variantSet = combinerTask.getResult();
+        final VariantCombiner combiner = new VariantCombiner(samples, remove);
+        combiner.run();
+        final VariantSet variantSet = combiner.getResult();
         if (expectedSize != variantSet.getVariants().size())
             System.err.println("Assert error. Expected " + expectedSize + ". Found " + variantSet.getVariants().size());
-//        Assert.assertEquals(expectedSize, variantSet.getVariants().size());
         return variantSet;
     }
 
     @Test
     public void testFindMist() {
-        for (File file : new File[]{new File("/media/uichuimi/Elements/GENOME_DATA/CONTROLS/PLA/VCF/PLA.vcf")}) {
+        for (File file : new File[]{SP077_VCF, SP030_VCF, SP072_VCF}) {
             findMist(file);
             findBam(file);
         }
@@ -170,15 +157,17 @@ public class VariantCombinerTest {
     }
 
     private void findMist(File file) {
-        final File[] files = SP077_VCF.getParentFile().listFiles((dir, filename)
-                -> filename.toLowerCase().matches(SP077_VCF.getName().replace(".vcf", "").toLowerCase() + ".*\\.mist"));
-        if (files != null && files.length > 0) System.err.println(Arrays.toString(files));
+        final File[] files = file.getParentFile().listFiles((dir, filename)
+                -> filename.toLowerCase().matches(file.getName().replace(".vcf", "").toLowerCase() + ".*\\.mist"));
+        if (files != null && files.length > 0)
+            System.err.println(Arrays.toString(files));
     }
 
     private void findBam(File file) {
-        final File[] files = SP077_VCF.getParentFile().listFiles((dir, filename)
-                -> filename.toLowerCase().matches(SP077_VCF.getName().replace(".vcf", "").toLowerCase() + ".*\\.bam"));
-        if (files != null && files.length > 0) System.err.println(Arrays.toString(files));
+        final File[] files = file.getParentFile().listFiles((dir, filename)
+                -> filename.toLowerCase().matches(file.getName().replace(".vcf", "").toLowerCase() + ".*\\.bam"));
+        if (files != null && files.length > 0)
+            System.err.println(Arrays.toString(files));
     }
 
 }

@@ -1,10 +1,12 @@
 package vcf;
 
-import org.junit.Assert;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Created by uichuimi on 4/10/16.
@@ -33,9 +35,9 @@ public class CoordinateTest {
         for (int i = 0; i < SORTED.size(); i++) {
             for (int j = 0; j < SORTED.size(); j++) {
                 final int compareTo = SORTED.get(i).compareTo(SORTED.get(j));
-                if (i < j) Assert.assertTrue(compareTo < 0);
-                if (i > j) Assert.assertTrue(compareTo > 0);
-                if (i == j) Assert.assertTrue(compareTo == 0);
+                if (i < j) assertTrue(compareTo < 0);
+                if (i > j) assertTrue(compareTo > 0);
+                if (i == j) assertTrue(compareTo == 0);
             }
         }
     }

@@ -17,9 +17,7 @@
 
 package vcf.io;
 
-import vcf.VariantException;
-import vcf.VariantSet;
-import vcf.VcfHeader;
+import vcf.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -66,17 +64,19 @@ public class VariantSetFactory {
     }
 
     private static void addMetaLine(VcfHeader header, Matcher metaLine) {
-        final String type = metaLine.group(1);
+        final String key = metaLine.group(1);
         final String value = metaLine.group(2);
         final Matcher contentMatcher = COMPLEX_HEADER.matcher(value);
-        if (contentMatcher.matches()) addComplexHeader(header, type, contentMatcher.group(1));
-        else header.addSimpleHeader(type, value);
+        if (contentMatcher.matches()) addComplexHeader(header, key, contentMatcher.group(1));
+        else header.getHeaderLines().add(new SimpleHeaderLine(key, value));
     }
 
-    private static void addComplexHeader(VcfHeader header, String type, String group) {
+    private static void addComplexHeader(VcfHeader header, String key, String group) {
         final Map<String, String> map = MapGenerator.parse(group);
         try {
-            header.addComplexHeader(type, map);
+            final ComplexHeaderLine complexHeaderLine = new ComplexHeaderLine(key, map);
+            header.getHeaderLines().add(complexHeaderLine);
+//            header.addComplexHeader(type, map);
         } catch (VariantException e) {
             e.printStackTrace();
         }

@@ -15,14 +15,13 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import vcf.VariantSet;
 import vcf.io.VariantSetFactory;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by uichuimi on 9/06/16.
@@ -33,10 +32,9 @@ public class MemoryTest {
     //  95.8MB /media/uichuimi/Elements/GENOME_DATA/SQZ/SQZ_077/VCF/sqz_077.vcf
     // Test result 11/11/2016 476.3MB
     // Test result 11/11/2016 547.7MB
-    private static final File input = new File("/media/uichuimi/Elements/GENOME_DATA/SQZ/SQZ_030/VCF/s030.vep.vcf");
-    private static final File input2 = new File("/media/uichuimi/Elements/GENOME_DATA/SQZ/SQZ_077/VCF/sqz_077.vcf");
-    private static final File input3 = new File("/media/uichuimi/DiscoInterno/GENOME_DATA/DTM/aa_more/DTM.vcf");
-    private static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+    private static final File input = new File("test/files/SP030.vcf");
+    private static final File input2 = new File("test/files/SP072.vcf");
+//    private static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
     private static void printMemory() {
         final long max = Runtime.getRuntime().maxMemory();
@@ -72,12 +70,15 @@ public class MemoryTest {
         long tic = System.currentTimeMillis();
         System.out.println("         Max       Total        Free       Usage");
         printMemory();
-        final VariantSet variantSet1 = VariantSetFactory.createFromFile(input);
+        final List<VariantSet> variantSets = new ArrayList<>();
+        for (int i = 0; i < 1000; i++)
+            variantSets.add(VariantSetFactory.createFromFile(input));
         System.gc();
         printMemory();
         System.out.printf("%tT\n", (System.currentTimeMillis() - tic));
         tic = System.currentTimeMillis();
-        final VariantSet variantSet = VariantSetFactory.createFromFile(input2);
+        for (int i = 0; i < 1000; i++)
+            variantSets.add(VariantSetFactory.createFromFile(input2));
         System.gc();
         printMemory();
         System.out.printf("%tT\n", (System.currentTimeMillis() - tic));

@@ -13,8 +13,9 @@ public class ValueUtils {
 
     private static final String NULL_VALUE = ".";
     private static final String VALUE_SEPARATOR = ",";
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.###",
-            DecimalFormatSymbols.getInstance(Locale.US));
+    private static final DecimalFormat DECIMAL_FORMAT =
+            new DecimalFormat("0.0##",
+                    DecimalFormatSymbols.getInstance(Locale.US));
 
     /**
      * Get the most precise value for the String passed by argument.
@@ -33,7 +34,7 @@ public class ValueUtils {
      * create:
      * <p>
      * <table border=1>
-     *     <caption>Types table</caption>
+     * <caption>Types table</caption>
      * <tr>
      * <th>Source type</th>
      * <th>Java type</th>

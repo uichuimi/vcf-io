@@ -1,15 +1,11 @@
 package vcf.io;
 
-import vcf.Coordinate;
-import vcf.Variant;
-import vcf.VcfHeader;
+import vcf.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -21,12 +17,12 @@ import java.util.stream.IntStream;
  * </p>
  * <code>
  * try (VariantSetReaderList readerList = new VariantSetReaderList(new LinkedList&lt;&gt;(files))) {
- *   while (readerList.hasNext()) {
- *     final List&lt;Variant&gt; variants = readerList.next();
- *     for (Variant variant : variants) {
- *         // do something with each variant
- *     }
- *   }
+ * while (readerList.hasNext()) {
+ * final List&lt;Variant&gt; variants = readerList.next();
+ * for (Variant variant : variants) {
+ * // do something with each variant
+ * }
+ * }
  * }
  * </code>
  * <p>
@@ -34,10 +30,10 @@ import java.util.stream.IntStream;
  * </p>
  * <code>
  * try (VariantSetReaderList readerList = new VariantSetReaderList(new LinkedList&lt;&gt;(files))) {
- *   while (readerList.hasNext()) {
- *     final Variant variant = readerList.nextMerged();
- *     // do something with the variant
- *   }
+ * while (readerList.hasNext()) {
+ * final Variant variant = readerList.nextMerged();
+ * // do something with the variant
+ * }
  * }
  * </code>
  * When using the merged version, a merged header is created by joining all the vcf headers, avoiding redundant lines.
@@ -82,7 +78,7 @@ public class VariantSetReaderList implements AutoCloseable {
      */
     public List<Variant> next() {
         final Coordinate nextCoordinate = nextCoordinate();
-        final List<Variant> next = new ArrayList<>();
+        final List<Variant> next = new LinkedList<>();
         IntStream.range(0, currentVariants.size()).forEach(i -> {
             if (currentVariants.get(i) != null) {
                 if (currentVariants.get(i).getCoordinate().equals(nextCoordinate)) {
@@ -108,41 +104,68 @@ public class VariantSetReaderList implements AutoCloseable {
 
     private Variant merge(List<Variant> variants) {
         if (header == null) mergeHeaders();
-        final Variant variant = variants.get(0);
-        final List<String> alleles = new LinkedList<>();
-        for (Object alt : variant.getAltArray()) if (!alleles.contains(alt)) alleles.add((String) alt);
-        variant.setVcfHeader(header);
-        if (variants.size() > 1) {
-            final List<String> formatKeys = header.getIdList("FORMAT");
-            for (int i = 1; i < variants.size(); i++) {
-                final Variant toMerge = variants.get(i);
-                for (Object alt : variant.getAltArray()) if (!alleles.contains(alt)) alleles.add((String) alt);
-                // Id
-                if (variant.getId().equals(".") && !toMerge.getId().equals("."))
-                    variant.setId(toMerge.getId());
-                // Info
-                for (String key : toMerge.getVcfHeader().getIdList("INFO")) {
-                    if (!variant.getInfo().hasInfo(key) && toMerge.getInfo().hasInfo(key))
-                        variant.getInfo().set(key, toMerge.getInfo().get(key));
-                }
-                // Format
-                toMerge.getVcfHeader().getSamples().forEach(sample -> {
-                    final String gt = variant.getSampleInfo().getFormat(sample, "GT");
+        // These variants DO have same Coordinate
+        final Coordinate coordinate = variants.get(0).getCoordinate();
+        final String ref = collectReferences(variants);
+        final List<String> alts = variants.stream()
+                .map(Variant::getAltArray).flatMap(Arrays::stream)
+                .distinct()
+                .collect(Collectors.toList());
+        final String[] alternatives = alts.toArray(new String[alts.size()]);
+        final Variant variant = new Variant(coordinate.getChrom(), coordinate.getPosition(), ref, alternatives, header);
+        final String[] alleles = variant.getAlleles();
 
-                    final boolean phased = gt.contains("|");
-                    final String[] gts = gt.split(phased ? "\\|" : "/");
-                    final int gt0 = Integer.valueOf(gts[0]);
-                    final int gt1 = Integer.valueOf(gts[1]);
-                    System.out.println(variant);
-                    final String r = reindexGT(variant, alleles, gt0);
-                    final String a = reindexGT(variant, alleles, gt1);
-                    variant.getSampleInfo().setFormat(sample, "GT", String.join(phased ? "|" : "/", r, a));
-                    formatKeys.forEach(key -> variant.getSampleInfo()
-                            .setFormat(sample, key, toMerge.getSampleInfo().getFormat(sample, key)));
+        for (Variant other : variants) {
+            if (variant.getId().equals(VariantSet.EMPTY_VALUE)
+                    && !other.getId().equals(VariantSet.EMPTY_VALUE))
+                variant.setId(other.getId());
+            other.getInfo().foreach((key, value) ->
+                    variant.getInfo().set(key, value));
+            header.getSamples().forEach(sample -> {
+                header.getIdList("FORMAT").forEach(key -> {
+                    final String value = other.getSampleInfo().getFormat(sample, key);
+                    if (value != null) {
+                        if (key.equals("GT")) {
+                            try {
+                                variant.getSampleInfo().setFormat(sample, key, reindexGT(alleles, other.getAlleles(), value));
+                            } catch (ArrayIndexOutOfBoundsException e) {
+                                System.err.println(variant);
+                                System.err.println(other);
+
+                            }
+                        } else
+                            variant.getSampleInfo().setFormat(sample, key, value);
+                    }
                 });
-            }
+            });
         }
         return variant;
+    }
+
+    private String reindexGT(String[] targetAlleles, String[] sourceAlleles, String sourceGT) {
+        if (sourceGT.contains("."))
+            return sourceGT;
+        final boolean phased = sourceGT.contains("\\|");
+        final String separator = phased ? "\\|" : "/";
+        final String[] gts = sourceGT.split(separator);
+        final String alleleA = sourceAlleles[Integer.valueOf(gts[0])];
+        final String alleleB = sourceAlleles[Integer.valueOf(gts[1])];
+        final int newGt0 = Arrays.binarySearch(targetAlleles, alleleA);
+        final int newGt1 = Arrays.binarySearch(targetAlleles, alleleB);
+        return String.format("%s%s%s", newGt0, separator, newGt1);
+    }
+
+    private String collectReferences(List<Variant> variants) {
+        final List<String> references = variants.stream().map(Variant::getRef)
+                .distinct().collect(Collectors.toList());
+        if (references.size() > 1) {
+            final String message = String.format("At coordinate %s," +
+                            " variants do not share the same reference: %s." +
+                            " Will use first one (%s)",
+                    variants.get(0).getCoordinate(), references, references.get(0));
+            Logger.getLogger(getClass().getName()).warning(message);
+        }
+        return references.get(0);
     }
 
     private String reindexGT(Variant variant, List<String> alleles, int gt0) {
@@ -160,11 +183,41 @@ public class VariantSetReaderList implements AutoCloseable {
                 .flatMap(vcfHeader -> vcfHeader.getSamples().stream())
                 .distinct()
                 .forEach(header.getSamples()::add);
-        readers.stream().map(VariantSetReader::header).forEach(vcfHeader -> {
-            vcfHeader.getSimpleHeaders().forEach(header::addSimpleHeader);
-            vcfHeader.getComplexHeaders().forEach((type, maps) ->
-                    maps.forEach(map -> header.addComplexHeader(type, map)));
-        });
+        readers.stream().map(VariantSetReader::header).forEach(vcfHeader ->
+                vcfHeader.getHeaderLines().forEach(sourceHeader -> {
+                    if (sourceHeader.getClass() == SimpleHeaderLine.class)
+                        addSimpleHeader((SimpleHeaderLine) sourceHeader);
+                    if (sourceHeader.getClass() == ComplexHeaderLine.class)
+                        addComplexHeader((ComplexHeaderLine) sourceHeader);
+                }));
+    }
+
+    private void addSimpleHeader(SimpleHeaderLine sourceHeader) {
+        if (headerContainsSimpleHeaderLine(sourceHeader)) return;
+        header.getHeaderLines().add(sourceHeader);
+    }
+
+    private boolean headerContainsSimpleHeaderLine(SimpleHeaderLine sourceHeader) {
+        for (SimpleHeaderLine headerLine : header.getSimpleHeaders())
+            if (headerLine.getKey().equals(sourceHeader.getKey())
+                    && headerLine.getValue().equals(sourceHeader.getValue()))
+                return true;
+        return false;
+    }
+
+    private void addComplexHeader(ComplexHeaderLine sourceHeader) {
+        if (headerContainsComplexHeaderLine(sourceHeader)) return;
+        header.getHeaderLines().add(sourceHeader);
+
+    }
+
+    private boolean headerContainsComplexHeaderLine(ComplexHeaderLine sourceHeader) {
+        for (ComplexHeaderLine headerLine : header.getComplexHeaders()) {
+            if (headerLine.getKey().equals(sourceHeader.getKey())
+                    && headerLine.getValue("ID").equals(sourceHeader.getValue("ID")))
+                return true;
+        }
+        return false;
     }
 
     /**

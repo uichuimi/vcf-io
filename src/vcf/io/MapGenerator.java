@@ -18,11 +18,11 @@
 package vcf.io;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
- * Returns a LinkedHashMap with the content of the line parsed. So "ID=AC,Number=A,Type=Integer"
- * becomes a map. This class is convenient to parse almost any VCF header lines.
+ * Returns a LinkedHashMap with the content of the line parsed. So
+ * "ID=AC,Number=A,Type=Integer" becomes a map. This class is convenient to
+ * parse almost any VCF header lines.
  *
  * @author UICHUIMI
  */
@@ -32,78 +32,116 @@ public class MapGenerator {
     private final static char COMMA = ',';
     private final static char EQUALS = '=';
 
-    private static int cursor;
-    private static String key;
-    private static String value;
-    private static Map<String, String> map;
-    private static String line;
-    private static boolean isKey;
+//    private static int cursor;
+//    private static String key;
+//    private static String value;
+//    private static LinkedHashMap<String, String> map;
+//    private static String line;
+//    private static boolean isKey;
 
     /**
-     * @param line line to map, without ##INFO neither ##FORMAT neither &lt; neither &gt;
+     * @param line line to map, without ##INFO neither ##FORMAT neither &lt;
+     *             neither &gt;
      * @return a map with the content of the line
      */
-    public synchronized static Map<String, String> parse(String line) {
-        MapGenerator.line = line;
-        map = new LinkedHashMap<>();
-        cursor = 0;
-        isKey = true;
-        return start();
+    public synchronized static LinkedHashMap<String, String> parse(String line) {
+        return privateParse(line);
     }
 
-    private static Map<String, String> start() {
-        while (cursor < line.length()) nextCharacter();
-        return map;
-    }
-
-    private static void nextCharacter() {
-        switch (line.charAt(cursor)) {
-            case QUOTE:
-                putQuotedValue();
-                break;
-            case EQUALS:
-                // Equals symbol: cursor at next position and expected a value
-                cursor++;
-                isKey = false;
-                break;
-            case COMMA:
-                // Comma symbol, cursor at next position and expected a key
-                cursor++;
-                isKey = true;
-                break;
-            default:
-                putUnquotedValue();
+    private static LinkedHashMap<String, String> privateParse(String line) {
+        Status status = new Status(line);
+        while (status.cursor < line.length()) {
+            switch (line.charAt(status.cursor)) {
+                case QUOTE:
+                    putQuotedValue(status);
+                    break;
+                case EQUALS:
+                    // Equals symbol: cursor at next position and expected a value
+                    status.cursor++;
+                    status.isKey = false;
+                    break;
+                case COMMA:
+                    // Comma symbol, cursor at next position and expected a key
+                    status.cursor++;
+                    status.isKey = true;
+                    break;
+                default:
+                    putUnquotedValue(status);
+            }
         }
+        return status.map;
     }
 
-    private static void putUnquotedValue() {
-        int end = endOfToken();
-        if (isKey)
-            key = line.substring(cursor, end);
+    //    private static LinkedHashMap<String, String> start() {
+//        while (cursor < line.length()) nextCharacter();
+//        return map;
+//    }
+//
+//    private static void nextCharacter() {
+//        switch (line.charAt(cursor)) {
+//            case QUOTE:
+//                putQuotedValue();
+//                break;
+//            case EQUALS:
+//                // Equals symbol: cursor at next position and expected a value
+//                cursor++;
+//                isKey = false;
+//                break;
+//            case COMMA:
+//                // Comma symbol, cursor at next position and expected a key
+//                cursor++;
+//                isKey = true;
+//                break;
+//            default:
+//                putUnquotedValue();
+//        }
+//    }
+//
+    private static void putUnquotedValue(Status status) {
+        int end = endOfToken(status);
+        if (status.isKey)
+            status.key = status.line.substring(status.cursor, end);
         else {
-            value = line.substring(cursor, end);
-            map.put(key, value);
+            String value = status.line.substring(status.cursor, end);
+            status.map.put(status.key, value);
         }
-        cursor = end;
+        status.cursor = end;
     }
 
-    private static int endOfToken() {
+    //
+    private static int endOfToken(Status status) {
         // Text not in quotes
         // token is the text between cursor and next "=" or ","
         // cursor at "=" or ","
-        int end = cursor;
-        while (end < line.length() && line.charAt(end) != EQUALS && line.charAt(end) != COMMA) end++;
+        int end = status.cursor;
+        while (end < status.line.length()
+                && status.line.charAt(end) != EQUALS
+                && status.line.charAt(end) != COMMA)
+            end++;
         return end;
     }
 
-    private static void putQuotedValue() {
+    //
+    private static void putQuotedValue(Status status) {
         // If isKey is false, something went wrong
         // token is the text between quotes
         // place cursor at next position after end quote
-        int endQuotePosition = line.indexOf(QUOTE, cursor + 1);
-        value = line.substring(cursor + 1, endQuotePosition);
-        cursor = endQuotePosition + 1;
-        map.put(key, value);
+        int endQuotePosition = status.line.indexOf(QUOTE, status.cursor + 1);
+        final String value = status.line.substring(status.cursor + 1, endQuotePosition);
+        status.map.put(status.key, value);
+        status.cursor = endQuotePosition + 1;
+    }
+
+    private static class Status {
+        public LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        public String key = "";
+        boolean isKey = true;
+        String line;
+        int cursor = 0;
+
+        public Status(String line) {
+            this.line = line;
+        }
     }
 
 }

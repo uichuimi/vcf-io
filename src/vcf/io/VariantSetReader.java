@@ -1,6 +1,8 @@
 package vcf.io;
 
-import vcf.*;
+import vcf.Variant;
+import vcf.VariantException;
+import vcf.VcfHeader;
 
 import java.io.*;
 import java.util.Iterator;
@@ -16,8 +18,8 @@ import java.util.stream.StreamSupport;
 public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 
 
-    private final VcfHeader header;
-    private final BufferedReader reader;
+    protected final VcfHeader header;
+    protected final BufferedReader reader;
     private Variant nextVariant;
 
     public VariantSetReader(File file) throws FileNotFoundException {
@@ -25,29 +27,30 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
         reader = new BufferedReader(new FileReader(file));
     }
 
-    public Stream<Variant> variants() {
+    public final Stream<Variant> variants() {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
                 Spliterator.NONNULL | Spliterator.ORDERED), true);
     }
 
     @Override
-    public void close() throws IOException {
+    public final void close() throws IOException {
         reader.close();
     }
 
-    public VcfHeader header() {
+    public final VcfHeader header() {
         return header;
     }
 
     @Override
-    public boolean hasNext() {
+    public final boolean hasNext() {
         if (nextVariant != null) return true;
         else {
             try {
                 String line = reader.readLine();
-                while (line != null && line.startsWith("#")) line = reader.readLine();
+                while (line != null && line.startsWith("#"))
+                    line = reader.readLine();
                 if (line == null) return false;
-                nextVariant = VariantFactory.createVariant(line, header);
+                nextVariant = createVariant(line);
                 return true;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -58,8 +61,19 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
         return false;
     }
 
+    /**
+     * This is the only intended method to be overwritten. VariantSetReader
+     * encapsulates the logic of opening, iterating and closing the file.
+     *
+     * @param line each variant line found in file
+     * @return a variant
+     */
+    protected Variant createVariant(String line) {
+        return VariantFactory.createVariant(line, header);
+    }
+
     @Override
-    public Variant next() {
+    public final Variant next() {
         if (hasNext()) {
             final Variant variant = nextVariant;
             nextVariant = null;

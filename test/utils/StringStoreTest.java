@@ -17,9 +17,10 @@
 
 package utils;
 
-import org.junit.Assert;
-import org.junit.Test;
-import utils.StringStore;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Created by uichuimi on 7/03/16.
@@ -29,14 +30,13 @@ public class StringStoreTest {
 
     @Test
     public void letsTest() {
-        Assert.assertEquals("hello", StringStore.getInstance("hello"));
-        Assert.assertEquals("goodbye", StringStore.getInstance("goodbye"));
-        Assert.assertEquals("hi", StringStore.getInstance("hi"));
-        Assert.assertEquals("patri", StringStore.getInstance("patri"));
-        Assert.assertEquals("hello", StringStore.getInstance("hello"));
-        for (int i = 0; i < 5000; i++) {
-            Assert.assertEquals(String.valueOf(i), StringStore.getInstance(String.valueOf(i)));
-        }
+        assertEquals("hello", StringStore.getInstance("hello"));
+        assertEquals("goodbye", StringStore.getInstance("goodbye"));
+        assertEquals("hi", StringStore.getInstance("hi"));
+        assertEquals("patri", StringStore.getInstance("patri"));
+        assertEquals("hello", StringStore.getInstance("hello"));
+        for (int i = 0; i < 5000; i++)
+            assertEquals(String.valueOf(i), StringStore.getInstance(String.valueOf(i)));
     }
 
 }

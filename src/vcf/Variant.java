@@ -20,9 +20,12 @@ package vcf;
 
 import utils.StringStore;
 
+import java.util.Arrays;
+
 /**
- * Stores a vcf. chrom, position, ref, alt, filter and format are Strings. position is an integer, qual a
- * double. Info is stored as a map of key==value. If value is null, key is treated as a flag.
+ * Stores a vcf. chrom, position, ref, alt, filter and format are Strings.
+ * position is an integer, qual a double. Info is stored as a map of key==value.
+ * If value is null, key is treated as a flag.
  *
  * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
  */
@@ -45,36 +48,29 @@ public class Variant implements Comparable<Variant> {
     private final SampleInfo sampleInfo;
     private final Info info;
     private VcfHeader vcfHeader;
-    private String ref;
-    private Object alt;
+    private String[] alleles;
     private String filter;
     private Double qual;
     private Object id;
+    //    private String ref;
+    //    private String[] alt;
 
-    /**
-     * Alt may be a String separated by ,
-     *
-     * @param chrom
-     * @param position
-     * @param ref
-     * @param alt      a String
-     */
-    public Variant(String chrom, int position, String ref, String alt) {
+    public Variant(String chrom, int position, String ref, String[] alt, VcfHeader header) {
         this.coordinate = new Coordinate(chrom, position);
-        this.ref = StringStore.getInstance(ref);
-        this.alt = ValueUtils.getValue(alt, "string");
+        this.alleles = new String[alt.length + 1];
+        this.alleles[0] = ref;
+        System.arraycopy(alt, 0, alleles, 1, alt.length);
+        for (int i = 0; i < alleles.length; i++)
+            alleles[i] = StringStore.getInstance(alleles[i]);
+        this.vcfHeader = header;
         sampleInfo = new SampleInfo(this);
         info = new Info();
     }
 
     public Variant(String chrom, int position, String ref, String alt, VcfHeader header) {
-        this.coordinate = new Coordinate(chrom, position);
-        this.ref = StringStore.getInstance(ref);
-        this.alt = ValueUtils.getValue(alt, "string");
-        this.vcfHeader = header;
-        sampleInfo = new SampleInfo(this);
-        info = new Info();
+        this(chrom, position, ref, alt.split(","), header);
     }
+
 
     /**
      * Gets the chromosome of the vcf.
@@ -83,6 +79,16 @@ public class Variant implements Comparable<Variant> {
      */
     public String getChrom() {
         return coordinate.getChrom();
+    }
+
+    /**
+     * Changes the contig. Be sure you explicitly reorder the variants in your
+     * dataset after changing the name of the contigs.
+     *
+     * @param chrom
+     */
+    public void setChrom(String chrom) {
+        coordinate.setContig(chrom);
     }
 
     /**
@@ -99,7 +105,9 @@ public class Variant implements Comparable<Variant> {
     }
 
     public String[] getIdArray() {
-        return ValueUtils.isArray(id) ? (String[]) id : new String[]{(String) id};
+        return ValueUtils.isArray(id)
+                ? (String[]) id
+                : new String[]{(String) id};
     }
 
     /**
@@ -108,7 +116,7 @@ public class Variant implements Comparable<Variant> {
      * @return the ref value
      */
     public String getRef() {
-        return ref;
+        return alleles[0];
     }
 
     /**
@@ -117,7 +125,7 @@ public class Variant implements Comparable<Variant> {
      * @return the alt value
      */
     public String getAlt() {
-        return ValueUtils.getString(alt);
+        return ValueUtils.getString(Arrays.copyOfRange(alleles, 1, alleles.length));
     }
 
     /**
@@ -125,8 +133,8 @@ public class Variant implements Comparable<Variant> {
      *
      * @return alt as <code>"A"</code> or <code>String[]{"A", "AC"}</code>
      */
-    public Object[] getAltArray() {
-        return ValueUtils.isArray(alt) ? (Object[]) alt : new String[]{(String) alt};
+    public String[] getAltArray() {
+        return Arrays.copyOfRange(alleles, 1, alleles.length);
     }
 
     /**
@@ -160,26 +168,28 @@ public class Variant implements Comparable<Variant> {
         return coordinate.compareTo(variant.coordinate);
     }
 
-    /**
-     * Changes the contig. Be sure you explicitly reorder the variants in your
-     * dataset after changing the name of the contigs.
-     * @param chrom
-     */
-    public void setChrom(String chrom) {
-        coordinate.setContig(chrom);
-    }
     public String getFilter() {
         return filter;
     }
 
     public void setFilter(String filter) {
-        this.filter = StringStore.getInstance(filter);
+        this.filter =
+                filter == null
+                        ? null
+                        : StringStore.getInstance(filter);
     }
 
     public VcfHeader getVcfHeader() {
         return vcfHeader;
     }
 
+    /**
+     * Changing variant from VariantSet is dangerous, as samples are indexed
+     * for current VcfHeader. Instead, create a new variant and copy data.
+     *
+     * @param vcfHeader new VcfHeader for variant
+     */
+    @Deprecated
     public void setVcfHeader(VcfHeader vcfHeader) {
         this.vcfHeader = vcfHeader;
     }
@@ -189,8 +199,8 @@ public class Variant implements Comparable<Variant> {
         return coordinate.getChrom() +
                 "\t" + coordinate.getPosition() +
                 "\t" + ValueUtils.getString(id) +
-                "\t" + ref +
-                "\t" + ValueUtils.getString(alt) +
+                "\t" + alleles[0] +
+                "\t" + ValueUtils.getString(Arrays.copyOfRange(alleles, 1, alleles.length)) +
                 "\t" + ValueUtils.getString(qual) +
                 "\t" + ValueUtils.getString(filter) +
                 "\t" + info +
@@ -205,4 +215,7 @@ public class Variant implements Comparable<Variant> {
         return info;
     }
 
+    public String[] getAlleles() {
+        return alleles;
+    }
 }

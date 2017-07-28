@@ -17,8 +17,6 @@
 
 package vcf;
 
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
@@ -39,8 +37,6 @@ public class VariantSet {
     public static final String EMPTY_VALUE = ".";
     private final ObservableSet<Variant> variants = FXCollections.observableSet(new TreeSet<>());
     private final VcfHeader header;
-
-    private Property<Boolean> changed = new SimpleObjectProperty<>(false);
 
     private Map<String, Map<Integer, Variant>> index = new TreeMap<>();
 
@@ -106,7 +102,8 @@ public class VariantSet {
      * @param variants list of variants
      */
     public void save(File file, Set<Variant> variants) {
-        if (file.exists() && !file.delete()) System.err.println("No access on " + file);
+        if (file.exists() && !file.delete())
+            System.err.println("No access on " + file);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(header.toString());
             writer.newLine();
@@ -136,7 +133,8 @@ public class VariantSet {
     }
 
     private void copyId(Variant target, Variant source) {
-        if (target.getId().equals(EMPTY_VALUE) && !source.getId().equals(EMPTY_VALUE)) target.setId(source.getId());
+        if (target.getId().equals(EMPTY_VALUE) && !source.getId().equals(EMPTY_VALUE))
+            target.setId(source.getId());
     }
 
     private void copySampleInfo(Variant target, Variant source) {
@@ -158,8 +156,7 @@ public class VariantSet {
      * @return
      */
     private Variant clone(Variant source) {
-        final Variant target = new Variant(source.getChrom(), source.getPosition(), source.getRef(), source.getAlt());
-        target.setVcfHeader(getHeader());
+        final Variant target = new Variant(source.getChrom(), source.getPosition(), source.getRef(), source.getAlt(), getHeader());
         target.setQual(source.getQual());
         target.setId(source.getId());
         target.setFilter(source.getFilter());
@@ -170,14 +167,17 @@ public class VariantSet {
 
     private void copyInfo(Variant target, Variant source) {
         source.getVcfHeader().getIdList("INFO").forEach(key -> {
-            if (source.getInfo().hasInfo(key)) target.getInfo().set(key, source.getInfo().get(key));
+            if (source.getInfo().hasInfo(key))
+                target.getInfo().set(key, source.getInfo().get(key));
         });
     }
 
     private void copyFormat(Variant target, Variant source) {
         final List<String> formatKeys = source.getVcfHeader().getIdList("FORMAT");
-        source.getVcfHeader().getSamples().forEach(sample -> formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo()
-                .getFormat(sample, key))));
+        source.getVcfHeader().getSamples().forEach(sample ->
+                formatKeys.forEach(key ->
+                        target.getSampleInfo().setFormat(sample, key,
+                                source.getSampleInfo().getFormat(sample, key))));
     }
 
 

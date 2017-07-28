@@ -17,58 +17,32 @@
 
 package vcf;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class InfoTest {
 
-    private final Info info = new Info();
-    private final Map<String, Object> someInfo = new HashMap<>();
-
-
-    public InfoTest() {
-        someInfo.put("this", "hello");
-        someInfo.put("that", "hi");
-        someInfo.put("those", 17);
-        someInfo.put("number", -14.67);
-        someInfo.put("true", true);
-        someInfo.put("false", false);
-    }
-
-    @Before
-    public void init() {
-        someInfo.forEach(info::set);
-    }
-
     @Test
-    public void testGetInfo() {
-        someInfo.forEach((s, o) -> Assert.assertEquals(o, info.get(s)));
+    void testInfo() {
+        final Info info = new Info();
+        info.set("this", "hello");
+        info.set("that", "hi");
+        info.set("those", 17);
+        info.set("number", -14.67);
+        info.set("true", true);
+        info.set("false", false);
+        assertEquals("hello", info.getString("this"));
+        assertEquals("hi", info.getString("that"));
+        assertEquals(17, info.getNumber("those"));
+        assertEquals(-14.67, (double) info.getNumber("number"), 0.001);
+        assertEquals(true, info.getBoolean("true"));
+        assertEquals(false, info.getBoolean("false"));
     }
 
-    @Test
-    public void testGetString() {
-        Assert.assertEquals("hello", info.getString("this"));
-        Assert.assertEquals("hi", info.getString("that"));
-    }
-
-    @Test
-    public void testGetNumber() {
-        Assert.assertEquals(17, info.getNumber("those"));
-        Assert.assertEquals(-14.67, (double) info.getNumber("number"), 0.001);
-    }
-
-    @Test
-    public void testGetBoolean() {
-        Assert.assertEquals(true, info.getBoolean("true"));
-        Assert.assertEquals(false, info.getBoolean("false"));
-
-    }
 
 }

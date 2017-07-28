@@ -16,10 +16,7 @@
  */
 package vcf;
 
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
 import vcf.io.VariantSetFactory;
 
 import java.io.BufferedReader;
@@ -28,20 +25,21 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class VariantSetFactoryTest {
 
     private final static File TEMPORARY_FILES = new File("test/files");
-    @Rule
-    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void testLoadFromFile() {
         final VariantSet file = VariantSetFactory.createFromFile(new File("test/files/Sample2.vcf"));
-        Assert.assertEquals(5, file.getVariants().size());
-        Assert.assertEquals(6, file.getHeader().getComplexHeaders().get("INFO").size());
+        assertEquals(5, file.getVariants().size());
+        assertEquals(6, file.getHeader().getComplexHeaders("INFO").size());
     }
 
     @Test
@@ -51,79 +49,78 @@ public class VariantSetFactoryTest {
         // When
         final VariantSet variantSet = VariantSetFactory.createFromFile(file);
         // Then
-        Assert.assertEquals(15, variantSet.getVariants().size());
-//        Assert.assertEquals(file, variantSet.getFile());
+        assertEquals(15, variantSet.getVariants().size());
+//        assertEquals(file, variantSet.getFile());
     }
 
     @Test
-    public void testWithOneSample() {
+    void testWithOneSample() {
         // Given
         final VariantSet variantSet = VariantSetFactory.createFromFile(new File(TEMPORARY_FILES, "Sample1.vcf"));
         final List<String> expected = new ArrayList<>(Collections.singletonList("sample01"));
         final List<String> samples = variantSet.getHeader().getSamples();
         // Then
-        Assert.assertEquals(expected, samples);
+        assertEquals(expected, samples);
     }
 
     @Test
-    public void testWithNoSample() {
+    void testWithNoSample() {
         // Given
         final VariantSet variantSet = VariantSetFactory.createFromFile(new File(TEMPORARY_FILES, "NoSample.vcf"));
         final List<String> expected = new ArrayList<>();
         final List<String> samples = variantSet.getHeader().getSamples();
         // Then
-        Assert.assertEquals(expected, samples);
+        assertEquals(expected, samples);
     }
 
     @Test
-    public void testWithMultipleSample() {
+    void testWithMultipleSample() {
         // Given
         final VariantSet variantSet = VariantSetFactory.createFromFile(new File(TEMPORARY_FILES, "MultiSample.vcf"));
         final List<String> expected = Arrays.asList("S_7", "S_75", "S_42", "S_81", "S_8", "S_76", "S_53", "S_82", "S_30", "S_77", "S_70", "S_83", "S_36", "S_78", "S_71", "S_84", "S_37", "S_79", "S_72", "S_85", "S_39", "S_80", "S_73", "S_86", "S_87", "S_99", "S_93", "S_110", "S_88", "S_100", "S_94", "S_111", "S_89", "S_102", "S_95", "S_120", "S_90", "S_103", "S_96", "S_185", "S_91", "S_104", "S_97", "PM", "S_92", "S_105", "S_98", "DAM");
         final List<String> samples = variantSet.getHeader().getSamples();
         // Then
-        Assert.assertEquals(expected, samples);
+        assertEquals(expected, samples);
     }
 
     @Test
     public void testComplexHeader() {
-        final VariantSet variantSet = VariantSetFactory.createFromFile(new File(TEMPORARY_FILES, "HeaderTest.vcf"));
-        final Map<String, List<Map<String, String>>> expected = new HashMap<>();
-        final Map<String, String> filter1 = new HashMap<>();
-        filter1.put("Description", "Low quality");
+        final VcfHeader header = VariantSetFactory.readHeader(new File(TEMPORARY_FILES, "HeaderTest.vcf"));
+        final VcfHeader expected = new VcfHeader("VCFv4.1");
+        expected.getHeaderLines().add(new SimpleHeaderLine("reference", "file:///home/unidad03/DNA_Sequencing/HomoSapiensGRCh37/human_g1k_v37.fasta"));
+        final LinkedHashMap<String, String> filter1 = new LinkedHashMap<>();
         filter1.put("ID", "LowQual");
-        final Map<String, String> info1 = new HashMap<>();
-        info1.put("Description", "If present, indicates that the position is in an MIST Zone");
-        info1.put("ID", "MistZone");
-        info1.put("Type", "Flag");
-        info1.put("Number", "0");
-        final Map<String, String> info2 = new HashMap<>();
-        info2.put("Description", "Allele Frequency, for each ALT allele, in the same order as listed");
-        info2.put("ID", "AF");
-        info2.put("Type", "Float");
-        info2.put("Number", "A");
-        final Map<String, String> contig1 = new HashMap<>();
-        contig1.put("assembly", "b37");
-        contig1.put("ID", "1");
-        contig1.put("length", "249250621");
-        final Map<String, String> contig2 = new HashMap<>();
-        contig2.put("assembly", "b37");
+        filter1.put("Description", "Low quality");
+        expected.getHeaderLines().add(new ComplexHeaderLine("FILTER", filter1));
+
+        final LinkedHashMap<String, String> infoMap1 = new LinkedHashMap<>();
+        infoMap1.put("ID", "MistZone");
+        infoMap1.put("Number", "0");
+        infoMap1.put("Type", "Flag");
+        infoMap1.put("Description", "If present, indicates that the position is in an MIST Zone");
+        expected.getHeaderLines().add(new ComplexHeaderLine("INFO", infoMap1));
+
+        final LinkedHashMap<String, String> infoMap2 = new LinkedHashMap<>();
+        infoMap2.put("ID", "AF");
+        infoMap2.put("Number", "A");
+        infoMap2.put("Type", "Float");
+        infoMap2.put("Description", "Allele Frequency, for each ALT allele, in the same order as listed");
+        expected.getHeaderLines().add(new ComplexHeaderLine("INFO", infoMap2));
+
+        final LinkedHashMap<String, String> contigMap1 = new LinkedHashMap<>();
+        contigMap1.put("ID", "1");
+        contigMap1.put("length", "249250621");
+        contigMap1.put("assembly", "b37");
+        expected.getHeaderLines().add(new ComplexHeaderLine("contig", contigMap1));
+
+        final LinkedHashMap<String, String> contig2 = new LinkedHashMap<>();
         contig2.put("ID", "2");
         contig2.put("length", "243199373");
-        expected.put("FILTER", Arrays.asList(filter1));
-        expected.put("INFO", Arrays.asList(info1, info2));
-        expected.put("contig", Arrays.asList(contig1, contig2));
-        /*
-         * ##fileformat=VCFv4.1
-         * ##reference=file:///home/unidad03/DNA_Sequencing/HomoSapiensGRCh37/human_g1k_v37.fasta
-         * ##FILTER=<Description="Low quality",ID=LowQual>
-         * ##INFO=<Description="If present, indicates that the position is in an MIST Zone",ID=MistZone,Type=Flag,Number=0>
-         * ##INFO=<Description="Allele Frequency, for each ALT allele, in the same order as listed",ID=AF,Number=A,Type=Float>
-         * ##contig=<ID=1,assembly=b37,length=249250621>
-         * ##contig=<ID=2,assembly=b37,length=243199373>
-         */
-        final Map<String, List<Map<String, String>>> complexHeaders = variantSet.getHeader().getComplexHeaders();
-        Assert.assertEquals(expected, complexHeaders);
+        contig2.put("assembly", "b37");
+        expected.getHeaderLines().add(new ComplexHeaderLine("contig", contig2));
+
+        // Not the best way, but valid
+        assertTrue(expected.toString().equals(header.toString()));
     }
 
     @Test
@@ -132,12 +129,10 @@ public class VariantSetFactoryTest {
          * ##fileformat=VCFv4.1
          * ##reference=file:///home/unidad03/DNA_Sequencing/HomoSapiensGRCh37/human_g1k_v37.fasta
          */
-        final VariantSet variantSet = VariantSetFactory.createFromFile(new File(TEMPORARY_FILES, "HeaderTest.vcf"));
-        final Map<String, String> expected = new HashMap<>();
-        expected.put("fileformat", "VCFv4.1");
-        expected.put("reference", "file:///home/unidad03/DNA_Sequencing/HomoSapiensGRCh37/human_g1k_v37.fasta");
-        final Map<String, String> simpleHeaders = variantSet.getHeader().getSimpleHeaders();
-        Assert.assertEquals(expected, simpleHeaders);
+        final VcfHeader header = VariantSetFactory.readHeader(new File(TEMPORARY_FILES, "HeaderTest.vcf"));
+        assertEquals("VCFv4.1", header.getSimpleHeader("fileformat").getValue());
+        assertEquals("file:///home/unidad03/DNA_Sequencing/HomoSapiensGRCh37/human_g1k_v37.fasta",
+                header.getSimpleHeader("reference").getValue());
     }
 
     @Test
@@ -145,19 +140,15 @@ public class VariantSetFactoryTest {
         final VariantSet variantSet = VariantSetFactory.createFromFile(new File(TEMPORARY_FILES, "Sample1.vcf"));
         final File expected = new File(TEMPORARY_FILES, "ExpectedSample1.vcf");
         final File saveFile;
-        try {
-            saveFile = temporaryFolder.newFile("saveFile.vcf");
-            variantSet.save(saveFile);
-            Assert.assertTrue(filesAreEqual(expected, saveFile));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        saveFile = new File(TEMPORARY_FILES, "saveFile.vcf");
+        variantSet.save(saveFile);
+        assertTrue(filesAreEqual(expected, saveFile));
     }
 
     @Test
     public void testFormats() {
         final VariantSet variantSet = VariantSetFactory.createFromFile(new File(TEMPORARY_FILES, "Sample1.vcf"));
-        Assert.assertEquals(Arrays.asList("GT", "AD", "DP", "GQ", "PL"), variantSet.getHeader().getIdList("FORMAT"));
+        assertEquals(Arrays.asList("AD", "DP", "GQ", "GT", "PL"), variantSet.getHeader().getIdList("FORMAT"));
     }
 
     private boolean filesAreEqual(File expected, File file) {
@@ -168,8 +159,10 @@ public class VariantSetFactoryTest {
             int lineNumber = 0;
             while ((expectedLine = expectedReader.readLine()) != null) {
                 fileLine = fileReader.readLine();
-                if (lineIsNull(expectedLine, fileLine, lineNumber)) return false;
-                if (lineIsDifferent(expectedLine, fileLine, lineNumber)) return false;
+                if (lineIsNull(expectedLine, fileLine, lineNumber))
+                    return false;
+                if (lineIsDifferent(expectedLine, fileLine, lineNumber))
+                    return false;
                 lineNumber++;
             }
             fileLine = fileReader.readLine();

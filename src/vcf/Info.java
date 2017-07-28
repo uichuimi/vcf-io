@@ -19,15 +19,15 @@ package vcf;
 
 import utils.StringStore;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiConsumer;
 
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class Info {
+
+
     private static String[] keys = {};
     private Object[] vals = {};
 
@@ -64,10 +64,9 @@ public class Info {
             value = StringStore.getInstance((String) value);
         } else if (Object[].class.isAssignableFrom(value.getClass())) {
             final Object[] array = (Object[]) value;
-            if (String.class.isAssignableFrom(array[0].getClass())) {
+            if (String.class.isAssignableFrom(array[0].getClass()))
                 for (int i = 0; i < array.length; i++)
                     array[i] = StringStore.getInstance((String) array[i]);
-            }
         }
         return value;
     }
@@ -203,4 +202,10 @@ public class Info {
         return String.join(";", infos);
     }
 
+    public void foreach(BiConsumer<String, Object> action) {
+        Objects.requireNonNull(action);
+        for (int i = 0; i < vals.length; i++)
+            if (vals[i] != null)
+                action.accept(keys[i], vals[i]);
+    }
 }

@@ -23,19 +23,21 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * Created by uichuimi on 8/06/16.
+ * Keeps an in-memory representation of a Mist file.
+ * Created on 8/06/16.
+ *
+ * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class Mist {
 
-    //    private TreeMap<String, BitSet> regions = new TreeMap<>();
+    /**
+     * Key of treeMap is the contig. TreeRegions are sorted by [start,end]
+     */
     private TreeMap<String, TreeSet<MistRegion>> treeMap = new TreeMap<>();
 
     public void addRegion(String chrom, int start, int end) {
         treeMap.putIfAbsent(chrom, new TreeSet<>());
         treeMap.get(chrom).add(new MistRegion(start, end));
-//        regions.putIfAbsent(chrom, new BitSet());
-//        final BitSet positions = regions.get(chrom);
-//        positions.set(start, end);
     }
 
     public boolean isInMistRegion(Variant variant) {
@@ -46,7 +48,6 @@ public class Mist {
         if (!treeMap.containsKey(chrom)) return false;
         final TreeSet<MistRegion> mistRegions = treeMap.get(chrom);
         return mistRegions.stream().anyMatch(mistRegion -> mistRegion.contains(position));
-//        return regions.containsKey(chrom) && regions.get(chrom).get(position);
     }
 
     private class MistRegion implements Comparable<MistRegion> {
@@ -61,7 +62,9 @@ public class Mist {
         @Override
         public int compareTo(MistRegion other) {
             final int compare = Integer.compare(start, other.start);
-            return compare == 0 ? 0 : Integer.compare(end, other.end);
+            return compare != 0
+                    ? compare
+                    : Integer.compare(end, other.end);
         }
 
         public boolean contains(int position) {

@@ -17,19 +17,16 @@
 
 package vcf.io;
 
-import vcf.ValueUtils;
-import vcf.Variant;
-import vcf.VariantException;
-import vcf.VcfHeader;
+import vcf.*;
 
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * Factory to create Variants. Use method <code>createVariant(line, file)</code> to get a new Variant. Line should be
+ * Factory to create Variants. Use method
+ * <code>createVariant(line, header)</code> to get a new Variant. Line should be
  * a String corresponding to a VCF line in a text VCF file.
  *
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
@@ -45,146 +42,132 @@ public class VariantFactory {
      * @param vcfHeader the owner VariantSet
      * @return a vcf representing the line in the VCF variantSet
      */
-    public static Variant createVariant(String line, VcfHeader vcfHeader) throws VariantException {
-
+    public static Variant createVariant(String line, VcfHeader vcfHeader)
+            throws VariantException {
         final String[] v = line.split("\t");
-        final String chrom = v[0];
-        final int pos = Integer.valueOf(v[1]);
-        final String ref = v[3];
-        final String alt = v[4];
-        final Variant variant = new Variant(chrom, pos, ref, alt, vcfHeader);
-        try {
-            variant.setQual(Double.valueOf(v[5]));
-        } catch (Exception ignored) {
-            ignored.printStackTrace();
-            return null;
-        }
-//        variant.setVcfHeader(vcfHeader);
-        variant.setId(v[2]);
-        variant.setFilter(v[6]);
-        addInfos(variant, v[7]);
-        addSamples(variant, v);
-        return variant;
-    }
-
-    private static void addInfos(Variant variant, String field) {
-        if (field.equals(".")) return;
-        final String[] split = field.split(";");
-        for (String s : split) {
-            if (s.contains("=")) {
-                final String[] pair = s.split("=");
-                final String key = pair[0];
-                final String value = pair[1];
-                final String type = getType(variant, key);
-                variant.getInfo().set(key, ValueUtils.getValue(value, type));
-            } else {
-                final String type = getType(variant, s);
-                if (type.equals("Flag")) variant.getInfo().set(s, true);
-                else raiseWarning(s + " is not Flag and has missing value in " + variant);
-            }
-        }
-    }
-
-    private static void addSamples(Variant variant, String[] line) throws VariantException {
-        if (line.length > 8) {
-            final String[] keys = line[8].split(":");
-            final int numberOfSamples = line.length - 9;
-            assertNumberOfSamples(variant.getVcfHeader(), numberOfSamples);
-            for (int i = 0; i < numberOfSamples; i++) {
-                final String[] values = line[i + 9].split(":");
-                for (int j = 0; j < values.length; j++) {
-                    if (!values[j].equals("."))
-                        variant.getSampleInfo().setFormat(variant.getVcfHeader().getSamples().get(i), keys[j], values[j]);
-                }
-            }
-        }
-    }
-
-    public static Variant createVariant(String line, VcfHeader header, VcfHeader readHeader, boolean loadId,
-                                        boolean loadQual, boolean loadFilter) throws VariantException {
-        final String[] v = line.split("\t");
-        final String chrom = v[0];
-        final int pos = Integer.valueOf(v[1]);
-        final String ref = v[3];
-        final String alt = v[4];
-        final Variant variant = new Variant(chrom, pos, ref, alt, header);
-        if (loadId) variant.setId(v[2]);
-        if (loadFilter) variant.setFilter(v[6]);
-        if (loadQual) {
+        final Variant variant = getBaseVariant(vcfHeader, v);
+        if (!v[2].equals(VariantSet.EMPTY_VALUE))
+            variant.setId(v[2]);
+        if (!v[5].equals(VariantSet.EMPTY_VALUE))
             try {
                 variant.setQual(Double.valueOf(v[5]));
-            } catch (NumberFormatException ignored) {
-
+            } catch (NumberFormatException e) {
+                throw new VariantException(e.getMessage());
             }
-        }
-        if (!header.getComplexHeaders().get("INFO").isEmpty())
-            addInfosStrictly(variant, v[7]);
-        if (!header.getComplexHeaders().get("FORMAT").isEmpty() && !header.getSamples().isEmpty())
-            addSamples(variant, readHeader, v);
+        if (!v[6].equals(VariantSet.EMPTY_VALUE))
+            variant.setFilter(v[6]);
+        parseInfo(variant, v[7], false);
+        addSamples(variant, v, vcfHeader.getSamples());
         return variant;
     }
 
-    private static void addSamples(Variant variant, VcfHeader readHeader, String[] line) throws VariantException {
+    /**
+     * This method is specific for loading only parts of a variant.
+     *
+     * @param line       variant line
+     * @param header     header to assign to variant
+     * @param fileHeader header loaded from file
+     * @param loadId     true to load the ID
+     * @param loadQual   true to load QUAL
+     * @param loadFilter true to load FILTER
+     * @return a new variant with header as VcfHeader
+     * @throws VariantException
+     */
+    public static Variant createVariant(String line, VcfHeader header, VcfHeader fileHeader, boolean loadId,
+                                        boolean loadQual, boolean loadFilter) throws VariantException {
+        final String[] v = line.split("\t");
+        final Variant variant = getBaseVariant(header, v);
+        if (loadId && !v[2].equals(VariantSet.EMPTY_VALUE))
+            variant.setId(v[2]);
+        if (loadQual && !v[5].equals(VariantSet.EMPTY_VALUE)) {
+            try {
+                variant.setQual(Double.valueOf(v[5]));
+            } catch (NumberFormatException e) {
+                throw new VariantException(e.getMessage());
+            }
+        }
+        if (loadFilter && !v[6].equals(VariantSet.EMPTY_VALUE))
+            variant.setFilter(v[6]);
+        parseInfo(variant, v[7], true);
+        addSamples(variant, v, fileHeader.getSamples());
+        return variant;
+    }
+
+    private static Variant getBaseVariant(VcfHeader header, String[] v) {
+        final String chrom = v[0];
+        final int pos = Integer.valueOf(v[1]);
+        final String ref = v[3];
+        final String alt = v[4];
+        return new Variant(chrom, pos, ref, alt, header);
+    }
+
+    /**
+     * Strictly to header
+     *
+     * @param variant
+     * @param line
+     * @param samples list of samples
+     * @throws VariantException
+     */
+    private static void addSamples(Variant variant, String[] line, List<String> samples) throws VariantException {
         if (line.length > 8) {
             final String[] keys = line[8].split(":");
             final int numberOfSamples = line.length - 9;
-            assertNumberOfSamples(readHeader, numberOfSamples);
+            assertNumberOfSamples(samples, numberOfSamples);
             for (int i = 0; i < numberOfSamples; i++) {
-                final String sample = readHeader.getSamples().get(i);
+                final String sample = samples.get(i);
                 if (variant.getVcfHeader().getSamples().contains(sample)) {
                     final String[] values = line[i + 9].split(":");
-                    for (int j = 0; j < values.length; j++) {
+                    for (int j = 0; j < values.length; j++)
                         if (variant.getVcfHeader().hasComplexHeader("FORMAT", keys[j]))
                             variant.getSampleInfo().setFormat(sample, keys[j], values[j]);
-                    }
                 }
             }
         }
 
     }
 
-    private static void assertNumberOfSamples(VcfHeader header, int numberOfSamples) throws VariantException {
-        if (numberOfSamples != header.getSamples().size()) {
-            final String message = "Bad line format, should be " + header.getSamples().size() + " samples";
+    private static void assertNumberOfSamples(List<String> samples, int numberOfSamples) throws VariantException {
+        if (numberOfSamples != samples.size()) {
+            final String message = "Bad line format, should be " + samples.size() + " samples";
             throw new VariantException(message);
         }
     }
 
-    private static void addInfosStrictly(Variant variant, String info) {
+    private static void parseInfo(Variant variant, String info, boolean strict) {
+        if (info.equals(VariantSet.EMPTY_VALUE))
+            return;
+        final List<String> idList = variant.getVcfHeader().getIdList("INFO");
         final String[] fields = info.split(";");
-        final List<String> tagged = new LinkedList<>(variant.getVcfHeader().getIdList("INFO"));
         for (String field : fields) {
             final String[] pair = field.split("=");
-            if (tagged.contains(pair[0])) {
-                setInfo(variant, pair[0], pair.length > 1 ? pair[1] : null);
-                tagged.remove(pair[0]);
-                if (tagged.isEmpty()) return;
+            final String key = pair[0];
+            if (strict && !idList.contains(key))
+                continue;
+            final String type = getInfoType(variant, key);
+            if (pair.length > 1) {
+                final String value = pair[1];
+                variant.getInfo().set(key, ValueUtils.getValue(value, type));
+            } else {
+                if (type.equals("Flag")) variant.getInfo().set(key, true);
+                else
+                    raiseWarning(key + " is not Flag and has missing value in " + variant);
             }
         }
     }
 
-    private static void setInfo(Variant variant, String key, String value) {
-        final String type = getType(variant, key);
-        if (value == null || value.isEmpty()) {
-            if (!type.equals("Flag")) {
-                Logger.getLogger(VariantFactory.class.getName()).severe(type + " INFO has no value: " + key);
-            } else variant.getInfo().set(key, true);
-        } else {
-            final Object val = ValueUtils.getValue(value, type);
-            variant.getInfo().set(key, val);
-        }
-    }
-
-    private static String getType(Variant variant, String id) {
-        if (variant.getVcfHeader().hasComplexHeader("INFO", id))
-            return variant.getVcfHeader().getComplexHeader("INFO", id).get("Type");
-        else
+    private static String getInfoType(Variant variant, String id) {
+        final ComplexHeaderLine info = variant.getVcfHeader().getComplexHeader("INFO", id);
+        if (info == null) {
             raiseWarning(id + " not found in INFO headers, assuming Type=String");
-        return "String";
+            return "String";
+        }
+        return info.getValue("Type");
     }
 
     private static void raiseWarning(String message) {
-        if (!warnings.contains(message)) Logger.getLogger(VariantFactory.class.getName()).warning(message);
+        if (!warnings.contains(message))
+            Logger.getLogger(VariantFactory.class.getName()).warning(message);
         warnings.add(message);
     }
 }

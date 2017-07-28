@@ -1,7 +1,6 @@
 package vcf.combine;
 
-import org.junit.Ignore;
-import vcf.Variant;
+import org.junit.jupiter.api.Disabled;
 import vcf.VariantSet;
 import vcf.io.VariantSetFactory;
 
@@ -25,7 +24,7 @@ public class HaplotypeTest {
     private final List<String> names = Arrays.asList("sqz_001", "sqz_002", "sqz_003", "sqz_020", "sqz_025",
             "sqz_030", "sqz_072", "sqz_077");
 
-    @Ignore()
+    @Disabled
     public void calculateEqualities() {
         final Map<String, Map<String, Long>> matrix = new LinkedHashMap<>();
         for (int i = 0; i < files.size(); i++) {
@@ -35,7 +34,8 @@ public class HaplotypeTest {
             matrix.put(sample, new LinkedHashMap<>());
             for (int j = i; j < files.size(); j++) {
                 System.out.println("with " + files.get(j));
-                if (files.get(i).equals(files.get(j))) matrix.get(sample).put(sample, 0L);
+                if (files.get(i).equals(files.get(j)))
+                    matrix.get(sample).put(sample, 0L);
                 else {
                     final VariantSet variantSet1 = VariantSetFactory.createFromFile(files.get(j));
                     final String sample1 = variantSet1.getHeader().getSamples().get(0);
@@ -60,10 +60,11 @@ public class HaplotypeTest {
         matrix.forEach((sample, map) -> System.out.println(sample + "->" + map));
     }
 
-    @Ignore
+    @Disabled
     public void megaJoin() {
         final List<Sample> samples = new ArrayList<>();
-        for (int i = 0; i < files.size(); i++) samples.add(new Sample(files.get(i), names.get(i)));
+        for (int i = 0; i < files.size(); i++)
+            samples.add(new Sample(files.get(i), names.get(i)));
         VariantCombiner combinerTask = new VariantCombiner(samples, false);
         combinerTask.messageProperty().addListener((observable, oldValue, newValue) -> System.out.println(newValue));
         combinerTask.run();
@@ -71,28 +72,7 @@ public class HaplotypeTest {
         result.save(new File("join.vcf"));
     }
 
-    @Ignore
-    public void findHaplotypes() {
-        final Set<String> possibilities = new LinkedHashSet<>();
-        final String chr = "1";
-        final int start = 10000;
-        final int end = 30000;
-        final VariantSet join = new VariantSet();
-        for (File file : files) {
-            System.out.println(file);
-            final VariantSet variantSet = VariantSetFactory.createFromFile(file);
-            join.getHeader().getSamples().addAll(variantSet.getHeader().getSamples());
-            variantSet.getHeader().getComplexHeaders()
-                    .forEach((type, list) -> list.forEach(map -> join.getHeader().addComplexHeader(type, map)));
-            for (int i = start; i < end; i++) {
-                final Variant variant = variantSet.findVariant(chr, i);
-                if (variant != null) join.addOrUpdate(variant);
-            }
-        }
-        join.save(new File("join.vcf"));
-    }
-
-    @Ignore
+    @Disabled
     public void haplotypeCaller() {
         final File file = new File("join.vcf");
         final Map<Integer, Set<String>> haplotypes = new LinkedHashMap<>();

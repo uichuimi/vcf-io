@@ -19,6 +19,7 @@ package vcf.combine;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
+import vcf.Genotype;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,7 +33,7 @@ public class Sample {
 
     private final File file;
     private final String name;
-    private Property<Status> status = new SimpleObjectProperty<>(Status.AFFECTED);
+    private final Property<Genotype> genotype = new SimpleObjectProperty<>(Genotype.UNCALLED);
     private File mistFile;
     private long size;
     private Mist mist;
@@ -62,20 +63,20 @@ public class Sample {
         return name;
     }
 
-    public Property<Status> statusProperty() {
-        return status;
+    public Property<Genotype> genotypeProperty() {
+        return genotype;
     }
 
     public File getFile() {
         return file;
     }
 
-    public Status getStatus() {
-        return status.getValue();
+    public Genotype getGenotype() {
+        return genotype.getValue();
     }
 
-    public void setStatus(Status status) {
-        this.status.setValue(status);
+    public void setGenotype(Genotype genotype) {
+        this.genotype.setValue(genotype);
     }
 
     public File getMistFile() {
