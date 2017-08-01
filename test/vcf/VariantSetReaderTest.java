@@ -11,16 +11,16 @@ import java.io.IOException;
  */
 public class VariantSetReaderTest {
 
-    @Test
-    public void test() {
-        final File file = new File("test/files/MultiSample.vcf");
-        try (VariantSetReader reader = new VariantSetReader(file)) {
-            final VcfHeader header = reader.header();
+	@Test
+	public void test() {
+		final File file = new File("test/files/MultiSample.vcf");
+		try (VariantSetReader reader = new VariantSetReader(file)) {
+			final VcfHeader header = reader.header();
 //            System.out.println(header);
 //            reader.variants().forEach(System.out::println);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 }

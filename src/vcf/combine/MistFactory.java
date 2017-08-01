@@ -26,27 +26,27 @@ import java.io.IOException;
  * Created by uichuimi on 9/06/16.
  */
 public class MistFactory {
-    private static final String MIST_HEADER = "chrom\texon_start\texon_end\tmist_start\tmist_end\tgene_id\tgene_name\texon_number\texon_id\ttranscript_name\tbiotype\tmatch";
+	private static final String MIST_HEADER = "chrom\texon_start\texon_end\tmist_start\tmist_end\tgene_id\tgene_name\texon_number\texon_id\ttranscript_name\tbiotype\tmatch";
 
-    public static Mist load(File file) {
-        final Mist mist = new Mist();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            reader.lines()
-                    .filter(line -> !line.startsWith("#"))
-                    .filter(line -> !line.equals(MIST_HEADER))
-                    .map(line -> line.split("\t")).forEach(line -> {
-                // chrom, exon_start, exon_end, mist_start, mist_end, gene_id, gene_name, exon_number, exon_id,
-                // transcript_name, biotype, match
-                final String chrom = line[0];
-                final int start = Integer.valueOf(line[3]);
-                final int end = Integer.valueOf(line[4]);
-                mist.addRegion(chrom, start, end);
-            });
+	public static Mist load(File file) {
+		final Mist mist = new Mist();
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			reader.lines()
+					.filter(line -> !line.startsWith("#"))
+					.filter(line -> !line.equals(MIST_HEADER))
+					.map(line -> line.split("\t")).forEach(line -> {
+				// chrom, exon_start, exon_end, mist_start, mist_end, gene_id, gene_name, exon_number, exon_id,
+				// transcript_name, biotype, match
+				final String chrom = line[0];
+				final int start = Integer.valueOf(line[3]);
+				final int end = Integer.valueOf(line[4]);
+				mist.addRegion(chrom, start, end);
+			});
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return mist;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return mist;
 
-    }
+	}
 }

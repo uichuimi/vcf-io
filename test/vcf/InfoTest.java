@@ -27,22 +27,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class InfoTest {
 
-    @Test
-    void testInfo() {
-        final Info info = new Info();
-        info.set("this", "hello");
-        info.set("that", "hi");
-        info.set("those", 17);
-        info.set("number", -14.67);
-        info.set("true", true);
-        info.set("false", false);
-        assertEquals("hello", info.getString("this"));
-        assertEquals("hi", info.getString("that"));
-        assertEquals(17, info.getNumber("those"));
-        assertEquals(-14.67, (double) info.getNumber("number"), 0.001);
-        assertEquals(true, info.getBoolean("true"));
-        assertEquals(false, info.getBoolean("false"));
-    }
+	@Test
+	void testInfo() {
+		final Info info = new Info();
+		info.set("this", "hello");
+		info.set("that", "hi");
+		info.set("those", 17);
+		info.set("number", -14.67);
+		info.set("true", true);
+		info.set("false", false);
+		assertEquals("hello", info.getString("this"));
+		assertEquals("hi", info.getString("that"));
+		assertEquals(17, info.getNumber("those"));
+		assertEquals(-14.67, (double) info.getNumber("number"), 0.001);
+		assertEquals(true, info.getBoolean("true"));
+		assertEquals(false, info.getBoolean("false"));
+	}
 
 
 }

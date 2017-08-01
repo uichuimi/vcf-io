@@ -13,26 +13,26 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class FixTest {
 
-    @Disabled
-    public void testFix() {
-        final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:**.vcf");
-        final FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (pathMatcher.matches(file)) fixFile(file.toFile());
-                return FileVisitResult.CONTINUE;
-            }
-        };
-        final Path root = new File("/media").toPath();
-        try {
-            Files.walkFileTree(root, visitor);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+	@Disabled
+	public void testFix() {
+		final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:**.vcf");
+		final FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				if (pathMatcher.matches(file)) fixFile(file.toFile());
+				return FileVisitResult.CONTINUE;
+			}
+		};
+		final Path root = new File("/media").toPath();
+		try {
+			Files.walkFileTree(root, visitor);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-    }
+	}
 
-    private void fixFile(File file) {
-        VariantSet variantSet = VariantSetFactory.createFromFile(file);
-    }
+	private void fixFile(File file) {
+		VariantSet variantSet = VariantSetFactory.createFromFile(file);
+	}
 }

@@ -31,72 +31,72 @@ import java.io.IOException;
  */
 public class Sample {
 
-    private final File file;
-    private final String name;
-    private final Property<Genotype> genotype = new SimpleObjectProperty<>(Genotype.UNCALLED);
-    private File mistFile;
-    private long size;
-    private Mist mist;
+	private final File file;
+	private final String name;
+	private final Property<Genotype> genotype = new SimpleObjectProperty<>(Genotype.UNCALLED);
+	private File mistFile;
+	private long size;
+	private Mist mist;
 
-    public Sample(File file, String name, long size) {
-        this.file = file;
-        this.name = name;
-        this.size = size;
-    }
+	public Sample(File file, String name, long size) {
+		this.file = file;
+		this.name = name;
+		this.size = size;
+	}
 
-    public Sample(File file, String name) {
-        this.file = file;
-        this.name = name;
-        this.size = getLinesCount();
-    }
+	public Sample(File file, String name) {
+		this.file = file;
+		this.name = name;
+		this.size = getLinesCount();
+	}
 
-    private long getLinesCount() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            return reader.lines().filter(line -> !line.startsWith("#")).count();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
+	private long getLinesCount() {
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			return reader.lines().filter(line -> !line.startsWith("#")).count();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public Property<Genotype> genotypeProperty() {
-        return genotype;
-    }
+	public Property<Genotype> genotypeProperty() {
+		return genotype;
+	}
 
-    public File getFile() {
-        return file;
-    }
+	public File getFile() {
+		return file;
+	}
 
-    public Genotype getGenotype() {
-        return genotype.getValue();
-    }
+	public Genotype getGenotype() {
+		return genotype.getValue();
+	}
 
-    public void setGenotype(Genotype genotype) {
-        this.genotype.setValue(genotype);
-    }
+	public void setGenotype(Genotype genotype) {
+		this.genotype.setValue(genotype);
+	}
 
-    public File getMistFile() {
-        return mistFile;
-    }
+	public File getMistFile() {
+		return mistFile;
+	}
 
-    public void setMistFile(File mistFile) {
-        this.mistFile = mistFile;
-        mist = MistFactory.load(mistFile);
-    }
+	public void setMistFile(File mistFile) {
+		this.mistFile = mistFile;
+		mist = MistFactory.load(mistFile);
+	}
 
-    public Mist getMist() {
-        return mist;
-    }
+	public Mist getMist() {
+		return mist;
+	}
 
-    public long getSize() {
-        return size;
-    }
+	public long getSize() {
+		return size;
+	}
 
-    public enum Status {
-        WILD, AFFECTED, HOMOZYGOUS, HETEROZYGOUS
-    }
+	public enum Status {
+		WILD, AFFECTED, HOMOZYGOUS, HETEROZYGOUS
+	}
 }

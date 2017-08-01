@@ -22,7 +22,7 @@ package vcf;
  */
 public class VariantException extends RuntimeException {
 
-    public VariantException(String message) {
-        super(message);
-    }
+	public VariantException(String message) {
+		super(message);
+	}
 }

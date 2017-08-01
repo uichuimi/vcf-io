@@ -28,43 +28,43 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ComplexHeaderLineTest {
 
-    @Test
-    void testIncomplete() {
-        final Map<String, String> map = new TreeMap<>();
-        // ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
-        map.put("ID", "DP");
-        map.put("Number", "1");
-        map.put("Description", "Total Depth");
-        assertThrows(VariantException.class, () -> new ComplexHeaderLine("INFO", map));
-    }
+	@Test
+	void testIncomplete() {
+		final Map<String, String> map = new TreeMap<>();
+		// ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+		map.put("ID", "DP");
+		map.put("Number", "1");
+		map.put("Description", "Total Depth");
+		assertThrows(VariantException.class, () -> new ComplexHeaderLine("INFO", map));
+	}
 
-    @Test
-    void testComplete() {
-        final VariantSet variantSet = new VariantSet();
-        final Map<String, String> map = new TreeMap<>();
-        //##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
-        map.put("ID", "DP");
-        map.put("Number", "1");
-        map.put("Description", "Total Depth");
-        map.put("Type", "Integer");
-        final ComplexHeaderLine complexHeaderLine = new ComplexHeaderLine("INFO", map);
-        assertEquals("INFO", complexHeaderLine.getKey());
-        assertEquals("DP", complexHeaderLine.getValue("ID"));
-        assertEquals("1", complexHeaderLine.getValue("Number"));
-        assertEquals("Integer", complexHeaderLine.getValue("Type"));
-        assertEquals("Total Depth", complexHeaderLine.getValue("Description"));
-    }
+	@Test
+	void testComplete() {
+		final VariantSet variantSet = new VariantSet();
+		final Map<String, String> map = new TreeMap<>();
+		//##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+		map.put("ID", "DP");
+		map.put("Number", "1");
+		map.put("Description", "Total Depth");
+		map.put("Type", "Integer");
+		final ComplexHeaderLine complexHeaderLine = new ComplexHeaderLine("INFO", map);
+		assertEquals("INFO", complexHeaderLine.getKey());
+		assertEquals("DP", complexHeaderLine.getValue("ID"));
+		assertEquals("1", complexHeaderLine.getValue("Number"));
+		assertEquals("Integer", complexHeaderLine.getValue("Type"));
+		assertEquals("Total Depth", complexHeaderLine.getValue("Description"));
+	}
 
-    @Test
-    public void testIncompleteFormatHeader() {
-        // ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        final Map<String, String> map = new TreeMap<>();
-        map.put("ID", "GT");
-        map.put("Number", "1");
-        map.put("Type", "String");
-        assertThrows(VariantException.class, () ->
-                new ComplexHeaderLine("FORMAT", map));
-    }
+	@Test
+	public void testIncompleteFormatHeader() {
+		// ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+		final Map<String, String> map = new TreeMap<>();
+		map.put("ID", "GT");
+		map.put("Number", "1");
+		map.put("Type", "String");
+		assertThrows(VariantException.class, () ->
+				new ComplexHeaderLine("FORMAT", map));
+	}
 
 
 }

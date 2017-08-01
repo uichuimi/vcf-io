@@ -32,79 +32,81 @@ import java.util.regex.Pattern;
  */
 public class VariantSetFactory {
 
-    private static final Pattern HEADER_LINE = Pattern.compile("##([^=]+)=(.+)");
-    private static final Pattern COMPLEX_HEADER = Pattern.compile("<(.*)>");
-    private static final Pattern FIELDS_LINE = Pattern.compile("#CHROM(.*)");
+	private static final Pattern HEADER_LINE = Pattern.compile("##([^=]+)=(.+)");
+	private static final Pattern COMPLEX_HEADER = Pattern.compile("<(.*)>");
+	private static final Pattern FIELDS_LINE = Pattern.compile("#CHROM(.*)");
 
-    public static VariantSet createFromFile(File file) {
-        final VariantSet variantSet = new VariantSet();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            readLines(reader, variantSet);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return variantSet;
-    }
+	public static VariantSet createFromFile(File file) {
+		final VariantSet variantSet = new VariantSet();
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			readLines(reader, variantSet);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return variantSet;
+	}
 
-    private static void readLines(final BufferedReader reader, VariantSet variantSet) throws VariantException {
-        reader.lines().forEach(line -> {
-            if (line.startsWith("#")) addHeader(variantSet.getHeader(), line);
-            else try {
-                variantSet.getVariants().add(VariantFactory.createVariant(line, variantSet.getHeader()));
-            } catch (VariantException e) {
-                e.printStackTrace();
-            }
-        });
-    }
+	private static void readLines(final BufferedReader reader, VariantSet variantSet) throws VariantException {
+		reader.lines().forEach(line -> {
+			if (line.startsWith("#")) addHeader(variantSet.getHeader(), line);
+			else try {
+				variantSet.getVariants().add(VariantFactory.createVariant(line, variantSet.getHeader()));
+			} catch (VariantException e) {
+				e.printStackTrace();
+			}
+		});
+	}
 
-    private static void addHeader(VcfHeader header, String line) {
-        final Matcher metaLine = HEADER_LINE.matcher(line);
-        if (metaLine.matches()) addMetaLine(header, metaLine);
-        else addFormatLine(header, line);
-    }
+	private static void addHeader(VcfHeader header, String line) {
+		final Matcher metaLine = HEADER_LINE.matcher(line);
+		if (metaLine.matches()) addMetaLine(header, metaLine);
+		else addFormatLine(header, line);
+	}
 
-    private static void addMetaLine(VcfHeader header, Matcher metaLine) {
-        final String key = metaLine.group(1);
-        final String value = metaLine.group(2);
-        final Matcher contentMatcher = COMPLEX_HEADER.matcher(value);
-        if (contentMatcher.matches()) addComplexHeader(header, key, contentMatcher.group(1));
-        else header.getHeaderLines().add(new SimpleHeaderLine(key, value));
-    }
+	private static void addMetaLine(VcfHeader header, Matcher metaLine) {
+		final String key = metaLine.group(1);
+		final String value = metaLine.group(2);
+		final Matcher contentMatcher = COMPLEX_HEADER.matcher(value);
+		if (contentMatcher.matches())
+			addComplexHeader(header, key, contentMatcher.group(1));
+		else header.getHeaderLines().add(new SimpleHeaderLine(key, value));
+	}
 
-    private static void addComplexHeader(VcfHeader header, String key, String group) {
-        final Map<String, String> map = MapGenerator.parse(group);
-        try {
-            final ComplexHeaderLine complexHeaderLine = new ComplexHeaderLine(key, map);
-            header.getHeaderLines().add(complexHeaderLine);
+	private static void addComplexHeader(VcfHeader header, String key, String group) {
+		final Map<String, String> map = MapGenerator.parse(group);
+		try {
+			final ComplexHeaderLine complexHeaderLine = new ComplexHeaderLine(key, map);
+			header.getHeaderLines().add(complexHeaderLine);
 //            header.addComplexHeader(type, map);
-        } catch (VariantException e) {
-            e.printStackTrace();
-        }
-    }
+		} catch (VariantException e) {
+			e.printStackTrace();
+		}
+	}
 
-    private static void addFormatLine(VcfHeader header, String line) {
-        final Matcher matcher = FIELDS_LINE.matcher(line);
-        if (matcher.matches()) {
-            final String[] split = line.split("\t");
-            int numberOfSamples = split.length - 9;
-            if (numberOfSamples > 0)
-                for (int i = 0; i < numberOfSamples; i++) header.getSamples().add(split[i + 9]);
+	private static void addFormatLine(VcfHeader header, String line) {
+		final Matcher matcher = FIELDS_LINE.matcher(line);
+		if (matcher.matches()) {
+			final String[] split = line.split("\t");
+			int numberOfSamples = split.length - 9;
+			if (numberOfSamples > 0)
+				for (int i = 0; i < numberOfSamples; i++)
+					header.getSamples().add(split[i + 9]);
 //            if (numberOfSamples > 0) samples.addAll(Arrays.asList(split).subList(9, numberOfSamples));
-        }
-    }
+		}
+	}
 
-    public static VcfHeader readHeader(File file) {
-        final VcfHeader header = new VcfHeader();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("#")) addHeader(header, line);
-                else break;
-            }
+	public static VcfHeader readHeader(File file) {
+		final VcfHeader header = new VcfHeader();
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				if (line.startsWith("#")) addHeader(header, line);
+				else break;
+			}
 //            reader.lines().filter(line -> line.startsWith("#")).forEach(line -> addHeader(header, line));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return header;
-    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return header;
+	}
 }

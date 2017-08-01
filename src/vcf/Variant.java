@@ -44,178 +44,178 @@ public class Variant implements Comparable<Variant> {
      *
      */
 
-    private final Coordinate coordinate;
-    private final SampleInfo sampleInfo;
-    private final Info info;
-    private VcfHeader vcfHeader;
-    private String[] alleles;
-    private String filter;
-    private Double qual;
-    private Object id;
-    //    private String ref;
-    //    private String[] alt;
+	private final Coordinate coordinate;
+	private final SampleInfo sampleInfo;
+	private final Info info;
+	private VcfHeader vcfHeader;
+	private String[] alleles;
+	private String filter;
+	private Double qual;
+	private Object id;
+	//    private String ref;
+	//    private String[] alt;
 
-    public Variant(String chrom, int position, String ref, String[] alt, VcfHeader header) {
-        this.coordinate = new Coordinate(chrom, position);
-        this.alleles = new String[alt.length + 1];
-        this.alleles[0] = ref;
-        System.arraycopy(alt, 0, alleles, 1, alt.length);
-        for (int i = 0; i < alleles.length; i++)
-            alleles[i] = StringStore.getInstance(alleles[i]);
-        this.vcfHeader = header;
-        sampleInfo = new SampleInfo(this);
-        info = new Info();
-    }
+	public Variant(String chrom, int position, String ref, String[] alt, VcfHeader header) {
+		this.coordinate = new Coordinate(chrom, position);
+		this.alleles = new String[alt.length + 1];
+		this.alleles[0] = ref;
+		System.arraycopy(alt, 0, alleles, 1, alt.length);
+		for (int i = 0; i < alleles.length; i++)
+			alleles[i] = StringStore.getInstance(alleles[i]);
+		this.vcfHeader = header;
+		sampleInfo = new SampleInfo(this);
+		info = new Info();
+	}
 
-    public Variant(String chrom, int position, String ref, String alt, VcfHeader header) {
-        this(chrom, position, ref, alt.split(","), header);
-    }
+	public Variant(String chrom, int position, String ref, String alt, VcfHeader header) {
+		this(chrom, position, ref, alt.split(","), header);
+	}
 
 
-    /**
-     * Gets the chromosome of the vcf.
-     *
-     * @return the chromosome of the vcf
-     */
-    public String getChrom() {
-        return coordinate.getChrom();
-    }
+	/**
+	 * Gets the chromosome of the vcf.
+	 *
+	 * @return the chromosome of the vcf
+	 */
+	public String getChrom() {
+		return coordinate.getChrom();
+	}
 
-    /**
-     * Changes the contig. Be sure you explicitly reorder the variants in your
-     * dataset after changing the name of the contigs.
-     *
-     * @param chrom
-     */
-    public void setChrom(String chrom) {
-        coordinate.setContig(chrom);
-    }
+	/**
+	 * Changes the contig. Be sure you explicitly reorder the variants in your
+	 * dataset after changing the name of the contigs.
+	 *
+	 * @param chrom
+	 */
+	public void setChrom(String chrom) {
+		coordinate.setContig(chrom);
+	}
 
-    /**
-     * Gets the ID of the vcf.
-     *
-     * @return the ID of the vcf
-     */
-    public String getId() {
-        return ValueUtils.getString(id);
-    }
+	/**
+	 * Gets the ID of the vcf.
+	 *
+	 * @return the ID of the vcf
+	 */
+	public String getId() {
+		return ValueUtils.getString(id);
+	}
 
-    public void setId(String id) {
-        this.id = ValueUtils.getValue(id, "text");
-    }
+	public void setId(String id) {
+		this.id = ValueUtils.getValue(id, "text");
+	}
 
-    public String[] getIdArray() {
-        return ValueUtils.isArray(id)
-                ? (String[]) id
-                : new String[]{(String) id};
-    }
+	public String[] getIdArray() {
+		return ValueUtils.isArray(id)
+				? (String[]) id
+				: new String[]{(String) id};
+	}
 
-    /**
-     * Gets the REF value of the vcf.
-     *
-     * @return the ref value
-     */
-    public String getRef() {
-        return alleles[0];
-    }
+	/**
+	 * Gets the REF value of the vcf.
+	 *
+	 * @return the ref value
+	 */
+	public String getRef() {
+		return alleles[0];
+	}
 
-    /**
-     * Gets the ALT value of the vcf.
-     *
-     * @return the alt value
-     */
-    public String getAlt() {
-        return ValueUtils.getString(Arrays.copyOfRange(alleles, 1, alleles.length));
-    }
+	/**
+	 * Gets the ALT value of the vcf.
+	 *
+	 * @return the alt value
+	 */
+	public String getAlt() {
+		return ValueUtils.getString(Arrays.copyOfRange(alleles, 1, alleles.length));
+	}
 
-    /**
-     * Gets the alt field as an array of Strings.
-     *
-     * @return alt as <code>"A"</code> or <code>String[]{"A", "AC"}</code>
-     */
-    public String[] getAltArray() {
-        return Arrays.copyOfRange(alleles, 1, alleles.length);
-    }
+	/**
+	 * Gets the alt field as an array of Strings.
+	 *
+	 * @return alt as <code>"A"</code> or <code>String[]{"A", "AC"}</code>
+	 */
+	public String[] getAltArray() {
+		return Arrays.copyOfRange(alleles, 1, alleles.length);
+	}
 
-    /**
-     * Gets the position of the vcf.
-     *
-     * @return the position
-     */
-    public int getPosition() {
-        return coordinate.getPosition();
-    }
+	/**
+	 * Gets the position of the vcf.
+	 *
+	 * @return the position
+	 */
+	public int getPosition() {
+		return coordinate.getPosition();
+	}
 
-    public Coordinate getCoordinate() {
-        return coordinate;
-    }
+	public Coordinate getCoordinate() {
+		return coordinate;
+	}
 
-    /**
-     * Gets the QUAL of the vcf.
-     *
-     * @return the quality
-     */
-    public Double getQual() {
-        return qual;
-    }
+	/**
+	 * Gets the QUAL of the vcf.
+	 *
+	 * @return the quality
+	 */
+	public Double getQual() {
+		return qual;
+	}
 
-    public void setQual(Double qual) {
-        this.qual = qual;
-    }
+	public void setQual(Double qual) {
+		this.qual = qual;
+	}
 
-    @Override
-    public int compareTo(Variant variant) {
-        return coordinate.compareTo(variant.coordinate);
-    }
+	@Override
+	public int compareTo(Variant variant) {
+		return coordinate.compareTo(variant.coordinate);
+	}
 
-    public String getFilter() {
-        return filter;
-    }
+	public String getFilter() {
+		return filter;
+	}
 
-    public void setFilter(String filter) {
-        this.filter =
-                filter == null
-                        ? null
-                        : StringStore.getInstance(filter);
-    }
+	public void setFilter(String filter) {
+		this.filter =
+				filter == null
+						? null
+						: StringStore.getInstance(filter);
+	}
 
-    public VcfHeader getVcfHeader() {
-        return vcfHeader;
-    }
+	public VcfHeader getVcfHeader() {
+		return vcfHeader;
+	}
 
-    /**
-     * Changing variant from VariantSet is dangerous, as samples are indexed
-     * for current VcfHeader. Instead, create a new variant and copy data.
-     *
-     * @param vcfHeader new VcfHeader for variant
-     */
-    @Deprecated
-    public void setVcfHeader(VcfHeader vcfHeader) {
-        this.vcfHeader = vcfHeader;
-    }
+	/**
+	 * Changing variant from VariantSet is dangerous, as samples are indexed
+	 * for current VcfHeader. Instead, create a new variant and copy data.
+	 *
+	 * @param vcfHeader new VcfHeader for variant
+	 */
+	@Deprecated
+	public void setVcfHeader(VcfHeader vcfHeader) {
+		this.vcfHeader = vcfHeader;
+	}
 
-    @Override
-    public String toString() {
-        return coordinate.getChrom() +
-                "\t" + coordinate.getPosition() +
-                "\t" + ValueUtils.getString(id) +
-                "\t" + alleles[0] +
-                "\t" + ValueUtils.getString(Arrays.copyOfRange(alleles, 1, alleles.length)) +
-                "\t" + ValueUtils.getString(qual) +
-                "\t" + ValueUtils.getString(filter) +
-                "\t" + info +
-                sampleInfo;
-    }
+	@Override
+	public String toString() {
+		return coordinate.getChrom() +
+				"\t" + coordinate.getPosition() +
+				"\t" + ValueUtils.getString(id) +
+				"\t" + alleles[0] +
+				"\t" + ValueUtils.getString(Arrays.copyOfRange(alleles, 1, alleles.length)) +
+				"\t" + ValueUtils.getString(qual) +
+				"\t" + ValueUtils.getString(filter) +
+				"\t" + info +
+				sampleInfo;
+	}
 
-    public SampleInfo getSampleInfo() {
-        return sampleInfo;
-    }
+	public SampleInfo getSampleInfo() {
+		return sampleInfo;
+	}
 
-    public Info getInfo() {
-        return info;
-    }
+	public Info getInfo() {
+		return info;
+	}
 
-    public String[] getAlleles() {
-        return alleles;
-    }
+	public String[] getAlleles() {
+		return alleles;
+	}
 }

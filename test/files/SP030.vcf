@@ -14,7 +14,7 @@
 ##INFO=<ID=ClippingRankSum,Description="Z-score From Wilcoxon rank sum test of Alt vs. Ref number of hard clipped bases",Number=1,Type=Float>
 ##INFO=<ID=DB,Description="dbSNP Membership",Number=0,Type=Flag>
 ##INFO=<ID=DP,Description="Approximate read depth; some reads may have been filtered",Number=1,Type=Integer>
-##INFO=<ID=DS,Description="Were any of the samples downsampled?",Number=0,Type=Flag>
+##INFO=<ID=DS,Description="Were any of the genotypes downsampled?",Number=0,Type=Flag>
 ##INFO=<ID=FS,Description="Phred-scaled p-value using Fisher's exact test to detect strand bias",Number=1,Type=Float>
 ##INFO=<ID=HaplotypeScore,Description="Consistency of the site with at most two segregating haplotypes",Number=1,Type=Float>
 ##INFO=<ID=InbreedingCoeff,Description="Inbreeding coefficient as estimated from the genotype likelihoods per-sample when compared against the Hardy-Weinberg expectation",Number=1,Type=Float>

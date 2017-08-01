@@ -28,15 +28,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class StringStoreTest {
 
 
-    @Test
-    public void letsTest() {
-        assertEquals("hello", StringStore.getInstance("hello"));
-        assertEquals("goodbye", StringStore.getInstance("goodbye"));
-        assertEquals("hi", StringStore.getInstance("hi"));
-        assertEquals("patri", StringStore.getInstance("patri"));
-        assertEquals("hello", StringStore.getInstance("hello"));
-        for (int i = 0; i < 5000; i++)
-            assertEquals(String.valueOf(i), StringStore.getInstance(String.valueOf(i)));
-    }
+	@Test
+	public void letsTest() {
+		assertEquals("hello", StringStore.getInstance("hello"));
+		assertEquals("goodbye", StringStore.getInstance("goodbye"));
+		assertEquals("hi", StringStore.getInstance("hi"));
+		assertEquals("patri", StringStore.getInstance("patri"));
+		assertEquals("hello", StringStore.getInstance("hello"));
+		for (int i = 0; i < 5000; i++)
+			assertEquals(String.valueOf(i), StringStore.getInstance(String.valueOf(i)));
+	}
 
 }

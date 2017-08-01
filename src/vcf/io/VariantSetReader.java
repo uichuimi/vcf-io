@@ -18,66 +18,66 @@ import java.util.stream.StreamSupport;
 public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 
 
-    protected final VcfHeader header;
-    protected final BufferedReader reader;
-    private Variant nextVariant;
+	protected final VcfHeader header;
+	protected final BufferedReader reader;
+	private Variant nextVariant;
 
-    public VariantSetReader(File file) throws FileNotFoundException {
-        header = VariantSetFactory.readHeader(file);
-        reader = new BufferedReader(new FileReader(file));
-    }
+	public VariantSetReader(File file) throws FileNotFoundException {
+		header = VariantSetFactory.readHeader(file);
+		reader = new BufferedReader(new FileReader(file));
+	}
 
-    public final Stream<Variant> variants() {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
-                Spliterator.NONNULL | Spliterator.ORDERED), true);
-    }
+	public final Stream<Variant> variants() {
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
+				Spliterator.NONNULL | Spliterator.ORDERED), true);
+	}
 
-    @Override
-    public final void close() throws IOException {
-        reader.close();
-    }
+	@Override
+	public final void close() throws IOException {
+		reader.close();
+	}
 
-    public final VcfHeader header() {
-        return header;
-    }
+	public final VcfHeader header() {
+		return header;
+	}
 
-    @Override
-    public final boolean hasNext() {
-        if (nextVariant != null) return true;
-        else {
-            try {
-                String line = reader.readLine();
-                while (line != null && line.startsWith("#"))
-                    line = reader.readLine();
-                if (line == null) return false;
-                nextVariant = createVariant(line);
-                return true;
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            } catch (VariantException e) {
-                e.printStackTrace();
-            }
-        }
-        return false;
-    }
+	@Override
+	public final boolean hasNext() {
+		if (nextVariant != null) return true;
+		else {
+			try {
+				String line = reader.readLine();
+				while (line != null && line.startsWith("#"))
+					line = reader.readLine();
+				if (line == null) return false;
+				nextVariant = createVariant(line);
+				return true;
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			} catch (VariantException e) {
+				e.printStackTrace();
+			}
+		}
+		return false;
+	}
 
-    /**
-     * This is the only intended method to be overwritten. VariantSetReader
-     * encapsulates the logic of opening, iterating and closing the file.
-     *
-     * @param line each variant line found in file
-     * @return a variant
-     */
-    protected Variant createVariant(String line) {
-        return VariantFactory.createVariant(line, header);
-    }
+	/**
+	 * This is the only intended method to be overwritten. VariantSetReader
+	 * encapsulates the logic of opening, iterating and closing the file.
+	 *
+	 * @param line each variant line found in file
+	 * @return a variant
+	 */
+	protected Variant createVariant(String line) {
+		return VariantFactory.createVariant(line, header);
+	}
 
-    @Override
-    public final Variant next() {
-        if (hasNext()) {
-            final Variant variant = nextVariant;
-            nextVariant = null;
-            return variant;
-        } else throw new NoSuchElementException();
-    }
+	@Override
+	public final Variant next() {
+		if (hasNext()) {
+			final Variant variant = nextVariant;
+			nextVariant = null;
+			return variant;
+		} else throw new NoSuchElementException();
+	}
 }

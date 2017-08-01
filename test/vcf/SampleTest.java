@@ -28,16 +28,16 @@ import java.util.Map;
  */
 public class SampleTest {
 
-    @Test
-    public void test() {
-        final VcfHeader header = new VcfHeader();
-        header.getSamples().add("S1");
-        header.getSamples().add("S2");
-        header.getSamples().add("S3");
-        header.getHeaderLines().add(new ComplexHeaderLine("FORMAT", getGenotypeHeader()));
-        final Variant variant = new Variant("1", 1, "A", new String[]{"C", "T"}, header);
-        variant.getSampleInfo().setFormat("S1", "GT", "0/1");
-        Assertions.assertEquals(Genotype.HETEROZYGOUS, variant.getSampleInfo().getGenotype("S1"));
+	@Test
+	public void test() {
+		final VcfHeader header = new VcfHeader();
+		header.getSamples().add("S1");
+		header.getSamples().add("S2");
+		header.getSamples().add("S3");
+		header.getHeaderLines().add(new ComplexHeaderLine("FORMAT", getGenotypeHeader()));
+		final Variant variant = new Variant("1", 1, "A", new String[]{"C", "T"}, header);
+		variant.getSampleInfo().setFormat("S1", "GT", "0/1");
+		Assertions.assertEquals(Genotype.HETEROZYGOUS, variant.getSampleInfo().getGenotype("S1"));
 //        Assertions.assertEquals(new String[]{"A", "C"}, variant.getSampleInfo().getAlleles("S1"));
 //        final VariantSet file = VariantSetFactory.createFromFile(new File("test/files/Sample2.vcf"));
 //        final Sample sample = new Sample(file, file.getHeader().getSamples().get(0));
@@ -47,15 +47,15 @@ public class SampleTest {
 //        Assert.assertEquals(2, sample.getVariants().size());
 //        Assert.assertEquals(4, sample1.getVariants().size());
 //        Assert.assertEquals(3, sample2.getVariants().size());
-    }
+	}
 
-    private Map<String, String> getGenotypeHeader() {
-        // ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        final Map<String, String> gt = new LinkedHashMap<>();
-        gt.put("ID", "GT");
-        gt.put("Number", "1");
-        gt.put("Type", "String");
-        gt.put("Description", "Genotype");
-        return gt;
-    }
+	private Map<String, String> getGenotypeHeader() {
+		// ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+		final Map<String, String> gt = new LinkedHashMap<>();
+		gt.put("ID", "GT");
+		gt.put("Number", "1");
+		gt.put("Type", "String");
+		gt.put("Description", "Genotype");
+		return gt;
+	}
 }

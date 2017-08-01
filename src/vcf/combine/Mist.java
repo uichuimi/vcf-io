@@ -30,45 +30,45 @@ import java.util.TreeSet;
  */
 public class Mist {
 
-    /**
-     * Key of treeMap is the contig. TreeRegions are sorted by [start,end]
-     */
-    private TreeMap<String, TreeSet<MistRegion>> treeMap = new TreeMap<>();
+	/**
+	 * Key of treeMap is the contig. TreeRegions are sorted by [start,end]
+	 */
+	private TreeMap<String, TreeSet<MistRegion>> treeMap = new TreeMap<>();
 
-    public void addRegion(String chrom, int start, int end) {
-        treeMap.putIfAbsent(chrom, new TreeSet<>());
-        treeMap.get(chrom).add(new MistRegion(start, end));
-    }
+	public void addRegion(String chrom, int start, int end) {
+		treeMap.putIfAbsent(chrom, new TreeSet<>());
+		treeMap.get(chrom).add(new MistRegion(start, end));
+	}
 
-    public boolean isInMistRegion(Variant variant) {
-        return isInMistRegion(variant.getChrom(), variant.getPosition());
-    }
+	public boolean isInMistRegion(Variant variant) {
+		return isInMistRegion(variant.getChrom(), variant.getPosition());
+	}
 
-    public boolean isInMistRegion(String chrom, int position) {
-        if (!treeMap.containsKey(chrom)) return false;
-        final TreeSet<MistRegion> mistRegions = treeMap.get(chrom);
-        return mistRegions.stream().anyMatch(mistRegion -> mistRegion.contains(position));
-    }
+	public boolean isInMistRegion(String chrom, int position) {
+		if (!treeMap.containsKey(chrom)) return false;
+		final TreeSet<MistRegion> mistRegions = treeMap.get(chrom);
+		return mistRegions.stream().anyMatch(mistRegion -> mistRegion.contains(position));
+	}
 
-    private class MistRegion implements Comparable<MistRegion> {
-        int start;
-        int end;
+	private class MistRegion implements Comparable<MistRegion> {
+		int start;
+		int end;
 
-        MistRegion(int start, int end) {
-            this.start = start;
-            this.end = end;
-        }
+		MistRegion(int start, int end) {
+			this.start = start;
+			this.end = end;
+		}
 
-        @Override
-        public int compareTo(MistRegion other) {
-            final int compare = Integer.compare(start, other.start);
-            return compare != 0
-                    ? compare
-                    : Integer.compare(end, other.end);
-        }
+		@Override
+		public int compareTo(MistRegion other) {
+			final int compare = Integer.compare(start, other.start);
+			return compare != 0
+					? compare
+					: Integer.compare(end, other.end);
+		}
 
-        public boolean contains(int position) {
-            return start <= position && position <= end;
-        }
-    }
+		public boolean contains(int position) {
+			return start <= position && position <= end;
+		}
+	}
 }

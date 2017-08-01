@@ -29,7 +29,7 @@
 ##INFO=<ID=DIST,Number=1,Type=String,Description="Shortest distance from variant to transcript">
 ##INFO=<ID=DOM,Number=1,Type=String,Description="the source and identifer of any overlapping protein domains">
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth; some reads may have been filtered">
-##INFO=<ID=DS,Number=0,Type=Flag,Description="Were any of the samples downsampled?">
+##INFO=<ID=DS,Number=0,Type=Flag,Description="Were any of the genotypes downsampled?">
 ##INFO=<ID=EA_F,Number=1,Type=String,Description="Minor allele and frequency of existing variant in NHLBI-ESP European American population">
 ##INFO=<ID=ENSP,Number=1,Type=String,Description="Ensembl protein identifier of the affected transcript">
 ##INFO=<ID=EUR_F,Number=1,Type=String,Description="Minor allele and frequency of existing variation in 1000 Genomes Phase 1 combined European population">

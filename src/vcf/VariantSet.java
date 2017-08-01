@@ -34,161 +34,161 @@ import java.util.*;
  */
 public class VariantSet {
 
-    public static final String EMPTY_VALUE = ".";
-    private final ObservableSet<Variant> variants = FXCollections.observableSet(new TreeSet<>());
-    private final VcfHeader header;
+	public static final String EMPTY_VALUE = ".";
+	private final ObservableSet<Variant> variants = FXCollections.observableSet(new TreeSet<>());
+	private final VcfHeader header;
 
-    private Map<String, Map<Integer, Variant>> index = new TreeMap<>();
+	private Map<String, Map<Integer, Variant>> index = new TreeMap<>();
 
-    {
-        variants.addListener((SetChangeListener<Variant>) c -> {
-            if (c.wasAdded()) addToIndex(c.getElementAdded());
-            else if (c.wasRemoved()) removeFromIndex(c.getElementRemoved());
-        });
-    }
+	{
+		variants.addListener((SetChangeListener<Variant>) c -> {
+			if (c.wasAdded()) addToIndex(c.getElementAdded());
+			else if (c.wasRemoved()) removeFromIndex(c.getElementRemoved());
+		});
+	}
 
-    /**
-     * Creates a new VariantSet using the given header.
-     *
-     * @param header
-     */
-    public VariantSet(VcfHeader header) {
-        this.header = header;
-    }
+	/**
+	 * Creates a new VariantSet using the given header.
+	 *
+	 * @param header
+	 */
+	public VariantSet(VcfHeader header) {
+		this.header = header;
+	}
 
-    /**
-     * Creates a new VariantSet with an empty header.
-     */
-    public VariantSet() {
-        header = new VcfHeader();
-    }
+	/**
+	 * Creates a new VariantSet with an empty header.
+	 */
+	public VariantSet() {
+		header = new VcfHeader();
+	}
 
-    private void removeFromIndex(Variant variant) {
-        index.get(variant.getChrom()).remove(variant.getPosition());
-    }
+	private void removeFromIndex(Variant variant) {
+		index.get(variant.getChrom()).remove(variant.getPosition());
+	}
 
-    private void addToIndex(Variant variant) {
-        index.putIfAbsent(variant.getChrom(), new TreeMap<>());
-        final Map<Integer, Variant> variantMap = index.get(variant.getChrom());
-        variantMap.put(variant.getPosition(), variant);
-    }
+	private void addToIndex(Variant variant) {
+		index.putIfAbsent(variant.getChrom(), new TreeMap<>());
+		final Map<Integer, Variant> variantMap = index.get(variant.getChrom());
+		variantMap.put(variant.getPosition(), variant);
+	}
 
-    public VcfHeader getHeader() {
-        return header;
-    }
+	public VcfHeader getHeader() {
+		return header;
+	}
 
-    /**
-     * Get the list of variants.
-     *
-     * @return the list of variants
-     */
-    public ObservableSet<Variant> getVariants() {
-        return variants;
-    }
+	/**
+	 * Get the list of variants.
+	 *
+	 * @return the list of variants
+	 */
+	public ObservableSet<Variant> getVariants() {
+		return variants;
+	}
 
-    /**
-     * Save current data to a file.
-     *
-     * @param file target file
-     */
-    public void save(File file) {
-        save(file, variants);
-    }
+	/**
+	 * Save current data to a file.
+	 *
+	 * @param file target file
+	 */
+	public void save(File file) {
+		save(file, variants);
+	}
 
-    /**
-     * Save list of variants passed by args, using this VCFFile for headers into the file.
-     *
-     * @param file     target file
-     * @param variants list of variants
-     */
-    public void save(File file, Set<Variant> variants) {
-        if (file.exists() && !file.delete())
-            System.err.println("No access on " + file);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write(header.toString());
-            writer.newLine();
-            for (Variant variant : variants) {
-                writer.write(variant.toString());
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	/**
+	 * Save list of variants passed by args, using this VCFFile for headers into the file.
+	 *
+	 * @param file     target file
+	 * @param variants list of variants
+	 */
+	public void save(File file, Set<Variant> variants) {
+		if (file.exists() && !file.delete())
+			System.err.println("No access on " + file);
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+			writer.write(header.toString());
+			writer.newLine();
+			for (Variant variant : variants) {
+				writer.write(variant.toString());
+				writer.newLine();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    public void addOrUpdate(Variant variant) {
-        final Variant find = findVariant(variant.getChrom(), variant.getPosition());
-        if (find != null) update(find, variant);
-        else cloneAndAdd(variant);
-    }
+	public void addOrUpdate(Variant variant) {
+		final Variant find = findVariant(variant.getChrom(), variant.getPosition());
+		if (find != null) update(find, variant);
+		else cloneAndAdd(variant);
+	}
 
-    public Variant findVariant(String chrom, int position) {
-        return index.containsKey(chrom) ? index.get(chrom).getOrDefault(position, null) : null;
-    }
+	public Variant findVariant(String chrom, int position) {
+		return index.containsKey(chrom) ? index.get(chrom).getOrDefault(position, null) : null;
+	}
 
-    private void update(Variant target, Variant source) {
-        copyId(target, source);
-        copySampleInfo(target, source);
-        copyInfo(target, source);
-    }
+	private void update(Variant target, Variant source) {
+		copyId(target, source);
+		copySampleInfo(target, source);
+		copyInfo(target, source);
+	}
 
-    private void copyId(Variant target, Variant source) {
-        if (target.getId().equals(EMPTY_VALUE) && !source.getId().equals(EMPTY_VALUE))
-            target.setId(source.getId());
-    }
+	private void copyId(Variant target, Variant source) {
+		if (target.getId().equals(EMPTY_VALUE) && !source.getId().equals(EMPTY_VALUE))
+			target.setId(source.getId());
+	}
 
-    private void copySampleInfo(Variant target, Variant source) {
-        final List<String> formatKeys = source.getVcfHeader().getIdList("FORMAT");
-        source.getVcfHeader().getSamples().forEach(sample ->
-                formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo().getFormat(sample, key))));
-    }
+	private void copySampleInfo(Variant target, Variant source) {
+		final List<String> formatKeys = source.getVcfHeader().getIdList("FORMAT");
+		source.getVcfHeader().getSamples().forEach(sample ->
+				formatKeys.forEach(key -> target.getSampleInfo().setFormat(sample, key, source.getSampleInfo().getFormat(sample, key))));
+	}
 
-    private void cloneAndAdd(Variant variant) {
-        final Variant clone = clone(variant);
-        variants.add(clone);
-    }
+	private void cloneAndAdd(Variant variant) {
+		final Variant clone = clone(variant);
+		variants.add(clone);
+	}
 
-    /**
-     * Creates a copy of variant. The copy will have the same chrom, pos, qual, ref, alt, filter and info, but not
-     * sample(FORMAT) info. new variant will have this as VariantSet.
-     *
-     * @param source
-     * @return
-     */
-    private Variant clone(Variant source) {
-        final Variant target = new Variant(source.getChrom(), source.getPosition(), source.getRef(), source.getAlt(), getHeader());
-        target.setQual(source.getQual());
-        target.setId(source.getId());
-        target.setFilter(source.getFilter());
-        copyInfo(target, source);
-        copyFormat(target, source);
-        return target;
-    }
+	/**
+	 * Creates a copy of variant. The copy will have the same chrom, pos, qual, ref, alt, filter and info, but not
+	 * sample(FORMAT) info. new variant will have this as VariantSet.
+	 *
+	 * @param source
+	 * @return
+	 */
+	private Variant clone(Variant source) {
+		final Variant target = new Variant(source.getChrom(), source.getPosition(), source.getRef(), source.getAlt(), getHeader());
+		target.setQual(source.getQual());
+		target.setId(source.getId());
+		target.setFilter(source.getFilter());
+		copyInfo(target, source);
+		copyFormat(target, source);
+		return target;
+	}
 
-    private void copyInfo(Variant target, Variant source) {
-        source.getVcfHeader().getIdList("INFO").forEach(key -> {
-            if (source.getInfo().hasInfo(key))
-                target.getInfo().set(key, source.getInfo().get(key));
-        });
-    }
+	private void copyInfo(Variant target, Variant source) {
+		source.getVcfHeader().getIdList("INFO").forEach(key -> {
+			if (source.getInfo().hasInfo(key))
+				target.getInfo().set(key, source.getInfo().get(key));
+		});
+	}
 
-    private void copyFormat(Variant target, Variant source) {
-        final List<String> formatKeys = source.getVcfHeader().getIdList("FORMAT");
-        source.getVcfHeader().getSamples().forEach(sample ->
-                formatKeys.forEach(key ->
-                        target.getSampleInfo().setFormat(sample, key,
-                                source.getSampleInfo().getFormat(sample, key))));
-    }
+	private void copyFormat(Variant target, Variant source) {
+		final List<String> formatKeys = source.getVcfHeader().getIdList("FORMAT");
+		source.getVcfHeader().getSamples().forEach(sample ->
+				formatKeys.forEach(key ->
+						target.getSampleInfo().setFormat(sample, key,
+								source.getSampleInfo().getFormat(sample, key))));
+	}
 
 
-    /**
-     * Completely removes sample info from VariantSet. Sample info is deleted from every Variant in VariantSet, and
-     * sample name is removed from VariantSetHeader.
-     *
-     * @param name sample name
-     */
-    public void removeSample(String name) {
-        header.getSamples().remove(name);
-        variants.forEach(variant -> variant.getSampleInfo().removeSample(name));
-    }
+	/**
+	 * Completely removes sample info from VariantSet. Sample info is deleted from every Variant in VariantSet, and
+	 * sample name is removed from VariantSetHeader.
+	 *
+	 * @param name sample name
+	 */
+	public void removeSample(String name) {
+		header.getSamples().remove(name);
+		variants.forEach(variant -> variant.getSampleInfo().removeSample(name));
+	}
 }
