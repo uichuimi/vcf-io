@@ -100,7 +100,8 @@ public class VariantMerger {
 	}
 
 	private static int mergeDP(List<Object> values) {
-		return values.stream().mapToInt(v -> (int) v).sum();
+		return values.stream().filter(Objects::nonNull)
+				.mapToInt(v -> (int) v).sum();
 	}
 
 	private static Variant baseVariant(List<Variant> variants, VcfHeader header) {
