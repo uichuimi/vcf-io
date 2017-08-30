@@ -86,6 +86,7 @@ public class VariantSetReaderList implements AutoCloseable {
 	 */
 	public VariantSetReaderList(List<File> files) throws FileNotFoundException {
 		for (File sample : files) buffers.add(new VariantBuffer(sample));
+		mergeHeaders();
 	}
 
 	@Override
@@ -143,75 +144,7 @@ public class VariantSetReaderList implements AutoCloseable {
 	}
 
 	public Variant nextMerged() {
-		return merge(next());
-	}
-
-	private Variant merge(List<Variant> variants) {
-		if (header == null) mergeHeaders();
-		// These variants DO have same Coordinate
-		final Coordinate coordinate = variants.get(0).getCoordinate();
-		final String ref = collectReferences(variants);
-		final List<String> alts = variants.stream()
-				.map(Variant::getAltArray).flatMap(Arrays::stream)
-				.distinct()
-				.collect(Collectors.toList());
-		final String[] alternatives = alts.toArray(new String[alts.size()]);
-		final Variant variant = new Variant(coordinate.getChrom(), coordinate.getPosition(), ref, alternatives, header);
-		final String[] alleles = variant.getAlleles();
-
-		for (Variant other : variants) {
-			// ID
-			if (variant.getId().equals(VariantSet.EMPTY_VALUE)
-					&& !other.getId().equals(VariantSet.EMPTY_VALUE))
-				variant.setId(other.getId());
-			// INFO
-			other.getInfo().foreach((key, value) ->
-					variant.getInfo().set(key, value));
-			// FORMAT (sample x key)
-			header.getSamples().forEach(sample ->
-					header.getIdList("FORMAT").forEach(key -> {
-						final String value = other.getSampleInfo().getFormat(sample, key);
-						if (value != null) {
-							if (key.equals("GT")) {
-								try {
-									variant.getSampleInfo().setFormat(sample, key, reindexGT(alleles, other.getAlleles(), value));
-								} catch (ArrayIndexOutOfBoundsException e) {
-									System.err.println(variant);
-									System.err.println(other);
-
-								}
-							} else
-								variant.getSampleInfo().setFormat(sample, key, value);
-						}
-					}));
-		}
-		return variant;
-	}
-
-	private String reindexGT(String[] targetAlleles, String[] sourceAlleles, String sourceGT) {
-		if (sourceGT.contains("."))
-			return sourceGT;
-		final boolean phased = sourceGT.contains("\\|");
-		final String separator = phased ? "\\|" : "/";
-		final String[] gts = sourceGT.split(separator);
-		final String alleleA = sourceAlleles[Integer.valueOf(gts[0])];
-		final String alleleB = sourceAlleles[Integer.valueOf(gts[1])];
-		final int newGt0 = Arrays.binarySearch(targetAlleles, alleleA);
-		final int newGt1 = Arrays.binarySearch(targetAlleles, alleleB);
-		return String.format("%s%s%s", newGt0, separator, newGt1);
-	}
-
-	private String collectReferences(List<Variant> variants) {
-		final List<String> references = variants.stream().map(Variant::getRef)
-				.distinct().collect(Collectors.toList());
-		if (references.size() > 1) {
-			final String message = String.format("At coordinate %s," +
-							" variants do not share the same reference: %s." +
-							" Will use first one (%s)",
-					variants.get(0).getCoordinate(), references, references.get(0));
-			Logger.getLogger(getClass().getName()).warning(message);
-		}
-		return references.get(0);
+		return VariantMerger.merge(next(), header);
 	}
 
 	private void mergeHeaders() {
@@ -267,7 +200,6 @@ public class VariantSetReaderList implements AutoCloseable {
 	 * @return the merged header
 	 */
 	public VcfHeader getMergedHeader() {
-		if (header == null) mergeHeaders();
 		return header;
 	}
 
