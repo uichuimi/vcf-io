@@ -66,7 +66,7 @@ public class SampleInfo {
 	 *
 	 * @param sample name of the sample: one of the vcf samples
 	 * @param key    FORMAT id
-	 * @return the value of key for the given sample or VariantSet.EMPTY_VALUE if not present
+	 * @return the value of key for the given sample or null if not present
 	 */
 	public String getFormat(String sample, String key) {
 		final SampleEntry entry = getEntry(sample);
@@ -102,6 +102,7 @@ public class SampleInfo {
 		for (String sample : samples) {
 			final List<String> values = usedTags.stream()
 					.map(key -> getFormat(sample, key))
+					.map(key -> key == null ? VariantSet.EMPTY_VALUE : key)
 					.collect(Collectors.toList());
 			builder.append("\t").append(String.join(":", values));
 		}
