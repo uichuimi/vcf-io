@@ -64,6 +64,10 @@ public class ComplexHeaderLine extends HeaderLine {
 		return map.get(key);
 	}
 
+	public void setValue(String key, String value) {
+		map.put(key, value);
+	}
+
 	private void checkRequiredKeys(String type, Map<String, String> map) throws VariantException {
 		if (REQUIRED_KEYS.containsKey(type))
 			for (String key : REQUIRED_KEYS.get(type))
