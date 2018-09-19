@@ -1,4 +1,4 @@
-# VariantCallFormat
+# VCF IO
 Manage VCF files. This project allow programmers to easily load VCF files into memory:
 ```java
 VariantSet variantSet = VariantSetFactory.createFromFile(new File("my_vcf.vcf"));
