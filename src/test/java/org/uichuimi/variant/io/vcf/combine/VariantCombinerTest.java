@@ -24,7 +24,7 @@
 
 package org.uichuimi.variant.io.vcf.combine;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.variant.io.vcf.Genotype;
 import org.uichuimi.variant.io.vcf.VariantSet;
@@ -40,62 +40,19 @@ import java.util.stream.Collectors;
  */
 public class VariantCombinerTest {
 
-	private final static File SP030_VCF = new File("test/files/SP030.vcf");
-	private final static File SP072_VCF = new File("test/files/SP072.vcf");
-	private final static File SP077_VCF = new File("test/files/SP077.vcf");
-	private final static File SP030_MIST = new File("test/files/SP030.mist");
-	private final static File SP072_MIST = new File("test/files/SP072.mist");
-	private final static File SP077_MIST = new File("test/files/SP077.mist");
-	private static final File DA_VCF = new File("test/files/DA.vcf");
-	private static final File DA_MIST = new File("test/files/DA.mist");
+	private final static File SP030_VCF = getFile("/files/SP030.vcf");
 
-	private static final File[] ALL_VCF = new File[]{SP030_VCF, SP072_VCF, SP077_VCF, DA_VCF};
-
-	@Disabled
-	public void testJoin() {
-		final List<Sample> samples = new ArrayList<>();
-		final Sample sp030 = new Sample(SP030_VCF, "SP030");
-		sp030.setMistFile(SP030_MIST);
-		samples.add(sp030);
-		final Sample sp072 = new Sample(SP072_VCF, "SP072");
-		sp030.setMistFile(SP072_MIST);
-		samples.add(sp072);
-		final Sample sp077 = new Sample(SP077_VCF, "SP077");
-		sp030.setMistFile(SP077_MIST);
-		samples.add(sp077);
-		final VariantSet variantSet = testCombine(samples, false, 94);
-//        variantSet.save(new File("SP_30_72_77_sum.vcf"));
+	private static File getFile(String file) {
+		return new File(VariantCombinerTest.class.getResource(file).getPath());
 	}
 
-	@Disabled
-	public void testCommonWithoutMist() {
-		final List<Sample> samples = new ArrayList<>();
-		final Sample sp030 = new Sample(SP030_VCF, "SP030");
-		samples.add(sp030);
-		final Sample sp072 = new Sample(SP072_VCF, "SP072");
-		samples.add(sp072);
-		final Sample sp077 = new Sample(SP077_VCF, "SP077");
-		samples.add(sp077);
-		final VariantSet variantSet = testCombine(samples, true, 4);
-//        variantSet.save(new File("SP_30_72_77_common.vcf"));
-	}
-
-	@Disabled
-	public void testCommonWithMist() {
-		final List<Sample> samples = new ArrayList<>();
-		final Sample sp030 = new Sample(SP030_VCF, "SP030");
-		sp030.setMistFile(SP030_MIST);
-		samples.add(sp030);
-		final Sample sp072 = new Sample(SP072_VCF, "SP072");
-		sp072.setMistFile(SP072_MIST);
-		samples.add(sp072);
-		final Sample sp077 = new Sample(SP077_VCF, "SP077");
-		sp077.setMistFile(SP077_MIST);
-		samples.add(sp077);
-		final VariantSet variantSet = testCombine(samples, true, 13);
-//        variantSet.save(new File("SP_30_72_77_common_mist.vcf"));
-
-	}
+	private final static File SP072_VCF = getFile("/files/SP072.vcf");
+	private final static File SP077_VCF = getFile("/files/SP077.vcf");
+	private final static File SP030_MIST = getFile("/files/SP030.mist");
+	private final static File SP072_MIST = getFile("/files/SP072.mist");
+	private final static File SP077_MIST = getFile("/files/SP077.mist");
+	private static final File DA_VCF = getFile("/files/DA.vcf");
+	private static final File DA_MIST = getFile("/files/DA.mist");
 
 	@Test
 	void testWithControlAndMist() {
@@ -136,7 +93,7 @@ public class VariantCombinerTest {
 	@Test
 	void testUniqueFileWithSeveralSamples() {
 		final List<Sample> samples = new ArrayList<>();
-		final File file = new File("test/files/MultiSample.vcf");
+		final File file = getFile("/files/MultiSample.vcf");
 		final VcfHeader header = VariantSetFactory.readHeader(file);
 		header.getSamples().forEach(s -> samples.add(new Sample(file, s)));
 		samples.get(2).setGenotype(Genotype.WILD);
@@ -170,8 +127,8 @@ public class VariantCombinerTest {
 	private void findMist(File file) {
 		final File[] files = file.getParentFile().listFiles((dir, filename)
 				-> filename.toLowerCase().matches(file.getName().replace(".vcf", "").toLowerCase() + ".*\\.mist"));
-		if (files != null && files.length > 0)
-			System.err.println(Arrays.toString(files));
+		Assertions.assertNotNull(files);
+		Assertions.assertEquals(files.length, 1);
 	}
 
 	private void findBam(File file) {

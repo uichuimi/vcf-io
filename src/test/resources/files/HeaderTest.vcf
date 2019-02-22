@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.1
-##reference=file:///home/unidad03/DNA_Sequencing/HomoSapiensGRCh37/human_g1k_v37.fasta
+##reference=human_g1k_v37.fasta
 ##FILTER=<ID=LowQual,Description="Low quality">
 ##INFO=<ID=MistZone,Number=0,Type=Flag,Description="If present, indicates that the position is in an MIST Zone">
 ##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">

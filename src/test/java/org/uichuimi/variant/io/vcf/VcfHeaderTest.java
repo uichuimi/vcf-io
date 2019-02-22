@@ -41,7 +41,7 @@ class VcfHeaderTest {
 
 	@Test
 	void testFromFile() {
-		final File file = new File("test/files/Sample2.vcf");
+		final File file = new File(getClass().getResource("/files/Sample2.vcf").getPath());
 		final VcfHeader header = VariantSetFactory.readHeader(file);
 //        assertEquals(5, header.getSimpleHeaders().size());
 		assertEquals(18, header.getHeaderLines().size());
