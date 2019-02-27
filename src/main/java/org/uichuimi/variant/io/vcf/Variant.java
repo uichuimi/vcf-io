@@ -25,30 +25,28 @@
 package org.uichuimi.variant.io.vcf;
 
 
-
 import java.util.Arrays;
 
 /**
- * Stores a vcf. chrom, position, ref, alt, filter and format are Strings.
- * position is an integer, qual a double. Info is stored as a map of key==value.
- * If value is null, key is treated as a flag.
+ * Stores a vcf. chrom, position, ref, alt, filter and format are Strings. position is an integer, qual a double. Info
+ * is stored as a map of key==value. If value is null, key is treated as a flag.
  *
  * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
  */
 public class Variant implements Comparable<Variant> {
 
-    /*
-     * A VCF line can hold more than one variant, for instance A/T,TAC
-     * In this case, some fields have several values separated by comma (,)
-     * Some of these fields are ALT, AC, AF, MLEAF and PL
-     *
-     * SQZ102
-     * 1	11944422	.	TACACACAC	T,TAC	2337.73	.	AC=1,1;AF=0.500,0.500;AN=2;DP=61;ExcessHet=3.0103;FS=0.000;MLEAC=1,1;MLEAF=0.500,0.500;MQ=60.00;QD=30.26;SOR=6.701	GT:AD:DP:GQ:PL	1/2:0,9,48:57:99:2375,1613,1523,302,0,133
-     * 1	11944422	rs33981344	TAC	T	177.73	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-2.379e+00;ClippingRankSum=0.00;DB;DP=26;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQRankSum=0.00;QD=9.87;ReadPosRankSum=1.87;SOR=0.540	GT:AD:DP:GQ:PL	0/1:12,6:22:99:215,0,316
-     * 1	11944422	.	T	TACACACAC	680.73	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-2.124e+00;ClippingRankSum=0.00;DP=62;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=59.79;MQRankSum=0.00;QD=17.02;ReadPosRankSum=-7.720e-01;SOR=0.540	GT:AD:DP:GQ:PL	0/1:26,14:48:99:718,0,1819
-     * 1	11944422	rs112065997	TACACAC	T	1256.73	.	AC=2;AF=1.00;AN=2;DB;DP=38;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=60.00;QD=29.49;SOR=4.615	GT:AD:DP:GQ:PL	1/1:0,28:31:93:1293,93,0
-     *
-     */
+	/*
+	 * A VCF line can hold more than one variant, for instance A/T,TAC
+	 * In this case, some fields have several values separated by comma (,)
+	 * Some of these fields are ALT, AC, AF, MLEAF and PL
+	 *
+	 * SQZ102
+	 * 1	11944422	.	TACACACAC	T,TAC	2337.73	.	AC=1,1;AF=0.500,0.500;AN=2;DP=61;ExcessHet=3.0103;FS=0.000;MLEAC=1,1;MLEAF=0.500,0.500;MQ=60.00;QD=30.26;SOR=6.701	GT:AD:DP:GQ:PL	1/2:0,9,48:57:99:2375,1613,1523,302,0,133
+	 * 1	11944422	rs33981344	TAC	T	177.73	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-2.379e+00;ClippingRankSum=0.00;DB;DP=26;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQRankSum=0.00;QD=9.87;ReadPosRankSum=1.87;SOR=0.540	GT:AD:DP:GQ:PL	0/1:12,6:22:99:215,0,316
+	 * 1	11944422	.	T	TACACACAC	680.73	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-2.124e+00;ClippingRankSum=0.00;DP=62;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=59.79;MQRankSum=0.00;QD=17.02;ReadPosRankSum=-7.720e-01;SOR=0.540	GT:AD:DP:GQ:PL	0/1:26,14:48:99:718,0,1819
+	 * 1	11944422	rs112065997	TACACAC	T	1256.73	.	AC=2;AF=1.00;AN=2;DB;DP=38;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=60.00;QD=29.49;SOR=4.615	GT:AD:DP:GQ:PL	1/1:0,28:31:93:1293,93,0
+	 *
+	 */
 
 	private final Coordinate coordinate;
 	private final SampleInfo sampleInfo;
@@ -86,8 +84,8 @@ public class Variant implements Comparable<Variant> {
 	}
 
 	/**
-	 * Changes the contig. Be sure you explicitly reorder the variants in your
-	 * dataset after changing the name of the contigs.
+	 * Changes the contig. Be sure you explicitly reorder the variants in your dataset after changing the name of the
+	 * contigs.
 	 *
 	 * @param chrom
 	 */
@@ -185,8 +183,74 @@ public class Variant implements Comparable<Variant> {
 	}
 
 	/**
-	 * Changing variant from VariantSet is dangerous, as samples are indexed
-	 * for current VcfHeader. Instead, create a new variant and copy data.
+	 * Get the HGVS identifier of this variant for the first alternative allele.
+	 *
+	 * @return the HGVS identifier as specified by <a href=http://varnomen.hgvs.org/>Sequence Variant Nomenclature</a>
+	 */
+	public String getHgvs() {
+		final String ref = getRef();
+		final String alt = alleles[1];
+		final String chrom = getChrom();
+		final int position = getPosition();
+		if (ref.length() > alt.length()) {
+			// DELETION
+			//
+			// <chrom>:g.<start>[_<end>]del[<seq>]
+			//
+			// chrom: chromosome
+			// start: initial position of deletion (inclusive)
+			// end: final position of deletion (inclusive). Mandatory if length of deletion is greater than 1.
+			// seq: sequence removed
+			//
+			// example 1: a T is removed in position 19
+			//      111112222
+			//      567890123
+			// ref: AGAATCACA
+			// alt: AGAA_CACA
+			//
+			// HGVS: chr1:g.19del (or chr1:g.19delT)
+			// VCF:  chr1	18 AT 	A
+			//
+			// example 2: a TCA is removed in position 19
+			//      111112222
+			//      567890123
+			// ref: AGAATCACA
+			// al2: AGAA___CA
+			//
+			// HGVS: chr1:g.19_21del (or chr1:g.19_21delTCA)
+			// VCF:  chr1	18 ATCA 	A
+			final int length = ref.length() - alt.length();
+			final String pos = length == 1
+					? String.format("%d", position + 1)
+					: String.format("%d_%d", position + 1, position + length);
+			return String.format("chr%s:g.%sdel", chrom, pos);
+		} else if (alt.length() > ref.length()) {
+			// insertion
+			// <chrom>:g.<start>_<end>ins<seq>
+			//
+			// chrom: chromosome
+			// start: previous position in ref of insertion
+			// end: latter position in ref of insertion (usually start + 1)
+			// seq: sequence inserted
+			//
+			//      11112222
+			//      67890123
+			// ref: AGAA__CA
+			// alt: AGAACACA
+			//
+			// HGVS: chr1:g.19_20CA
+			// VCF:  chr1 19 A ACA
+			final String inserted = alt.substring(1);
+			return String.format("chr%s:g.%d_%dins%s", chrom, position, position + 1, inserted);
+		} else {
+			// substitution
+			return String.format("chr%s:g.%d%s>%s", chrom, position, ref, alt);
+		}
+	}
+
+	/**
+	 * Changing variant from VariantSet is dangerous, as samples are indexed for current VcfHeader. Instead, create a
+	 * new variant and copy data.
 	 *
 	 * @param vcfHeader new VcfHeader for variant
 	 */

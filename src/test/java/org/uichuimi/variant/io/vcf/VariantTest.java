@@ -24,6 +24,7 @@
 
 package org.uichuimi.variant.io.vcf;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
 
@@ -237,6 +238,16 @@ public class VariantTest {
 	public void testGenotype() {
 		final Variant variant = file.getVariants().stream().findFirst().get();
 		assertEquals(Genotype.HETEROZYGOUS, variant.getSampleInfo().getGenotype("sample01"));
+	}
+
+	@Test
+	public void testHgvs() {
+		Variant variant = new Variant("1", 19, "A", "AT", null);
+		Assertions.assertEquals("chr1:g.19_20insT", variant.getHgvs());
+		variant = new Variant("1", 20, "AT", "A", null);
+		Assertions.assertEquals("chr1:g.21del", variant.getHgvs());
+		variant = new Variant("1", 20, "ATC", "A", null);
+		Assertions.assertEquals("chr1:g.21_22del", variant.getHgvs());
 	}
 
 }
