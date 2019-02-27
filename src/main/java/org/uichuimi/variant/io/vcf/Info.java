@@ -189,7 +189,7 @@ public class Info {
 		return String.join(";", infos);
 	}
 
-	public void foreach(BiConsumer<String, Object> action) {
+	public void forEach(BiConsumer<String, Object> action) {
 		Objects.requireNonNull(action);
 		for (int i = 0; i < vals.length; i++)
 			if (vals[i] != null)

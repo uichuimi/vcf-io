@@ -26,6 +26,7 @@ package org.uichuimi.variant.io.vcf;
 
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
@@ -44,7 +45,7 @@ public class SampleInfo {
 		this.variant = variant;
 	}
 
-	public void setFormat(String sample, String key, String value) {
+	public void setFormat(String sample, String key, Object value) {
 		final SampleEntry entry = getorCreateEntry(sample);
 		entry.set(key, value);
 	}
@@ -60,8 +61,7 @@ public class SampleInfo {
 
 
 	/**
-	 * Get the value of the key FORMAT for sample. If sample or key do not
-	 * exist, then return null.
+	 * Get the value of the key FORMAT for sample. If sample or key do not exist, then return null.
 	 *
 	 * @param sample name of the sample: one of the vcf samples
 	 * @param key    FORMAT id
@@ -119,8 +119,8 @@ public class SampleInfo {
 	 * Removes a sample info from variant.
 	 *
 	 * @param name sample name
-	 * @deprecated it is not a good practise to remove samples from a variant.
-	 * If you are removing to create a new Vcf, consider cloning the variant.
+	 * @deprecated it is not a good practise to remove samples from a variant. If you are removing to create a new Vcf,
+	 * consider cloning the variant.
 	 */
 	@Deprecated
 	public void removeSample(String name) {
@@ -154,23 +154,34 @@ public class SampleInfo {
 		return null;
 	}
 
+	public void forEach(String sample, BiConsumer<String, Object> action) {
+		Objects.requireNonNull(action);
+		final SampleEntry entry = getEntry(sample);
+		if (entry != null) entry.map.forEach(action);
+	}
+
 	private class SampleEntry {
 		public Map<String, Object> map = new LinkedHashMap<>();
+
 		public String sample;
 
 		public SampleEntry(String sample, int length) {
 			this.sample = sample;
 		}
 
-		public void set(String key, String value) {
-			final String type = variant.getVcfHeader().hasComplexHeader("FORMAT", key)
-					? variant.getVcfHeader().getComplexHeader("FORMAT", key).getValue("Type")
-					: "String";
-			map.put(key, ValueUtils.getValue(value, type));
+		public void set(String key, Object value) {
+			if (value instanceof String) {
+				final String type = variant.getVcfHeader().hasComplexHeader("FORMAT", key)
+						? variant.getVcfHeader().getComplexHeader("FORMAT", key).getValue("Type")
+						: "String";
+				map.put(key, ValueUtils.getValue((String) value, type));
+			} else {
+				map.put(key, value);
+			}
 		}
-
 		public Object get(String key) {
 			return map.get(key);
 		}
+
 	}
 }
