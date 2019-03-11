@@ -24,8 +24,8 @@
 
 package org.uichuimi.variant.io.vcf.io;
 
+import org.uichuimi.variant.io.vcf.Coordinate;
 import org.uichuimi.variant.io.vcf.Variant;
-import org.uichuimi.variant.io.vcf.VariantException;
 import org.uichuimi.variant.io.vcf.VcfHeader;
 
 import java.io.*;
@@ -45,6 +45,11 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 	protected final VcfHeader header;
 	protected final BufferedReader reader;
 	private Variant nextVariant;
+
+	public VariantSetReader(InputStream is) {
+		reader = new BufferedReader(new InputStreamReader(is));
+		header = VariantSetFactory.readHeader(reader);
+	}
 
 	public VariantSetReader(File file) throws FileNotFoundException {
 		header = VariantSetFactory.readHeader(file);
@@ -78,16 +83,13 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 				return true;
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
-			} catch (VariantException e) {
-				e.printStackTrace();
 			}
 		}
-		return false;
 	}
 
 	/**
-	 * This is the only intended method to be overwritten. VariantSetReader
-	 * encapsulates the logic of opening, iterating and closing the file.
+	 * This is the only intended method to be overwritten. VariantSetReader encapsulates the logic of opening, iterating
+	 * and closing the file.
 	 *
 	 * @param line each variant line found in file
 	 * @return a variant
@@ -103,5 +105,32 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 			nextVariant = null;
 			return variant;
 		} else throw new NoSuchElementException();
+	}
+
+	/**
+	 * Get the next variant which coordinate is equals to the coordinate passed as argument. If this reader does not
+	 * contain a variant with this coordinate, null is returned and all variants with coordinate less than
+	 * <em>coordinate</em> will be skipped. Next variant returned by {@link VariantSetReader#next()} will have
+	 * coordinate greater than <em>coordinate</em>.
+	 *
+	 * @param coordinate coordinate of the next variant to return
+	 * @return a variant matching coordinate or null
+	 */
+	public Variant next(Coordinate coordinate) {
+		while (hasNext()) {
+			final int compare = nextVariant.getCoordinate().compareTo(coordinate);
+			if (compare == 0) {
+				final Variant variant = nextVariant;
+				nextVariant = null;
+				return variant;
+			} else if (compare > 0) {
+				// Do not nullify nextVariant
+				return null;
+			} else {
+				// Force fetch of next variant
+				nextVariant = null;
+			}
+
+		} return null;
 	}
 }
