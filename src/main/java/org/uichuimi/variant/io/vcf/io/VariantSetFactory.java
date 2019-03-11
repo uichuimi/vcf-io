@@ -32,8 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Creates a VariantSet by reading a text file (usually a .vcf).
- * Created by uichuimi on 25/05/16.
+ * Creates a VariantSet by reading a text file (usually a .vcf). Created by uichuimi on 25/05/16.
  */
 public class VariantSetFactory {
 
@@ -122,6 +121,24 @@ public class VariantSetFactory {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return header;
+	}
+
+	public static VcfHeader readHeader(BufferedReader reader) {
+		final VcfHeader header = new VcfHeader();
+		try {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				if (line.startsWith("##")) addHeader(header, line);
+				else if (line.startsWith("#CHROM")) {
+					addHeader(header, line);
+					break;
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		return header;
 	}
 }
