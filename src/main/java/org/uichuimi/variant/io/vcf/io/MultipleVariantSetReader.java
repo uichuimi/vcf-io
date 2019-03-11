@@ -70,7 +70,7 @@ import java.util.Objects;
  * This is a work in progress. This version is useful when using only genotype
  * information and INFO values such as frequencies or consequences.
  */
-public class VariantSetReaderList implements AutoCloseable {
+public class MultipleVariantSetReader implements AutoCloseable {
 
 	private final List<VariantBuffer> buffers = new LinkedList<>();
 	private VcfHeader header;
@@ -81,7 +81,7 @@ public class VariantSetReaderList implements AutoCloseable {
 	 * @param files list of samples with criteria
 	 * @throws FileNotFoundException if any of the files is not found
 	 */
-	public VariantSetReaderList(List<File> files) throws FileNotFoundException {
+	public MultipleVariantSetReader(List<File> files) throws FileNotFoundException {
 		for (File sample : files) buffers.add(new VariantBuffer(sample));
 		mergeHeaders();
 	}

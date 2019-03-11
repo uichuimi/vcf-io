@@ -30,8 +30,8 @@ import org.uichuimi.variant.io.vcf.Genotype;
 import org.uichuimi.variant.io.vcf.Variant;
 import org.uichuimi.variant.io.vcf.VariantSet;
 import org.uichuimi.variant.io.vcf.VcfHeader;
+import org.uichuimi.variant.io.vcf.io.MultipleVariantSetReader;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
-import org.uichuimi.variant.io.vcf.io.VariantSetReaderList;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -111,7 +111,7 @@ public class VariantCombiner implements Runnable {
 
 	@Override
 	public void run() {
-		try (VariantSetReaderList reader = new VariantSetReaderList(files)) {
+		try (MultipleVariantSetReader reader = new MultipleVariantSetReader(files)) {
 			final VcfHeader header = reader.getMergedHeader();
 			this.variantSet = new VariantSet(header);
 			while (reader.hasNext()) {
