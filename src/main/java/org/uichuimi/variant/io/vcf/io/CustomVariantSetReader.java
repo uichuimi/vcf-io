@@ -25,43 +25,56 @@
 package org.uichuimi.variant.io.vcf.io;
 
 import org.uichuimi.variant.io.vcf.ComplexHeaderLine;
+import org.uichuimi.variant.io.vcf.SimpleHeaderLine;
 import org.uichuimi.variant.io.vcf.Variant;
 import org.uichuimi.variant.io.vcf.VcfHeader;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Iterator;
 
 /**
- * By default, variants will only load chromosome, reference and alternative
- * Created by uichuimi on 20/12/16.
+ * By default, variants will only load chromosome, reference and alternative Created by uichuimi on 20/12/16.
  */
 public class CustomVariantSetReader extends VariantSetReader
 		implements AutoCloseable, Iterator<Variant> {
 
-	private final VcfHeader customReader;
+	private final VcfHeader customHeader;
 	private boolean loadId = false;
 	private boolean loadQual = false;
 	private boolean loadFilter = false;
 
+	public CustomVariantSetReader(InputStream is) {
+		super(is);
+		customHeader = new VcfHeader();
+		for (SimpleHeaderLine simpleHeader : header.getSimpleHeaders())
+			customHeader.getHeaderLines().add(simpleHeader);
+		for (ComplexHeaderLine complexHeader : header.getComplexHeaders())
+			customHeader.getHeaderLines().add(complexHeader);
+		customHeader.getSamples().clear();
+		customHeader.getHeaderLines().removeAll(customHeader.getComplexHeaders("INFO"));
+		customHeader.getHeaderLines().removeAll(customHeader.getComplexHeaders("FORMAT"));
+	}
+
 	/**
-	 * Creates a VariantSet reader that will only read chrom, pos, id, ref,
-	 * alt, qual and filter by default. No INFO, no FORMAT is loaded by default.
+	 * Creates a VariantSet reader that will only read chrom, pos, id, ref, alt, qual and filter by default. No INFO, no
+	 * FORMAT is loaded by default.
 	 *
 	 * @param file
 	 * @throws FileNotFoundException
 	 */
 	public CustomVariantSetReader(File file) throws FileNotFoundException {
 		super(file);
-		customReader = VariantSetFactory.readHeader(file);
-		customReader.getSamples().clear();
-		customReader.getHeaderLines().removeAll(customReader.getComplexHeaders("INFO"));
-		customReader.getHeaderLines().removeAll(customReader.getComplexHeaders("FORMAT"));
+		customHeader = VariantSetFactory.readHeader(file);
+		customHeader.getSamples().clear();
+		customHeader.getHeaderLines().removeAll(customHeader.getComplexHeaders("INFO"));
+		customHeader.getHeaderLines().removeAll(customHeader.getComplexHeaders("FORMAT"));
 	}
 
 	@Override
 	protected Variant createVariant(String line) {
-		return VariantFactory.createVariant(line, customReader, header, loadId, loadQual, loadFilter);
+		return VariantFactory.createVariant(line, customHeader, header, loadId, loadQual, loadFilter);
 	}
 
 	/**
@@ -70,14 +83,13 @@ public class CustomVariantSetReader extends VariantSetReader
 	 * @return
 	 */
 	public VcfHeader getCustomHeader() {
-		return customReader;
+		return customHeader;
 	}
 
 	/**
 	 * Sets whether to load ID field or not.
 	 *
-	 * @param loadId if true, ID will be read. If false ID will be always null.
-	 *               By default is true.
+	 * @param loadId if true, ID will be read. If false ID will be always null. By default is true.
 	 */
 	public void setloadId(boolean loadId) {
 		this.loadId = loadId;
@@ -86,8 +98,7 @@ public class CustomVariantSetReader extends VariantSetReader
 	/**
 	 * Sets whether to load QUAL field or not.
 	 *
-	 * @param loadQual if true, QUAL will be read. If false QUAL will be always
-	 *                 null. By default is true.
+	 * @param loadQual if true, QUAL will be read. If false QUAL will be always null. By default is true.
 	 */
 	public void setLoadQual(boolean loadQual) {
 		this.loadQual = loadQual;
@@ -96,8 +107,7 @@ public class CustomVariantSetReader extends VariantSetReader
 	/**
 	 * Sets whether to load FILTER field or not.
 	 *
-	 * @param loadFilter if true, FILTER will be read. If false FILTER will be
-	 *                   always null. By default is true.
+	 * @param loadFilter if true, FILTER will be read. If false FILTER will be always null. By default is true.
 	 */
 	public void setLoadFilter(boolean loadFilter) {
 		this.loadFilter = loadFilter;
@@ -109,8 +119,8 @@ public class CustomVariantSetReader extends VariantSetReader
 	 * @param sample a sample you want to load its genotype.
 	 */
 	public void addSample(String sample) {
-		if (header.getSamples().contains(sample) && !customReader.getSamples().contains(sample))
-			customReader.getSamples().add(sample);
+		if (header.getSamples().contains(sample) && !customHeader.getSamples().contains(sample))
+			customHeader.getSamples().add(sample);
 	}
 
 	/**
@@ -119,7 +129,7 @@ public class CustomVariantSetReader extends VariantSetReader
 	 * @param sample the name of the sample to not be loaded
 	 */
 	public void removeSample(String sample) {
-		customReader.getSamples().remove(sample);
+		customHeader.getSamples().remove(sample);
 	}
 
 	/**
@@ -167,9 +177,8 @@ public class CustomVariantSetReader extends VariantSetReader
 	 */
 	private void addComplexHeader(String key, String id) {
 		final ComplexHeaderLine complexHeader = header.getComplexHeader(key, id);
-		if (complexHeader == null)
-			return;
-		customReader.getHeaderLines().add(complexHeader);
+		if (complexHeader == null) return;
+		customHeader.getHeaderLines().add(complexHeader);
 	}
 
 	/**
@@ -180,8 +189,7 @@ public class CustomVariantSetReader extends VariantSetReader
 	 */
 	private void removeComplexHeader(String key, String id) {
 		final ComplexHeaderLine complexHeader = header.getComplexHeader(key, id);
-		if (complexHeader == null)
-			return;
-		customReader.getHeaderLines().remove(complexHeader);
+		if (complexHeader == null) return;
+		customHeader.getHeaderLines().remove(complexHeader);
 	}
 }
