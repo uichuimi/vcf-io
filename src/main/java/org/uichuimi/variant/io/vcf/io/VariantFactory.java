@@ -41,6 +41,7 @@ import java.util.logging.Logger;
 public class VariantFactory {
 
 	private static final Set<String> warnings = new LinkedHashSet<>();
+	private static final String VCF_SEPARATOR = "\t";
 
 	/**
 	 * Generates a new Variant using line to populate.
@@ -51,7 +52,8 @@ public class VariantFactory {
 	 */
 	public static Variant createVariant(String line, VcfHeader vcfHeader)
 			throws VariantException {
-		final String[] v = line.split("\t");
+		final String[] v = line.split(VCF_SEPARATOR);
+		if (v.length < 8) throw new VariantException("Variant line does not contain enough columns: " + line);
 		final Variant variant = getBaseVariant(vcfHeader, v);
 		if (!v[2].equals(VariantSet.EMPTY_VALUE))
 			variant.setId(v[2]);
@@ -82,7 +84,8 @@ public class VariantFactory {
 	 */
 	public static Variant createVariant(String line, VcfHeader header, VcfHeader fileHeader, boolean loadId,
 	                                    boolean loadQual, boolean loadFilter) throws VariantException {
-		final String[] v = line.split("\t");
+		final String[] v = line.split(VCF_SEPARATOR);
+		if (v.length < 8) throw new VariantException("Variant line does not contain enough columns: " + line);
 		final Variant variant = getBaseVariant(header, v);
 		if (loadId && !v[2].equals(VariantSet.EMPTY_VALUE))
 			variant.setId(v[2]);
@@ -145,6 +148,7 @@ public class VariantFactory {
 		if (info.equals(VariantSet.EMPTY_VALUE))
 			return;
 		final List<String> idList = variant.getVcfHeader().getIdList("INFO");
+		if (strict && idList.isEmpty()) return;
 		final String[] fields = info.split(";");
 		for (String field : fields) {
 			final String[] pair = field.split("=");
