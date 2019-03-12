@@ -88,8 +88,8 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 	}
 
 	/**
-	 * This is the only intended method to be overwritten. VariantSetReader encapsulates the logic of opening, iterating
-	 * and closing the file.
+	 * This is the only intended method to be overwritten. VariantSetReader encapsulates the logic
+	 * of opening, iterating and closing the file.
 	 *
 	 * @param line each variant line found in file
 	 * @return a variant
@@ -108,10 +108,23 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 	}
 
 	/**
-	 * Get the next variant which coordinate is equals to the coordinate passed as argument. If this reader does not
-	 * contain a variant with this coordinate, null is returned and all variants with coordinate less than
-	 * <em>coordinate</em> will be skipped. Next variant returned by {@link VariantSetReader#next()} will have
-	 * coordinate greater than <em>coordinate</em>.
+	 * Get, but do not remove, next variant in the buffer. Multiple call to this method should
+	 * return the same value.
+	 *
+	 * @return the next variant in the buffer. If there are no more variants in the buffer, returns
+	 * null.
+	 */
+	public Variant peek() {
+		return hasNext() ? nextVariant : null;
+	}
+
+	/**
+	 * Get the next variant which coordinate is equals to the coordinate passed as argument. If this
+	 * reader does not contain a variant with this coordinate, null is returned and all variants
+	 * with coordinate less than
+	 * <em>coordinate</em> will be skipped. Next variant returned by {@link
+	 * VariantSetReader#next()}
+	 * will have coordinate greater than <em>coordinate</em>.
 	 *
 	 * @param coordinate coordinate of the next variant to return
 	 * @return a variant matching coordinate or null
@@ -131,6 +144,7 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 				nextVariant = null;
 			}
 
-		} return null;
+		}
+		return null;
 	}
 }

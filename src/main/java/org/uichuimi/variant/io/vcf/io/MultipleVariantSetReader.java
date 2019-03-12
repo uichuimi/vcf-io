@@ -28,6 +28,7 @@ import org.uichuimi.variant.io.vcf.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -69,7 +70,9 @@ import java.util.Objects;
  * values are not updated, and INFO values as DP or AC are not recalculated.
  * This is a work in progress. This version is useful when using only genotype
  * information and INFO values such as frequencies or consequences.
+ * @deprecated Use {@link MultipleVcfReader} instead
  */
+@Deprecated
 public class MultipleVariantSetReader implements AutoCloseable {
 
 	private final List<VariantBuffer> buffers = new LinkedList<>();
@@ -81,7 +84,7 @@ public class MultipleVariantSetReader implements AutoCloseable {
 	 * @param files list of samples with criteria
 	 * @throws FileNotFoundException if any of the files is not found
 	 */
-	public MultipleVariantSetReader(List<File> files) throws FileNotFoundException {
+	public MultipleVariantSetReader(Collection<File> files) throws FileNotFoundException {
 		for (File sample : files) buffers.add(new VariantBuffer(sample));
 		mergeHeaders();
 	}
@@ -97,8 +100,7 @@ public class MultipleVariantSetReader implements AutoCloseable {
 	public boolean hasNext() {
 		return buffers.stream()
 				.map(VariantBuffer::getNext)
-				.filter(Objects::nonNull)
-				.count() > 0;
+				.anyMatch(Objects::nonNull);
 	}
 
 	/**
@@ -120,14 +122,6 @@ public class MultipleVariantSetReader implements AutoCloseable {
 				}
 			}
 		}
-//		IntStream.range(0, currentVariants.size()).forEach(i -> {
-//			if (currentVariants.get(i) != null) {
-//				if (currentVariants.get(i).getCoordinate().equals(nextCoordinate)) {
-//					next.add(currentVariants.get(i));
-//					currentVariants.set(i, readers.get(i).hasNext() ? readers.get(i).next() : null);
-//				}
-//			}
-//		});
 		return next;
 	}
 

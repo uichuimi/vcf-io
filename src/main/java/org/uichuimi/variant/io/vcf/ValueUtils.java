@@ -140,7 +140,7 @@ public class ValueUtils {
 	public static String getString(Object value, String sep) {
 		return value == null ? NULL_VALUE
 				: isArray(value)
-				? String.join(sep, Arrays.stream((Object[]) value).map(String::valueOf).collect(Collectors.toList()))
+				? Arrays.stream((Object[]) value).map(String::valueOf).collect(Collectors.joining(sep))
 				: Double.class.isAssignableFrom(value.getClass())
 				? DECIMAL_FORMAT.format(value)
 				: String.valueOf(value);

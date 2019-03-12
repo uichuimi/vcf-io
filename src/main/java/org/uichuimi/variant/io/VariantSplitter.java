@@ -16,6 +16,18 @@ import java.util.List;
  */
 public class VariantSplitter {
 
+	/**
+	 * Precomputed indexes in genotype arrays
+	 */
+	private static final int[][] GS = new int[][]{
+			{0},                        // k = 0
+			{1, 2},                     // k = 1
+			{3, 4, 5},                  // k = 2
+			{6, 7, 8, 9},               // k = 3
+			{10, 11, 12, 13, 14},       // k = 4
+			{15, 16, 17, 18, 19, 20}    // k = 5
+	};
+
 	private final VcfHeader header;
 
 	/**
@@ -35,9 +47,12 @@ public class VariantSplitter {
 		if (alts.length == 1)
 			return Collections.singletonList(variant);
 		final List<Variant> rtn = new ArrayList<>(alts.length);
-		for (int i = 0; i < alts.length; i++) {
-			final Variant var = new Variant(variant.getChrom(), variant.getPosition(), variant.getRef(), alts[i], variant.getVcfHeader());
+		for (String alt : alts) {
+			final Variant var = new Variant(variant.getChrom(), variant.getPosition(), variant.getRef(), alt, variant.getVcfHeader());
 			rtn.add(var);
+			var.setId(variant.getId());
+			var.setQual(variant.getQual());
+			var.setFilter(variant.getFilter());
 		}
 		// To go faster, we will split by field
 		variant.getInfo().forEach((key, value) -> splitField(key, value, rtn));
@@ -129,13 +144,14 @@ public class VariantSplitter {
 	}
 
 	private static Object getValue(Object[] values, int j, int k) {
+		return values[GS[k][j]];
 		// https://samtools.github.io/hts-specs/VCFv4.2.pdf
 		// See GL field spec (around page 6)
 		// if a variant has 1 alt, values will contain 3 values: RR, RA, AA
 		// if a variant has 1 alts, values will contain 6 values: RR, RA, AA, RB, AB, BB
 		// where R is the reference and A and B alternative alleles. The index of each genotype is given by the indices
 		// of its alleles (j and k)
-		final int pos = (int) ((k * (k + 1) / 2.) + j);
-		return values[pos];
+//		final int pos = (int) ((k * (k + 1) / 2.) + j);
+//		return values[pos];
 	}
 }

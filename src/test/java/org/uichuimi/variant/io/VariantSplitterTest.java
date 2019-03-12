@@ -11,7 +11,7 @@ public class VariantSplitterTest {
 
 	@Test
 	public void splitVariant() {
-		final VariantSet variantSet = VariantSetFactory.create(getClass().getResourceAsStream("/files/test.vcf"));
+		final VariantSet variantSet = VariantSetFactory.create(getClass().getResourceAsStream("/files/test-split.vcf"));
 		final VariantSplitter splitter = new VariantSplitter(variantSet.getHeader());
 		for (Variant variant : variantSet.getVariants()) {
 			final Collection<Variant> variants = splitter.split(variant);
