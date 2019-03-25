@@ -26,7 +26,7 @@ package org.uichuimi.variant.io.vcf;
 
 import java.util.*;
 
-public class ComplexHeaderLine extends HeaderLine {
+public class ComplexHeaderLine implements HeaderLine {
 
 	private static final Map<String, List<String>> REQUIRED_KEYS = new TreeMap<>();
 

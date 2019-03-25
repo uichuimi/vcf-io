@@ -27,6 +27,8 @@ package org.uichuimi.variant.io.vcf;
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
-public abstract class HeaderLine {
+public interface HeaderLine {
+
+	String getKey();
 
 }

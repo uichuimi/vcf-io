@@ -104,12 +104,7 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 	}
 
 	private boolean headerContains(ComplexHeaderLine sourceHeader) {
-		for (ComplexHeaderLine headerLine : header.getComplexHeaders()) {
-			if (headerLine.getKey().equals(sourceHeader.getKey())
-					&& headerLine.getValue("ID").equals(sourceHeader.getValue("ID")))
-				return true;
-		}
-		return false;
+		return header.hasComplexHeader(sourceHeader.getKey(), sourceHeader.getValue("ID"));
 	}
 
 }

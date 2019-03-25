@@ -22,7 +22,7 @@ public class GenotypeIndex {
 	private static final List<List<Integer>> GS = new ArrayList<>();
 
 	public static int get(int j, int k) {
-		if (GS.size() <= k) resize((k * (k + 1) / 2) + 1);
+		if (GS.size() <= k) resize((int) ((k * (k + 1) / .2) + j));
 		return GS.get(k).get(j);
 	}
 

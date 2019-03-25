@@ -33,8 +33,10 @@ import java.util.List;
  */
 public class Coordinate implements Comparable<Coordinate> {
 
-	private final static List<String> CHROMOSOMES = new ArrayList<>(Arrays.asList("1", "2", "3", "4", "5", "6",
-			"7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "Y", "MT"));
+	private final static List<String> CHROMOSOMES = new ArrayList<>(Arrays.asList(
+			"1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+			"11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
+			"21", "22", "X", "Y", "MT"));
 
 	private int chromIndex;
 	private final int position;
@@ -45,6 +47,7 @@ public class Coordinate implements Comparable<Coordinate> {
 	}
 
 	private int getChromIndex(String chrom) {
+		if (chrom.startsWith("chr")) chrom = chrom.replace("chr", "");
 		if (!CHROMOSOMES.contains(chrom)) CHROMOSOMES.add(chrom);
 		return CHROMOSOMES.indexOf(chrom);
 	}

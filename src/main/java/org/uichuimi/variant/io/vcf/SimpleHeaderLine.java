@@ -24,7 +24,7 @@
 
 package org.uichuimi.variant.io.vcf;
 
-public class SimpleHeaderLine extends HeaderLine {
+public class SimpleHeaderLine implements HeaderLine {
 
 	private final String key;
 	private final String value;

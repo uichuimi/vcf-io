@@ -159,4 +159,44 @@ public class VcfHeader {
 				.filter(header -> header.getKey().equals(key))
 				.collect(Collectors.toList());
 	}
+
+	public static VcfHeader merge(Collection<VcfHeader> headers) {
+		final VcfHeader header = new VcfHeader();
+		// Samples
+		headers.stream().map(VcfHeader::getSamples)
+				.flatMap(Collection::stream)
+				.distinct()
+				.forEach(header.getSamples()::add);
+		// header lines
+		headers.forEach(h -> h.getHeaderLines().forEach(sourceHeader -> {
+			if (sourceHeader instanceof SimpleHeaderLine) {
+				addSimpleHeader(header, (SimpleHeaderLine) sourceHeader);
+			}
+			if (sourceHeader instanceof ComplexHeaderLine) {
+				addComplexHeader(header, (ComplexHeaderLine) sourceHeader);
+			}
+		}));
+
+		return header;
+	}
+
+	private static void addSimpleHeader(VcfHeader header, SimpleHeaderLine sourceHeader) {
+		if (headerContains(header, sourceHeader)) return;
+		header.getHeaderLines().add(sourceHeader);
+	}
+
+	private static boolean headerContains(VcfHeader header, SimpleHeaderLine sourceHeader) {
+		for (SimpleHeaderLine headerLine : header.getSimpleHeaders())
+			if (headerLine.getKey().equals(sourceHeader.getKey())
+					&& headerLine.getValue().equals(sourceHeader.getValue()))
+				return true;
+		return false;
+	}
+
+	private static void addComplexHeader(VcfHeader header, ComplexHeaderLine sourceHeader) {
+		if (header.hasComplexHeader(sourceHeader.getKey(), sourceHeader.getValue("ID"))) return;
+		header.getHeaderLines().add(sourceHeader);
+
+	}
+
 }

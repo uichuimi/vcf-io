@@ -29,7 +29,7 @@ import java.util.Arrays;
 
 /**
  * Stores a vcf. chrom, position, ref, alt, filter and format are Strings. position is an integer, qual a double. Info
- * is stored as a map of key==value. If value is null, key is treated as a flag.
+ * is stored as a map of key=value. If value is null, key is treated as a flag.
  *
  * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
  */
@@ -72,7 +72,6 @@ public class Variant implements Comparable<Variant> {
 	public Variant(String chrom, int position, String ref, String alt, VcfHeader header) {
 		this(chrom, position, ref, alt.split(","), header);
 	}
-
 
 	/**
 	 * Gets the chromosome of the vcf.
