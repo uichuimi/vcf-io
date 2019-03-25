@@ -192,9 +192,15 @@ public class VariantMerger {
 		// j = i - (k * (k + 1) / 2)
 
 		// 2) map k, j to variant
-		final int newK = indexOf(variant.getAlleles(), src.getAlleles()[k]);
-		final int newJ = indexOf(variant.getAlleles(), src.getAlleles()[j]);
+		int newK = indexOf(variant.getAlleles(), src.getAlleles()[k]);
+		int newJ = indexOf(variant.getAlleles(), src.getAlleles()[j]);
 
+		// 2/1 or 1/0
+		if (newK < newJ) {
+			final int aux = newJ;
+			newJ = newK;
+			newK = aux;
+		}
 		// 3) call getIndexInGenotypes
 		return GenotypeIndex.get(newJ, newK);
 	}
