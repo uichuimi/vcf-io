@@ -1,12 +1,12 @@
 package org.uichuimi.variant.io.vcf.input;
 
-import org.uichuimi.variant.io.vcf.variant.Coordinate;
-import org.uichuimi.variant.io.vcf.variant.VariantContext;
-import org.uichuimi.variant.io.vcf.combine.SuperVariantMerger;
+import org.uichuimi.variant.io.vcf.combine.VariantContextMerger;
 import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
 import org.uichuimi.variant.io.vcf.header.SimpleHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.utils.FileUtils;
+import org.uichuimi.variant.io.vcf.variant.Coordinate;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,14 +14,14 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collection<VariantContext>> {
+public class MultipleVariantContextReader implements AutoCloseable, Iterator<Collection<VariantContext>> {
 
-	private final Collection<SuperVcfReader> readers;
+	private final Collection<VariantContextReader> readers;
 	private final VcfHeader header = new VcfHeader();
 
-	public SuperMultipleVcfReader(Collection<InputStream> inputStreams) {
+	public MultipleVariantContextReader(Collection<InputStream> inputStreams) {
 		this.readers = new ArrayList<>(inputStreams.size());
-		for (InputStream inputStream : inputStreams) readers.add(new SuperVcfReader(inputStream));
+		for (InputStream inputStream : inputStreams) readers.add(new VariantContextReader(inputStream));
 		mergeHeaders();
 	}
 
@@ -29,10 +29,10 @@ public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collectio
 	 * Secondary constructor. As Java does not allow override constructors with generics, we provide
 	 * the files constructors with a getInstance pattern.
 	 */
-	public static SuperMultipleVcfReader getInstance(Collection<File> files) throws IOException {
+	public static MultipleVariantContextReader getInstance(Collection<File> files) throws IOException {
 		final List<InputStream> is = new ArrayList<>(files.size());
 		for (File file : files) is.add(FileUtils.getInputStream(file));
-		return new SuperMultipleVcfReader(is);
+		return new MultipleVariantContextReader(is);
 	}
 
 	public VcfHeader getHeader() {
@@ -41,12 +41,12 @@ public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collectio
 
 	@Override
 	public void close() throws Exception {
-		for (SuperVcfReader reader : readers) reader.close();
+		for (VariantContextReader reader : readers) reader.close();
 	}
 
 	@Override
 	public boolean hasNext() {
-		return readers.stream().anyMatch(SuperVcfReader::hasNext);
+		return readers.stream().anyMatch(VariantContextReader::hasNext);
 	}
 
 	@Override
@@ -59,12 +59,12 @@ public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collectio
 	}
 
 	public VariantContext nextMerged() {
-		return SuperVariantMerger.merge(next(), header);
+		return VariantContextMerger.merge(next(), header);
 	}
 
 	private Coordinate nextCoordinate() {
 		return readers.stream()
-				.map(SuperVcfReader::peek)
+				.map(VariantContextReader::peek)
 				.filter(Objects::nonNull)
 				.map(VariantContext::getCoordinate)
 				.min(Coordinate::compareTo)
@@ -74,13 +74,13 @@ public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collectio
 	private void mergeHeaders() {
 		// Samples
 		readers.stream()
-				.map(SuperVcfReader::header)
+				.map(VariantContextReader::header)
 				.flatMap(vcfHeader -> vcfHeader.getSamples().stream())
 				.distinct()
 				.forEach(header.getSamples()::add);
 		// header lines
 		readers.stream()
-				.map(SuperVcfReader::header).forEach(vcfHeader ->
+				.map(VariantContextReader::header).forEach(vcfHeader ->
 				vcfHeader.getHeaderLines().forEach(sourceHeader -> {
 					if (sourceHeader instanceof SimpleHeaderLine)
 						addSimpleHeader((SimpleHeaderLine) sourceHeader);

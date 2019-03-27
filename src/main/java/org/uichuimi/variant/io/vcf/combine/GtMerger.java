@@ -1,10 +1,13 @@
 package org.uichuimi.variant.io.vcf.combine;
 
+import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 import org.uichuimi.variant.io.vcf.variant.MultiLevelInfo;
 import org.uichuimi.variant.io.vcf.variant.VariantContext;
 import org.uichuimi.variant.io.vcf.variant.VariantSet;
-import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
+/**
+ * Merges the unique format GT.
+ */
 public class GtMerger implements DataMerger {
 
 	private static GtMerger instance;

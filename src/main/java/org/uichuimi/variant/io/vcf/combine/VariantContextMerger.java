@@ -24,22 +24,22 @@
 
 package org.uichuimi.variant.io.vcf.combine;
 
-import org.uichuimi.variant.io.vcf.variant.Coordinate;
-import org.uichuimi.variant.io.vcf.variant.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.variant.VariantContext;
 import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
 import org.uichuimi.variant.io.vcf.header.InfoHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
+import org.uichuimi.variant.io.vcf.variant.Coordinate;
+import org.uichuimi.variant.io.vcf.variant.MultiLevelInfo;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SuperVariantMerger {
+public class VariantContextMerger {
 
 	/**
-	 * Returns a new Variant using information from all variants and header as VcfHeader.
+	 * Returns a new Variant using information from all variants using header as the header of the newly created
+	 * variant.
 	 *
 	 * @param variants list of variants to merge, all of them must have the same Coordinate
 	 * @param header   header for the new Variant
@@ -47,12 +47,9 @@ public class SuperVariantMerger {
 	 */
 	public static VariantContext merge(Collection<VariantContext> variants, VcfHeader header) {
 		if (variants.isEmpty()) return null;
-		final List<VariantContext> variantList = new ArrayList<>(variants);
-		if (variantList.size() == 1 && variantList.get(0).getHeader() == header)
-			return variantList.get(0);
-		final VariantContext variant = baseVariant(variantList, header);
+		final VariantContext variant = baseVariant(variants, header);
 
-		for (VariantContext other : variantList) {
+		for (VariantContext other : variants) {
 			// ID
 			// TODO: 27/03/19 associate id with allele
 			for (String id : other.getIds())
@@ -69,24 +66,23 @@ public class SuperVariantMerger {
 					variant.getFilters().add(filter);
 		}
 
-		mergeInfo(variantList, variant);
-		mergeSamples(variantList, variant);
+		mergeInfo(variants, variant);
+		mergeSamples(variants, variant);
 		return variant;
 	}
 
-	private static void mergeInfo(List<VariantContext> variants, VariantContext variant) {
-		final List<InfoHeaderLine> infoLines = variant.getHeader().getInfoLines();
-		for (InfoHeaderLine headerLine : infoLines)
-			for (VariantContext other : variants)
-				headerLine.mergeInto(variant, variant, other, other);
+	private static void mergeInfo(Collection<VariantContext> variants, VariantContext variant) {
+		for (VariantContext other : variants)
+			for (InfoHeaderLine headerLine : variant.getHeader().getInfoLines())
+				headerLine.mergeInto(variant, variant.getInfo(), other, other.getInfo());
 	}
 
-	private static void mergeSamples(List<VariantContext> variantList, VariantContext variant) {
+	private static void mergeSamples(Collection<VariantContext> variantList, VariantContext variant) {
 		for (final VariantContext other : variantList) {
 			for (int s = 0; s < other.getHeader().getSamples().size(); s++) {
 				final String sample = other.getHeader().getSamples().get(s);
-				final MultiLevelInfo sourceInfo = other.getSampleInfo(s);
 				final int vs = variant.getHeader().getSamples().indexOf(sample);
+				final MultiLevelInfo sourceInfo = other.getSampleInfo(s);
 				final MultiLevelInfo targetInfo = variant.getSampleInfo(vs);
 				for (FormatHeaderLine formatLine : variant.getHeader().getFormatLines())
 					formatLine.mergeInto(variant, targetInfo, other, sourceInfo);
@@ -99,10 +95,12 @@ public class SuperVariantMerger {
 		final Coordinate coordinate = variants.iterator().next().getCoordinate();
 		final List<String> references = variants.stream()
 				.flatMap(v -> v.getReferences().stream())
-				.distinct().collect(Collectors.toList());
+				.distinct()
+				.collect(Collectors.toList());
 		final List<String> alternatives = variants.stream()
 				.flatMap(v -> v.getAlternatives().stream())
-				.distinct().collect(Collectors.toList());
+				.distinct()
+				.collect(Collectors.toList());
 		return new VariantContext(header, coordinate, references, alternatives);
 	}
 

@@ -28,9 +28,9 @@ package org.uichuimi.variant.io.vcf.variant;
  */
 public class MultiLevelInfo {
 
-	private final Info info = new Info();
-	private final Info[] alleleInfo;
-	private final Info[] genotypeInfo;
+	private final Info global = new Info();
+	private final Info[] alleles;
+	private final Info[] genotypes;
 	private final int numberOfAlleles;
 	private final int numberOfGenotypes;
 
@@ -44,8 +44,8 @@ public class MultiLevelInfo {
 	public MultiLevelInfo(int references, int alternatives) {
 		this.numberOfAlleles = references + alternatives;
 		this.numberOfGenotypes = computeGenotypes(numberOfAlleles);
-		this.alleleInfo = new Info[numberOfAlleles];
-		this.genotypeInfo = new Info[numberOfGenotypes];
+		this.alleles = new Info[numberOfAlleles];
+		this.genotypes = new Info[numberOfGenotypes];
 	}
 
 	private int computeGenotypes(int numberOfAlleles) {
@@ -57,24 +57,24 @@ public class MultiLevelInfo {
 	/**
 	 * Get the global information of this object.
 	 */
-	public Info getInfo() {
-		return info;
+	public Info getGlobal() {
+		return global;
 	}
 
 	/**
 	 * Get the information of the allele in index.
 	 */
-	public Info getAlleleInfo(int index) {
-		if (alleleInfo[index] == null) alleleInfo[index] = new Info();
-		return alleleInfo[index];
+	public Info getAllele(int index) {
+		if (alleles[index] == null) alleles[index] = new Info();
+		return alleles[index];
 	}
 
 	/**
 	 * Get the information of the genotype in index.
 	 */
-	public Info getGenotypeInfo(int index) {
-		if (genotypeInfo[index] == null) genotypeInfo[index] = new Info();
-		return genotypeInfo[index];
+	public Info getGenotype(int index) {
+		if (genotypes[index] == null) genotypes[index] = new Info();
+		return genotypes[index];
 	}
 
 	/**

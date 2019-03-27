@@ -1,8 +1,8 @@
 package org.uichuimi.variant.io.vcf.input.extractor;
 
+import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 import org.uichuimi.variant.io.vcf.variant.MultiLevelInfo;
 import org.uichuimi.variant.io.vcf.variant.VariantContext;
-import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ public class AlternativeExtractor extends DataExtractor {
 		if (values == null) return;
 		final int offset = variant.getReferences().size();
 		for (int i = 0; i < variant.getAlternatives().size(); i++) {
-			info.getAlleleInfo(offset + i).set(headerLine.getId(), headerLine.parse(values[i]));
+			info.getAllele(offset + i).set(headerLine.getId(), headerLine.parse(values[i]));
 		}
 	}
 
@@ -37,7 +37,7 @@ public class AlternativeExtractor extends DataExtractor {
 		final List<Object> objects = new ArrayList<>();
 		final int offset = variant.getReferences().size();
 		for (int i = 0; i < variant.getAlternatives().size(); i++)
-			objects.add(info.getAlleleInfo(offset + i).get(formatLine.getId()));
+			objects.add(info.getAllele(offset + i).get(formatLine.getId()));
 		return toValueString(objects);
 	}
 

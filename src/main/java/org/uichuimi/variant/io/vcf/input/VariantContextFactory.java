@@ -1,17 +1,20 @@
 package org.uichuimi.variant.io.vcf.input;
 
-import org.uichuimi.variant.io.vcf.variant.Coordinate;
-import org.uichuimi.variant.io.vcf.variant.VariantContext;
 import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
 import org.uichuimi.variant.io.vcf.header.InfoHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
+import org.uichuimi.variant.io.vcf.variant.Coordinate;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class SuperVariantFactory {
+/**
+ * Factory class for {@link VariantContext}. To be used by {@link VariantContextReader}.
+ */
+class VariantContextFactory {
 
 	private static final String EMPTY_VALUE = ".";
 	private static final String SECONDARY_SEPARATOR = ",";
@@ -24,17 +27,13 @@ public class SuperVariantFactory {
 	private final Map<String, InfoHeaderLine> infoHeaders;
 	private final Map<String, FormatHeaderLine> formatHeaders;
 
-	public SuperVariantFactory(VcfHeader header) {
+	VariantContextFactory(VcfHeader header) {
 		this.header = header;
-		infoHeaders = header.getHeaderLines().stream()
-				.filter(InfoHeaderLine.class::isInstance)
-				.map(InfoHeaderLine.class::cast)
+		// Create indexes for keys
+		infoHeaders = header.getInfoLines().stream()
 				.collect(Collectors.toMap(InfoHeaderLine::getId, Function.identity()));
-		formatHeaders = header.getHeaderLines().stream()
-				.filter(FormatHeaderLine.class::isInstance)
-				.map(FormatHeaderLine.class::cast)
+		formatHeaders = header.getFormatLines().stream()
 				.collect(Collectors.toMap(FormatHeaderLine::getId, Function.identity()));
-
 	}
 
 	public final VariantContext parse(String line) {
@@ -71,7 +70,7 @@ public class SuperVariantFactory {
 			final String key = keyValue[0];
 			final String value = keyValue.length > 1 ? keyValue[1] : null;
 			final InfoHeaderLine infoHeaderLine = getOrCreateInfo(key);
-			infoHeaderLine.apply(variant, variant, value);
+			infoHeaderLine.apply(variant, variant.getInfo(), value);
 		}
 	}
 

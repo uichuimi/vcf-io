@@ -43,7 +43,7 @@ public class SampleInfo {
 	 */
 	private Variant variant;
 
-	SampleInfo(Variant variant) {
+	public SampleInfo(Variant variant) {
 		this.variant = variant;
 	}
 

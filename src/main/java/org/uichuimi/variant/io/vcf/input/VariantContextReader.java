@@ -1,10 +1,10 @@
 package org.uichuimi.variant.io.vcf.input;
 
-import org.uichuimi.variant.io.vcf.variant.Coordinate;
-import org.uichuimi.variant.io.vcf.variant.VariantContext;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
 import org.uichuimi.variant.io.vcf.io.VariantSetReader;
+import org.uichuimi.variant.io.vcf.variant.Coordinate;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
 
 import java.io.*;
 import java.util.Iterator;
@@ -14,24 +14,24 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class SuperVcfReader implements AutoCloseable, Iterator<VariantContext> {
+public class VariantContextReader implements AutoCloseable, Iterator<VariantContext> {
 
 
 	protected final VcfHeader header;
 	protected final BufferedReader reader;
 	private VariantContext nextVariant;
-	private SuperVariantFactory variantFactory;
+	private VariantContextFactory variantFactory;
 
-	public SuperVcfReader(InputStream is) {
+	public VariantContextReader(InputStream is) {
 		reader = new BufferedReader(new InputStreamReader(is));
 		header = VariantSetFactory.readHeader(reader);
-		variantFactory = new SuperVariantFactory(header);
+		variantFactory = new VariantContextFactory(header);
 	}
 
-	public SuperVcfReader(File file) throws FileNotFoundException {
+	public VariantContextReader(File file) throws FileNotFoundException {
 		header = VariantSetFactory.readHeader(file);
 		reader = new BufferedReader(new FileReader(file));
-		variantFactory = new SuperVariantFactory(header);
+		variantFactory = new VariantContextFactory(header);
 	}
 
 	public final Stream<VariantContext> variants() {

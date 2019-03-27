@@ -34,10 +34,9 @@ import java.util.List;
  * This is the newer approach of a VCF line. A context defines all possible variations in a genomic coordinate. It can
  * contain 1 or more reference alleles, and 1 or more alternative alleles. It can store information at different levels.
  *
- *
  * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
  */
-public class VariantContext extends MultiLevelInfo {
+public class VariantContext {
 
 	private final VcfHeader header;
 	private final List<String> alleles;
@@ -50,15 +49,16 @@ public class VariantContext extends MultiLevelInfo {
 	private List<String> filters = new ArrayList<>();
 
 	private final MultiLevelInfo[] sampleInfo;
+	private final MultiLevelInfo info;
 
 	public VariantContext(VcfHeader header, Coordinate coordinate, List<String> references, List<String> alternatives) {
-		super(references.size(), alternatives.size());
+		this.info = new MultiLevelInfo(references.size(), alternatives.size());
 		this.header = header;
 		this.coordinate = coordinate;
 		this.references = references;
 		this.alternatives = alternatives;
 		this.sampleInfo = new MultiLevelInfo[header.getSamples().size()];
-		this.alleles = new ArrayList<>(getNumberOfAlleles());
+		this.alleles = new ArrayList<>(info.getNumberOfAlleles());
 		alleles.addAll(references);
 		alleles.addAll(alternatives);
 	}
@@ -95,6 +95,9 @@ public class VariantContext extends MultiLevelInfo {
 		return alternatives;
 	}
 
+	/**
+	 * Get the FORMAT data of the sample in index.
+	 */
 	public MultiLevelInfo getSampleInfo(int index) {
 		if (sampleInfo[index] == null)
 			sampleInfo[index] = new MultiLevelInfo(references.size(), alternatives.size());
@@ -111,5 +114,12 @@ public class VariantContext extends MultiLevelInfo {
 
 	public int indexOfAllele(String allele) {
 		return alleles.indexOf(allele);
+	}
+
+	/**
+	 * Get the INFO values of this variant.
+	 */
+	public MultiLevelInfo getInfo() {
+		return info;
 	}
 }

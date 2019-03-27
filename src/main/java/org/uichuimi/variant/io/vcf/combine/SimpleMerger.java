@@ -1,9 +1,12 @@
 package org.uichuimi.variant.io.vcf.combine;
 
+import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 import org.uichuimi.variant.io.vcf.variant.MultiLevelInfo;
 import org.uichuimi.variant.io.vcf.variant.VariantContext;
-import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
+/**
+ * Merges data with Number=1,2,3,... or Number=.
+ */
 public class SimpleMerger implements DataMerger {
 
 	private static SimpleMerger instance;

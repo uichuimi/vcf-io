@@ -1,10 +1,13 @@
 package org.uichuimi.variant.io.vcf.combine;
 
+import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 import org.uichuimi.variant.io.vcf.variant.GenotypeIndex;
 import org.uichuimi.variant.io.vcf.variant.MultiLevelInfo;
 import org.uichuimi.variant.io.vcf.variant.VariantContext;
-import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
+/**
+ * Merges data of Number=G.
+ */
 public class GenotypeMerger implements DataMerger {
 
 	private static GenotypeMerger instance;
@@ -19,8 +22,8 @@ public class GenotypeMerger implements DataMerger {
 
 	@Override
 	public void accept(VariantContext target, MultiLevelInfo targetInfo, VariantContext source, MultiLevelInfo sourceInfo, DataFormatLine formatLine) {
-		for (int i = 0; i < source.getNumberOfGenotypes(); i++) {
-			final Object value = sourceInfo.getGenotypeInfo(i).get(formatLine.getId());
+		for (int i = 0; i < source.getInfo().getNumberOfGenotypes(); i++) {
+			final Object value = sourceInfo.getGenotype(i).get(formatLine.getId());
 			if (value == null) continue;
 			//  Reindex genotype
 			final int j = GenotypeIndex.getJ(i);
@@ -30,7 +33,7 @@ public class GenotypeMerger implements DataMerger {
 			final int newj = target.getAlleles().indexOf(a);
 			final int newk = target.getAlleles().indexOf(b);
 			final int index = GenotypeIndex.get(newj, newk);
-			targetInfo.getGenotypeInfo(index).set(formatLine.getId(), value);
+			targetInfo.getGenotype(index).set(formatLine.getId(), value);
 		}
 	}
 }

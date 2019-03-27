@@ -1,22 +1,28 @@
 package org.uichuimi.variant.io.vcf.io;
 
+import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
+import org.uichuimi.variant.io.vcf.header.InfoHeaderLine;
 import org.uichuimi.variant.io.vcf.variant.VariantContext;
 import org.uichuimi.variant.io.vcf.variant.VariantSet;
-import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
-import org.uichuimi.variant.io.vcf.header.HeaderLine;
-import org.uichuimi.variant.io.vcf.header.InfoHeaderLine;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SuperVariantWriter {
+/**
+ * Helper class to create the string representation of a VariantContext for
+ * <a href=https://samtools.github.io/hts-specs/VCFv4.3.pdf>Variant Call Format</a>.
+ */
+public class VariantContextWriter {
 
 	private static final String SEPARATOR = "\t";
 	private static final String SECONDARY_SEPARATOR = ",";
 	private static final String INFO_SEPARATOR = ";";
 	private static final String FORMAT_SEPARATOR = ":";
 
-	public static String toString(VariantContext variant) {
+	/**
+	 * Creates the VCF representation of the variant.
+	 */
+	public static String toVcf(VariantContext variant) {
 		final StringBuilder builder = new StringBuilder();
 		builder.append(variant.getCoordinate().getChrom())
 				.append(SEPARATOR).append(variant.getCoordinate().getPosition())
@@ -37,43 +43,41 @@ public class SuperVariantWriter {
 
 	private static String getInfoString(VariantContext variant) {
 		final StringJoiner infoBuilder = new StringJoiner(INFO_SEPARATOR);
-		for (HeaderLine headerLine : variant.getHeader().getHeaderLines()) {
-			if (headerLine instanceof InfoHeaderLine) {
-				final InfoHeaderLine infoHeaderLine = (InfoHeaderLine) headerLine;
+		for (InfoHeaderLine headerLine : variant.getHeader().getInfoLines()) {
+			if (headerLine.getNumber().equals("0")) {
 				// Flags
-				if (infoHeaderLine.getNumber().equals("0")) {
-					if (variant.getGlobal().hasInfo(infoHeaderLine.getId()))
-						infoBuilder.add(infoHeaderLine.getId());
-				} else {
-					final String value = infoHeaderLine.extract(variant, variant);
-					if (value != null) infoBuilder.add(infoHeaderLine.getId() + "=" + value);
-				}
+				if (variant.getInfo().getGlobal().hasInfo(headerLine.getId()))
+					infoBuilder.add(headerLine.getId());
+			} else {
+				// Others
+				final String value = headerLine.extract(variant, variant.getInfo());
+				if (value != null) infoBuilder.add(headerLine.getId() + "=" + value);
 			}
 		}
 		return infoBuilder.toString();
 	}
 
 	private static void addSampleData(VariantContext variant, StringBuilder builder) {
-		final List<FormatHeaderLine> formatLines = variant.getHeader().getFormatLines();
+		// We are going to collect the sample data in a matrix, ignoring those FORMAT tags that do not contain
+		// information for any sample. After that, we are going to generate the string by sample.
 		final List<String[]> sampleData = new ArrayList<>();
 		final List<String> keys = new ArrayList<>();
 		// keys sampleData
 		// GT   [0/1, 0/1, ./.]
 		// DP   [15, 14, 24]
 		// H2   [51,51, ., .]
-		// Collect FORMAT by format key, adding only those where at least one sample has a value
-		for (final FormatHeaderLine headerLine : formatLines) {
-			final String[] vals = new String[variant.getHeader().getSamples().size()];
+		// Collect FORMAT by key, adding only those where at least one sample has a value
+		for (final FormatHeaderLine headerLine : variant.getHeader().getFormatLines()) {
+			final String[] values = new String[variant.getHeader().getSamples().size()];
 			for (int s = 0; s < variant.getHeader().getSamples().size(); s++) {
 				final String value = headerLine.extract(variant, variant.getSampleInfo(s));
-				if (value != null) vals[s] = value;
+				if (value != null) values[s] = value;
 			}
-			if (Arrays.stream(vals).allMatch(Objects::isNull)) continue;
+			if (Arrays.stream(values).allMatch(Objects::isNull)) continue;
 			keys.add(headerLine.getId());
-			sampleData.add(vals);
+			sampleData.add(values);
 		}
 
-		// keys only contain those keys present in at least 1 sample
 		builder.append("\t").append(String.join(FORMAT_SEPARATOR, keys));
 
 		// Now we add FORMAT by sample
@@ -82,9 +86,10 @@ public class SuperVariantWriter {
 			final List<String> sample = new ArrayList<>(keys.size());
 			for (String[] ft : sampleData) sample.add(ft[s]);
 
-			// Remove trailing nulls
+			// Remove trailing nulls, leaving at least one value
 			// Can this feature annoy some parsers?
-			 while (sample.size() > 1 && sample.get(sample.size() - 1) == null) sample.remove(sample.size() - 1);
+			while (sample.size() > 1 && sample.get(sample.size() - 1) == null)
+				sample.remove(sample.size() - 1);
 
 			// map nulls to . and join
 			final String sformat = sample.stream()
