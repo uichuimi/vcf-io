@@ -26,6 +26,7 @@ package org.uichuimi.variant.io.vcf;
 
 
 import org.junit.jupiter.api.Test;
+import org.uichuimi.variant.io.vcf.variant.Coordinate;
 
 import java.util.Arrays;
 import java.util.List;

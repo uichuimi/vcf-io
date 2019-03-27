@@ -22,7 +22,7 @@
  *
  */
 
-package org.uichuimi.variant.io.vcf;
+package org.uichuimi.variant.io.vcf.variant;
 
 
 import org.uichuimi.variant.io.vcf.header.VcfHeader;

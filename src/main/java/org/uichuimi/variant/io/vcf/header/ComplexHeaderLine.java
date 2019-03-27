@@ -24,7 +24,7 @@
 
 package org.uichuimi.variant.io.vcf.header;
 
-import org.uichuimi.variant.io.vcf.VariantException;
+import org.uichuimi.variant.io.vcf.variant.VariantException;
 
 import java.util.*;
 

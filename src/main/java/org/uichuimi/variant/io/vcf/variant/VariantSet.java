@@ -22,11 +22,12 @@
  *
  */
 
-package org.uichuimi.variant.io.vcf;
+package org.uichuimi.variant.io.vcf.variant;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
+import org.uichuimi.variant.io.vcf.Variant;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
 
 import java.io.BufferedWriter;

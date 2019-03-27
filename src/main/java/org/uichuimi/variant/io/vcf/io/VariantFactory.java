@@ -24,10 +24,10 @@
 
 package org.uichuimi.variant.io.vcf.io;
 
-import org.uichuimi.variant.io.vcf.ValueUtils;
+import org.uichuimi.variant.io.vcf.variant.ValueUtils;
 import org.uichuimi.variant.io.vcf.Variant;
-import org.uichuimi.variant.io.vcf.VariantException;
-import org.uichuimi.variant.io.vcf.VariantSet;
+import org.uichuimi.variant.io.vcf.variant.VariantException;
+import org.uichuimi.variant.io.vcf.variant.VariantSet;
 import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
 

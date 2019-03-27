@@ -22,8 +22,10 @@
  *
  */
 
-package org.uichuimi.variant.io.vcf;
+package org.uichuimi.variant.io.vcf.variant;
 
+
+import org.uichuimi.variant.io.vcf.Variant;
 
 import java.util.*;
 import java.util.function.BiConsumer;

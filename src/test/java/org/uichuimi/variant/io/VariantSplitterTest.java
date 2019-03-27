@@ -2,7 +2,7 @@ package org.uichuimi.variant.io;
 
 import org.junit.jupiter.api.Test;
 import org.uichuimi.variant.io.vcf.Variant;
-import org.uichuimi.variant.io.vcf.VariantSet;
+import org.uichuimi.variant.io.vcf.variant.VariantSet;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
 
 import java.util.Collection;

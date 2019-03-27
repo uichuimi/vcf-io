@@ -26,6 +26,7 @@ package org.uichuimi.variant.io.vcf;
 
 
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
+import org.uichuimi.variant.io.vcf.variant.*;
 
 import java.util.Arrays;
 

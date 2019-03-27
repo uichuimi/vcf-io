@@ -22,7 +22,7 @@
  *
  */
 
-package org.uichuimi.variant.io.vcf;
+package org.uichuimi.variant.io.vcf.variant;
 
 /**
  * Created by uichuimi on 15/06/17.

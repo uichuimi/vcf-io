@@ -1,6 +1,6 @@
 package org.uichuimi.variant.io.vcf.io;
 
-import org.uichuimi.variant.io.vcf.Coordinate;
+import org.uichuimi.variant.io.vcf.variant.Coordinate;
 import org.uichuimi.variant.io.vcf.Variant;
 import org.uichuimi.variant.io.vcf.combine.VariantMerger;
 import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;

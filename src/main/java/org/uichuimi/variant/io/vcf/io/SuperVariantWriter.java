@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.io;
 
-import org.uichuimi.variant.io.vcf.VariantContext;
-import org.uichuimi.variant.io.vcf.VariantSet;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
+import org.uichuimi.variant.io.vcf.variant.VariantSet;
 import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
 import org.uichuimi.variant.io.vcf.header.HeaderLine;
 import org.uichuimi.variant.io.vcf.header.InfoHeaderLine;

@@ -24,7 +24,7 @@ package org.uichuimi.variant.io;/*
 
 import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.Test;
-import org.uichuimi.variant.io.vcf.VariantSet;
+import org.uichuimi.variant.io.vcf.variant.VariantSet;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
 
 import java.io.InputStream;

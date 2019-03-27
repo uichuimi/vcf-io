@@ -1,4 +1,4 @@
-package org.uichuimi.variant.io.vcf;
+package org.uichuimi.variant.io.vcf.variant;
 
 /**
  * Contains 3 levels of info storage:

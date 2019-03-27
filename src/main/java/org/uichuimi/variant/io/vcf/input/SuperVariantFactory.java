@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input;
 
-import org.uichuimi.variant.io.vcf.Coordinate;
-import org.uichuimi.variant.io.vcf.VariantContext;
+import org.uichuimi.variant.io.vcf.variant.Coordinate;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
 import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
 import org.uichuimi.variant.io.vcf.header.InfoHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;

@@ -5,6 +5,7 @@ import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.input.SuperVariantFactory;
 import org.uichuimi.variant.io.vcf.io.SuperVariantWriter;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.combine;
 
 import org.junit.jupiter.api.Test;
-import org.uichuimi.variant.io.vcf.VariantContext;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
 import org.uichuimi.variant.io.vcf.input.SuperMultipleVcfReader;
 import org.uichuimi.variant.io.vcf.io.SuperVariantWriter;
 

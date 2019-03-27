@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input.extractor;
 
-import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.VariantContext;
+import org.uichuimi.variant.io.vcf.variant.MultiLevelInfo;
+import org.uichuimi.variant.io.vcf.variant.VariantContext;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 import java.util.Arrays;

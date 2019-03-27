@@ -27,6 +27,8 @@ package org.uichuimi.variant.io.vcf;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
+import org.uichuimi.variant.io.vcf.variant.Genotype;
+import org.uichuimi.variant.io.vcf.variant.VariantSet;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -28,6 +28,7 @@ import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
 import org.uichuimi.variant.io.vcf.header.SimpleHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
+import org.uichuimi.variant.io.vcf.variant.VariantSet;
 
 import java.io.BufferedReader;
 import java.io.File;

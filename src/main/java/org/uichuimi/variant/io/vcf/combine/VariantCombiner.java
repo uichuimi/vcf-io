@@ -26,9 +26,9 @@ package org.uichuimi.variant.io.vcf.combine;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
-import org.uichuimi.variant.io.vcf.Genotype;
+import org.uichuimi.variant.io.vcf.variant.Genotype;
 import org.uichuimi.variant.io.vcf.Variant;
-import org.uichuimi.variant.io.vcf.VariantSet;
+import org.uichuimi.variant.io.vcf.variant.VariantSet;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.io.MultipleVariantSetReader;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
