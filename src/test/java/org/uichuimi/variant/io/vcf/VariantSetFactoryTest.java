@@ -24,6 +24,9 @@
 package org.uichuimi.variant.io.vcf;
 
 import org.junit.jupiter.api.Test;
+import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
+import org.uichuimi.variant.io.vcf.header.SimpleHeaderLine;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
 
 import java.io.BufferedReader;

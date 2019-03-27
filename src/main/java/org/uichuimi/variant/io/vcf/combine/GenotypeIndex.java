@@ -23,6 +23,11 @@ public class GenotypeIndex {
 
 	public static int get(int j, int k) {
 		if (GS.size() <= k) resize((int) ((k * (k + 1) / .2) + j));
+		if (j > k) {
+			int aux = j;
+			j = k;
+			k = aux;
+		}
 		return GS.get(k).get(j);
 	}
 
@@ -37,7 +42,7 @@ public class GenotypeIndex {
 	}
 
 	private static void resize(int maxIndex) {
-		while (JS.size() < maxIndex) {
+		while (JS.size() <= maxIndex) {
 			final List<Integer> gs = new ArrayList<>();
 			for (int i = 0; i <= genotypes; i++) {
 				JS.add(i);

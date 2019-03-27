@@ -26,6 +26,9 @@ package org.uichuimi.variant.io.vcf;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.uichuimi.variant.io.vcf.combine.VariantMerger;
+import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;

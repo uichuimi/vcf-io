@@ -44,7 +44,7 @@ public class Info {
 
 	private void insertValue(Object value, int index) {
 		if (vals.length < index + 1) resizeVals(index + 1);
-		if (value.equals(".")) return;
+		if (value.equals(VariantSet.EMPTY_VALUE)) return;
 		vals[index] = value;
 	}
 

@@ -1,9 +1,9 @@
 package org.uichuimi.variant.io;
 
-import org.uichuimi.variant.io.vcf.ComplexHeaderLine;
 import org.uichuimi.variant.io.vcf.Variant;
-import org.uichuimi.variant.io.vcf.VcfHeader;
 import org.uichuimi.variant.io.vcf.combine.GenotypeIndex;
+import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 
 import java.util.ArrayList;
 import java.util.Collection;

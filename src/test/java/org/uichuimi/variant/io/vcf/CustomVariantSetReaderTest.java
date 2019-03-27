@@ -25,6 +25,7 @@
 package org.uichuimi.variant.io.vcf;
 
 import org.junit.jupiter.api.Disabled;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.io.CustomVariantSetReader;
 
 import java.io.File;

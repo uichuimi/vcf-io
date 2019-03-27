@@ -27,6 +27,7 @@ package org.uichuimi.variant.io.vcf;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 
 import java.io.BufferedWriter;
 import java.io.File;

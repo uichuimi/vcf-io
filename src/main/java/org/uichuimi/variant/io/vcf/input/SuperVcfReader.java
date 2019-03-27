@@ -1,32 +1,10 @@
-/*
- * Copyright (c) UICHUIMI 2017
- *
- * This file is part of VariantCallFormat.
- *
- * VariantCallFormat is free software:
- * you can redistribute it and/or modify it under the terms of the GNU
- * General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * VariantCallFormat is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with VariantCallFormat.
- *
- * If not, see <http://www.gnu.org/licenses/>.
- *
- *
- */
-
-package org.uichuimi.variant.io.vcf.io;
+package org.uichuimi.variant.io.vcf.input;
 
 import org.uichuimi.variant.io.vcf.Coordinate;
-import org.uichuimi.variant.io.vcf.Variant;
+import org.uichuimi.variant.io.vcf.SuperVariant;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
+import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
+import org.uichuimi.variant.io.vcf.io.VariantSetReader;
 
 import java.io.*;
 import java.util.Iterator;
@@ -36,27 +14,27 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-/**
- * Created by uichuimi on 3/10/16.
- */
-public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
+public class SuperVcfReader implements AutoCloseable, Iterator<SuperVariant> {
 
 
 	protected final VcfHeader header;
 	protected final BufferedReader reader;
-	private Variant nextVariant;
+	private SuperVariant nextVariant;
+	private SuperVariantFactory variantFactory;
 
-	public VariantSetReader(InputStream is) {
+	public SuperVcfReader(InputStream is) {
 		reader = new BufferedReader(new InputStreamReader(is));
 		header = VariantSetFactory.readHeader(reader);
+		variantFactory = new SuperVariantFactory(header);
 	}
 
-	public VariantSetReader(File file) throws FileNotFoundException {
+	public SuperVcfReader(File file) throws FileNotFoundException {
 		header = VariantSetFactory.readHeader(file);
 		reader = new BufferedReader(new FileReader(file));
+		variantFactory = new SuperVariantFactory(header);
 	}
 
-	public final Stream<Variant> variants() {
+	public final Stream<SuperVariant> variants() {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
 				Spliterator.NONNULL | Spliterator.ORDERED), true);
 	}
@@ -94,14 +72,14 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 	 * @param line each variant line found in file
 	 * @return a variant
 	 */
-	protected Variant createVariant(String line) {
-		return VariantFactory.createVariant(line, header);
+	protected SuperVariant createVariant(String line) {
+		return variantFactory.parse(line);
 	}
 
 	@Override
-	public final Variant next() {
+	public final SuperVariant next() {
 		if (hasNext()) {
-			final Variant variant = nextVariant;
+			final SuperVariant variant = nextVariant;
 			nextVariant = null;
 			return variant;
 		} else throw new NoSuchElementException();
@@ -114,7 +92,7 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 	 * @return the next variant in the buffer. If there are no more variants in the buffer, returns
 	 * null.
 	 */
-	public Variant peek() {
+	public SuperVariant peek() {
 		return hasNext() ? nextVariant : null;
 	}
 
@@ -129,11 +107,11 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 	 * @param coordinate coordinate of the next variant to return
 	 * @return a variant matching coordinate or null
 	 */
-	public Variant next(Coordinate coordinate) {
+	public SuperVariant next(Coordinate coordinate) {
 		while (hasNext()) {
 			final int compare = nextVariant.getCoordinate().compareTo(coordinate);
 			if (compare == 0) {
-				final Variant variant = nextVariant;
+				final SuperVariant variant = nextVariant;
 				nextVariant = null;
 				return variant;
 			} else if (compare > 0) {
@@ -147,4 +125,5 @@ public class VariantSetReader implements AutoCloseable, Iterator<Variant> {
 		}
 		return null;
 	}
+
 }

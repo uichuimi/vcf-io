@@ -22,7 +22,7 @@
  *
  */
 
-package org.uichuimi.variant.io.vcf;
+package org.uichuimi.variant.io.vcf.header;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,10 +36,13 @@ public class VcfHeader {
 
 	private final static List<String> REQUIRED_COLUMNS =
 			Arrays.asList("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO");
+	private static final List<String> FORMAT_ORDER = Arrays.asList("GT", "AD", "DP", "GQ", "PL");
 
 	private final List<String> samples = new ArrayList<>();
-	private final LinkedList<HeaderLine> headerLines = new LinkedList<>();
+	private final List<HeaderLine> headerLines = new LinkedList<>();
 	private Map<String, List<String>> cache = new LinkedHashMap<>();
+	private List<FormatHeaderLine> formatLines;
+	private List<InfoHeaderLine> infoLines;
 
 	/**
 	 * An empty VcfHeader. Remember that fileformat must be the first HeaderLine.
@@ -57,8 +60,8 @@ public class VcfHeader {
 
 	public List<ComplexHeaderLine> getComplexHeaders() {
 		return headerLines.stream()
-				.filter(headerLine -> headerLine.getClass() == ComplexHeaderLine.class)
-				.map(headerLine -> (ComplexHeaderLine) headerLine)
+				.filter(ComplexHeaderLine.class::isInstance)
+				.map(ComplexHeaderLine.class::cast)
 				.collect(Collectors.toList());
 	}
 
@@ -141,14 +144,14 @@ public class VcfHeader {
 
 	public ComplexHeaderLine getComplexHeader(String key, String id) {
 		return headerLines.stream()
-				.filter(header -> header.getClass() == ComplexHeaderLine.class)
+				.filter(header -> header instanceof ComplexHeaderLine)
 				.map(header -> (ComplexHeaderLine) header)
 				.filter(header -> header.getKey().equals(key))
 				.filter(header -> header.getValue("ID").equals(id))
 				.findFirst().orElse(null);
 	}
 
-	public LinkedList<HeaderLine> getHeaderLines() {
+	public List<HeaderLine> getHeaderLines() {
 		return headerLines;
 	}
 
@@ -199,4 +202,23 @@ public class VcfHeader {
 
 	}
 
+	public List<FormatHeaderLine> getFormatLines() {
+		if (formatLines == null) {
+			formatLines = headerLines.stream()
+					.filter(FormatHeaderLine.class::isInstance)
+					.map(FormatHeaderLine.class::cast)
+					.sorted(Comparator.comparingInt(format -> FORMAT_ORDER.indexOf(format.getId())))
+					.collect(Collectors.toList());
+		}
+		return formatLines;
+	}
+
+	public List<InfoHeaderLine> getInfoLines() {
+		if (infoLines == null)
+			infoLines = headerLines.stream()
+					.filter(InfoHeaderLine.class::isInstance)
+					.map(InfoHeaderLine.class::cast)
+					.collect(Collectors.toList());
+		return infoLines;
+	}
 }

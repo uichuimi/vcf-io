@@ -25,6 +25,7 @@
 package org.uichuimi.variant.io.vcf;
 
 import org.junit.jupiter.api.Test;
+import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
 
 import java.util.Map;
 import java.util.TreeMap;

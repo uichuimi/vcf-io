@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.variant.io.vcf.Genotype;
 import org.uichuimi.variant.io.vcf.VariantSet;
-import org.uichuimi.variant.io.vcf.VcfHeader;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
 
 import java.io.File;

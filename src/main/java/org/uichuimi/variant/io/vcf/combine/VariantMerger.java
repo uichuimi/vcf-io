@@ -22,9 +22,13 @@
  *
  */
 
-package org.uichuimi.variant.io.vcf;
+package org.uichuimi.variant.io.vcf.combine;
 
-import org.uichuimi.variant.io.vcf.combine.GenotypeIndex;
+import org.uichuimi.variant.io.vcf.Coordinate;
+import org.uichuimi.variant.io.vcf.Variant;
+import org.uichuimi.variant.io.vcf.VariantSet;
+import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 
 import java.util.*;
 import java.util.logging.Logger;

@@ -29,7 +29,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import org.uichuimi.variant.io.vcf.Genotype;
 import org.uichuimi.variant.io.vcf.Variant;
 import org.uichuimi.variant.io.vcf.VariantSet;
-import org.uichuimi.variant.io.vcf.VcfHeader;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.io.MultipleVariantSetReader;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
 

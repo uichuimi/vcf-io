@@ -22,7 +22,9 @@
  *
  */
 
-package org.uichuimi.variant.io.vcf;
+package org.uichuimi.variant.io.vcf.header;
+
+import org.uichuimi.variant.io.vcf.VariantException;
 
 import java.util.*;
 
@@ -47,7 +49,6 @@ public class ComplexHeaderLine implements HeaderLine {
 	 * @param map
 	 */
 	public ComplexHeaderLine(String key, Map<String, String> map) {
-		checkRequiredKeys(key, map);
 		this.key = key;
 		this.map.putAll(map);
 	}

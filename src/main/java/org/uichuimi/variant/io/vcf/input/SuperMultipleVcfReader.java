@@ -1,27 +1,27 @@
-package org.uichuimi.variant.io.vcf.io;
+package org.uichuimi.variant.io.vcf.input;
 
 import org.uichuimi.variant.io.vcf.Coordinate;
-import org.uichuimi.variant.io.vcf.Variant;
-import org.uichuimi.variant.io.vcf.combine.VariantMerger;
+import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.combine.SuperVariantMerger;
 import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
 import org.uichuimi.variant.io.vcf.header.SimpleHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
+import org.uichuimi.variant.io.vcf.utils.FileUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Variant>> {
+public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collection<SuperVariant>> {
 
-	private final Collection<VariantSetReader> readers;
+	private final Collection<SuperVcfReader> readers;
 	private final VcfHeader header = new VcfHeader();
 
-	public MultipleVcfReader(Collection<InputStream> inputStreams) {
+	public SuperMultipleVcfReader(Collection<InputStream> inputStreams) {
 		this.readers = new ArrayList<>(inputStreams.size());
-		for (InputStream inputStream : inputStreams) readers.add(new VariantSetReader(inputStream));
+		for (InputStream inputStream : inputStreams) readers.add(new SuperVcfReader(inputStream));
 		mergeHeaders();
 	}
 
@@ -29,10 +29,10 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 	 * Secondary constructor. As Java does not allow override constructors with generics, we provide
 	 * the files constructors with a getInstance pattern.
 	 */
-	public static MultipleVcfReader getInstance(Collection<File> files) throws FileNotFoundException {
+	public static SuperMultipleVcfReader getInstance(Collection<File> files) throws IOException {
 		final List<InputStream> is = new ArrayList<>(files.size());
-		for (File file : files) is.add(new FileInputStream(file));
-		return new MultipleVcfReader(is);
+		for (File file : files) is.add(FileUtils.getInputStream(file));
+		return new SuperMultipleVcfReader(is);
 	}
 
 	public VcfHeader getHeader() {
@@ -41,16 +41,16 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 
 	@Override
 	public void close() throws Exception {
-		for (VariantSetReader reader : readers) reader.close();
+		for (SuperVcfReader reader : readers) reader.close();
 	}
 
 	@Override
 	public boolean hasNext() {
-		return readers.stream().anyMatch(VariantSetReader::hasNext);
+		return readers.stream().anyMatch(SuperVcfReader::hasNext);
 	}
 
 	@Override
-	public Collection<Variant> next() {
+	public Collection<SuperVariant> next() {
 		final Coordinate coordinate = nextCoordinate();
 		return readers.stream()
 				.map(reader -> reader.next(coordinate))
@@ -58,15 +58,15 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 				.collect(Collectors.toList());
 	}
 
-	public Variant nextMerged() {
-		return VariantMerger.merge(next(), header);
+	public SuperVariant nextMerged() {
+		return SuperVariantMerger.merge(next(), header);
 	}
 
 	private Coordinate nextCoordinate() {
 		return readers.stream()
-				.map(VariantSetReader::peek)
+				.map(SuperVcfReader::peek)
 				.filter(Objects::nonNull)
-				.map(Variant::getCoordinate)
+				.map(SuperVariant::getCoordinate)
 				.min(Coordinate::compareTo)
 				.orElse(null);
 	}
@@ -74,13 +74,13 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 	private void mergeHeaders() {
 		// Samples
 		readers.stream()
-				.map(VariantSetReader::header)
+				.map(SuperVcfReader::header)
 				.flatMap(vcfHeader -> vcfHeader.getSamples().stream())
 				.distinct()
 				.forEach(header.getSamples()::add);
 		// header lines
 		readers.stream()
-				.map(VariantSetReader::header).forEach(vcfHeader ->
+				.map(SuperVcfReader::header).forEach(vcfHeader ->
 				vcfHeader.getHeaderLines().forEach(sourceHeader -> {
 					if (sourceHeader instanceof SimpleHeaderLine)
 						addSimpleHeader((SimpleHeaderLine) sourceHeader);

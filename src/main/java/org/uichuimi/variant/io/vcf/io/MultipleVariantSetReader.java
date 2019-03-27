@@ -24,7 +24,12 @@
 
 package org.uichuimi.variant.io.vcf.io;
 
-import org.uichuimi.variant.io.vcf.*;
+import org.uichuimi.variant.io.vcf.Coordinate;
+import org.uichuimi.variant.io.vcf.Variant;
+import org.uichuimi.variant.io.vcf.combine.VariantMerger;
+import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
+import org.uichuimi.variant.io.vcf.header.SimpleHeaderLine;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 
 import java.io.File;
 import java.io.FileNotFoundException;

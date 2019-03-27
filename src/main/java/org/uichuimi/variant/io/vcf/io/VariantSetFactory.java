@@ -24,7 +24,9 @@
 
 package org.uichuimi.variant.io.vcf.io;
 
-import org.uichuimi.variant.io.vcf.*;
+import org.uichuimi.variant.io.vcf.VariantException;
+import org.uichuimi.variant.io.vcf.VariantSet;
+import org.uichuimi.variant.io.vcf.header.*;
 
 import java.io.*;
 import java.util.Map;
@@ -89,11 +91,22 @@ public class VariantSetFactory {
 	private static void addComplexHeader(VcfHeader header, String key, String group) {
 		final Map<String, String> map = MapGenerator.parse(group);
 		try {
-			final ComplexHeaderLine complexHeaderLine = new ComplexHeaderLine(key, map);
+			final ComplexHeaderLine complexHeaderLine = getComplexHeaderLine(key, map);
 			header.getHeaderLines().add(complexHeaderLine);
 //            header.addComplexHeader(type, map);
 		} catch (VariantException e) {
 			e.printStackTrace();
+		}
+	}
+
+	private static ComplexHeaderLine getComplexHeaderLine(String key, Map<String, String> map) {
+		switch (key) {
+			case "INFO":
+				return new InfoHeaderLine(map);
+			case "FORMAT":
+				return new FormatHeaderLine(map);
+			default:
+				return new ComplexHeaderLine(key, map);
 		}
 	}
 

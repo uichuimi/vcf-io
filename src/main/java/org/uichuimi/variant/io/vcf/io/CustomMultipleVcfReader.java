@@ -1,9 +1,9 @@
 package org.uichuimi.variant.io.vcf.io;
 
-import org.uichuimi.variant.io.vcf.ComplexHeaderLine;
-import org.uichuimi.variant.io.vcf.HeaderLine;
-import org.uichuimi.variant.io.vcf.SimpleHeaderLine;
-import org.uichuimi.variant.io.vcf.VcfHeader;
+import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
+import org.uichuimi.variant.io.vcf.header.HeaderLine;
+import org.uichuimi.variant.io.vcf.header.SimpleHeaderLine;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 
 import java.io.InputStream;
 import java.util.ArrayList;

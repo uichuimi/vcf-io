@@ -26,6 +26,8 @@ package org.uichuimi.variant.io.vcf;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
+import org.uichuimi.variant.io.vcf.header.VcfHeader;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
