@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.combine;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.VariantSet;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
@@ -18,9 +18,9 @@ public class GtMerger implements DataMerger {
 	}
 
 	@Override
-	public void accept(SuperVariant target, MultiLevelInfo targetInfo, SuperVariant source, MultiLevelInfo sourceInfo, DataFormatLine formatLine) {
+	public void accept(VariantContext target, MultiLevelInfo targetInfo, VariantContext source, MultiLevelInfo sourceInfo, DataFormatLine formatLine) {
 		// id is expected to be GT
-		final String gt = sourceInfo.getInfo().getString(formatLine.getId());
+		final String gt = sourceInfo.getGlobal().getString(formatLine.getId());
 		if (gt == null) return;
 		// if any of the alleles is ., dont merge
 		if (gt.contains(VariantSet.EMPTY_VALUE)) return;
@@ -37,6 +37,6 @@ public class GtMerger implements DataMerger {
 		final String b = source.getAlleles().get(Integer.valueOf(gts[1]));
 		final int gt0 = target.getAlleles().indexOf(a);
 		final int gt1 = target.getAlleles().indexOf(b);
-		targetInfo.getInfo().set(formatLine.getId(), gt0 + sep + gt1);
+		targetInfo.getGlobal().set(formatLine.getId(), gt0 + sep + gt1);
 	}
 }

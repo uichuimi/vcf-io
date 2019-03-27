@@ -1,7 +1,8 @@
 package org.uichuimi.variant.io.vcf.combine;
 
+import org.uichuimi.variant.io.vcf.GenotypeIndex;
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 public class GenotypeMerger implements DataMerger {
@@ -17,7 +18,7 @@ public class GenotypeMerger implements DataMerger {
 	}
 
 	@Override
-	public void accept(SuperVariant target, MultiLevelInfo targetInfo, SuperVariant source, MultiLevelInfo sourceInfo, DataFormatLine formatLine) {
+	public void accept(VariantContext target, MultiLevelInfo targetInfo, VariantContext source, MultiLevelInfo sourceInfo, DataFormatLine formatLine) {
 		for (int i = 0; i < source.getNumberOfGenotypes(); i++) {
 			final Object value = sourceInfo.getGenotypeInfo(i).get(formatLine.getId());
 			if (value == null) continue;

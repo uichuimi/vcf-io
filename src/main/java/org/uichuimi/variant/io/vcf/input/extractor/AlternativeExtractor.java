@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input.extractor;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class AlternativeExtractor extends DataExtractor {
 	}
 
 	@Override
-	public void accept(SuperVariant variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
+	public void accept(VariantContext variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
 		final String[] values = split(value);
 		if (values == null) return;
 		final int offset = variant.getReferences().size();
@@ -33,7 +33,7 @@ public class AlternativeExtractor extends DataExtractor {
 	}
 
 	@Override
-	public String extract(SuperVariant variant, MultiLevelInfo info, DataFormatLine formatLine) {
+	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
 		final List<Object> objects = new ArrayList<>();
 		final int offset = variant.getReferences().size();
 		for (int i = 0; i < variant.getAlternatives().size(); i++)

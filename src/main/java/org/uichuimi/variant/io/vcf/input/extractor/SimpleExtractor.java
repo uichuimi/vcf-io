@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input.extractor;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 /**
@@ -20,13 +20,13 @@ public class SimpleExtractor extends DataExtractor {
 	}
 
 	@Override
-	public void accept(SuperVariant variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
+	public void accept(VariantContext variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
 		final Object val = headerLine.parse(value);
-		if (val != null) info.getInfo().set(headerLine.getId(), val);
+		if (val != null) info.getGlobal().set(headerLine.getId(), val);
 	}
 
 	@Override
-	public String extract(SuperVariant variant, MultiLevelInfo info, DataFormatLine formatLine) {
-		return info.getInfo().getString(formatLine.getId());
+	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
+		return info.getGlobal().getString(formatLine.getId());
 	}
 }

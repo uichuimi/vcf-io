@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input.extractor;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class GenotypeExtractor extends DataExtractor {
 	}
 
 	@Override
-	public void accept(SuperVariant variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
+	public void accept(VariantContext variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
 		final String[] values = split(value);
 		if (values == null) return;
 		for (int i = 0; i < values.length; i++)
@@ -31,7 +31,7 @@ public class GenotypeExtractor extends DataExtractor {
 	}
 
 	@Override
-	public String extract(SuperVariant variant, MultiLevelInfo info, DataFormatLine formatLine) {
+	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
 		final List<Object> objects = new ArrayList<>();
 		for (int i = 0; i < variant.getNumberOfGenotypes(); i++)
 			objects.add(info.getGenotypeInfo(i).get(formatLine.getId()));

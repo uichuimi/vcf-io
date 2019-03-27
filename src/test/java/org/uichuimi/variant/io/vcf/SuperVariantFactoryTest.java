@@ -20,7 +20,7 @@ class SuperVariantFactoryTest {
 			final VcfHeader header = VariantSetFactory.readHeader(reader);
 			final SuperVariantFactory factory = new SuperVariantFactory(header);
 			reader.lines().forEach(line -> {
-				final SuperVariant variant = factory.parse(line);
+				final VariantContext variant = factory.parse(line);
 				System.out.println(SuperVariantWriter.toString(variant));
 			});
 		} catch (IOException e) {

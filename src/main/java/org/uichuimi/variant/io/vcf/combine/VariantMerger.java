@@ -25,6 +25,7 @@
 package org.uichuimi.variant.io.vcf.combine;
 
 import org.uichuimi.variant.io.vcf.Coordinate;
+import org.uichuimi.variant.io.vcf.GenotypeIndex;
 import org.uichuimi.variant.io.vcf.Variant;
 import org.uichuimi.variant.io.vcf.VariantSet;
 import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;

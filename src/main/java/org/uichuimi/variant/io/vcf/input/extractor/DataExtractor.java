@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input.extractor;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.VariantSet;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
@@ -14,9 +14,9 @@ public abstract class DataExtractor {
 	static final String SEPARATOR = ",";
 
 
-	public abstract void accept(SuperVariant variant, MultiLevelInfo info, DataFormatLine headerLine, String value);
+	public abstract void accept(VariantContext variant, MultiLevelInfo info, DataFormatLine headerLine, String value);
 
-	public abstract String extract(SuperVariant variant, MultiLevelInfo info, DataFormatLine formatLine);
+	public abstract String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine);
 
 		public static DataExtractor getInstance(String number) {
 		try {

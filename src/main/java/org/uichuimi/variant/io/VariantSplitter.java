@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io;
 
+import org.uichuimi.variant.io.vcf.GenotypeIndex;
 import org.uichuimi.variant.io.vcf.Variant;
-import org.uichuimi.variant.io.vcf.combine.GenotypeIndex;
 import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
 

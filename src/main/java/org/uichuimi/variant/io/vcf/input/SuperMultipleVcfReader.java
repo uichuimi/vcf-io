@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input;
 
 import org.uichuimi.variant.io.vcf.Coordinate;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.combine.SuperVariantMerger;
 import org.uichuimi.variant.io.vcf.header.ComplexHeaderLine;
 import org.uichuimi.variant.io.vcf.header.SimpleHeaderLine;
@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collection<SuperVariant>> {
+public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collection<VariantContext>> {
 
 	private final Collection<SuperVcfReader> readers;
 	private final VcfHeader header = new VcfHeader();
@@ -50,7 +50,7 @@ public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collectio
 	}
 
 	@Override
-	public Collection<SuperVariant> next() {
+	public Collection<VariantContext> next() {
 		final Coordinate coordinate = nextCoordinate();
 		return readers.stream()
 				.map(reader -> reader.next(coordinate))
@@ -58,7 +58,7 @@ public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collectio
 				.collect(Collectors.toList());
 	}
 
-	public SuperVariant nextMerged() {
+	public VariantContext nextMerged() {
 		return SuperVariantMerger.merge(next(), header);
 	}
 
@@ -66,7 +66,7 @@ public class SuperMultipleVcfReader implements AutoCloseable, Iterator<Collectio
 		return readers.stream()
 				.map(SuperVcfReader::peek)
 				.filter(Objects::nonNull)
-				.map(SuperVariant::getCoordinate)
+				.map(VariantContext::getCoordinate)
 				.min(Coordinate::compareTo)
 				.orElse(null);
 	}

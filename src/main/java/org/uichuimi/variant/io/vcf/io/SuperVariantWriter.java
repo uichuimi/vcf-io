@@ -1,6 +1,6 @@
 package org.uichuimi.variant.io.vcf.io;
 
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.VariantSet;
 import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
 import org.uichuimi.variant.io.vcf.header.HeaderLine;
@@ -16,7 +16,7 @@ public class SuperVariantWriter {
 	private static final String INFO_SEPARATOR = ";";
 	private static final String FORMAT_SEPARATOR = ":";
 
-	public static String toString(SuperVariant variant) {
+	public static String toString(VariantContext variant) {
 		final StringBuilder builder = new StringBuilder();
 		builder.append(variant.getCoordinate().getChrom())
 				.append(SEPARATOR).append(variant.getCoordinate().getPosition())
@@ -35,14 +35,14 @@ public class SuperVariantWriter {
 		return String.join(SECONDARY_SEPARATOR, values);
 	}
 
-	private static String getInfoString(SuperVariant variant) {
+	private static String getInfoString(VariantContext variant) {
 		final StringJoiner infoBuilder = new StringJoiner(INFO_SEPARATOR);
 		for (HeaderLine headerLine : variant.getHeader().getHeaderLines()) {
 			if (headerLine instanceof InfoHeaderLine) {
 				final InfoHeaderLine infoHeaderLine = (InfoHeaderLine) headerLine;
 				// Flags
 				if (infoHeaderLine.getNumber().equals("0")) {
-					if (variant.getInfo().hasInfo(infoHeaderLine.getId()))
+					if (variant.getGlobal().hasInfo(infoHeaderLine.getId()))
 						infoBuilder.add(infoHeaderLine.getId());
 				} else {
 					final String value = infoHeaderLine.extract(variant, variant);
@@ -53,7 +53,7 @@ public class SuperVariantWriter {
 		return infoBuilder.toString();
 	}
 
-	private static void addSampleData(SuperVariant variant, StringBuilder builder) {
+	private static void addSampleData(VariantContext variant, StringBuilder builder) {
 		final List<FormatHeaderLine> formatLines = variant.getHeader().getFormatLines();
 		final List<String[]> sampleData = new ArrayList<>();
 		final List<String> keys = new ArrayList<>();

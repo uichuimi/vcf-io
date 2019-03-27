@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.combine;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 public class SimpleMerger implements DataMerger {
@@ -17,9 +17,9 @@ public class SimpleMerger implements DataMerger {
 	}
 
 	@Override
-	public void accept(SuperVariant target, MultiLevelInfo targetInfo, SuperVariant source, MultiLevelInfo sourceInfo, DataFormatLine formatLine) {
-		if (sourceInfo.getInfo().hasInfo(formatLine.getId()) && !targetInfo.getInfo().hasInfo(formatLine.getId()))
-			targetInfo.getInfo().set(formatLine.getId(), sourceInfo.getInfo().get(formatLine.getId()));
+	public void accept(VariantContext target, MultiLevelInfo targetInfo, VariantContext source, MultiLevelInfo sourceInfo, DataFormatLine formatLine) {
+		if (sourceInfo.getGlobal().hasInfo(formatLine.getId()) && !targetInfo.getGlobal().hasInfo(formatLine.getId()))
+			targetInfo.getGlobal().set(formatLine.getId(), sourceInfo.getGlobal().get(formatLine.getId()));
 
 	}
 }

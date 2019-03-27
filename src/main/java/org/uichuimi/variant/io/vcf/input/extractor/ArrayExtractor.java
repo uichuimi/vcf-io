@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input.extractor;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 import java.util.Arrays;
@@ -20,17 +20,17 @@ public class ArrayExtractor extends DataExtractor {
 	}
 
 	@Override
-	public void accept(SuperVariant variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
+	public void accept(VariantContext variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
 		final String[] values = split(value);
 		if (values == null) return;
 		final Object[] array = new Object[values.length];
 		for (int i = 0; i < values.length; i++) array[i] = headerLine.parse(values[i]);
-		info.getInfo().set(headerLine.getId(), array);
+		info.getGlobal().set(headerLine.getId(), array);
 	}
 
 	@Override
-	public String extract(SuperVariant variant, MultiLevelInfo info, DataFormatLine formatLine) {
-		final Object[] array = info.getInfo().getArray(formatLine.getId());
+	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
+		final Object[] array = info.getGlobal().getArray(formatLine.getId());
 		if (array == null) return null;
 		return Arrays.stream(array).map(String::valueOf).collect(Collectors.joining(SEPARATOR));
 	}

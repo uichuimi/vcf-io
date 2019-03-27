@@ -34,7 +34,9 @@ import java.util.Arrays;
  * is stored as a map of key=value. If value is null, key is treated as a flag.
  *
  * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
+ * @deprecated Use {@link VariantContext} instead
  */
+@Deprecated
 public class Variant implements Comparable<Variant> {
 
 	/*

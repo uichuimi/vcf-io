@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.header;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.VariantSet;
 import org.uichuimi.variant.io.vcf.combine.*;
 import org.uichuimi.variant.io.vcf.input.extractor.DataExtractor;
@@ -93,15 +93,15 @@ public class DataFormatLine extends ComplexHeaderLine {
 		return val.equals(VariantSet.EMPTY_VALUE) ? null : (T) parser.apply(val);
 	}
 
-	public void apply(SuperVariant variant, MultiLevelInfo info, String value) {
+	public void apply(VariantContext variant, MultiLevelInfo info, String value) {
 		extractor.accept(variant, info, this, value);
 	}
 
-	public String extract(SuperVariant variant, MultiLevelInfo info) {
+	public String extract(VariantContext variant, MultiLevelInfo info) {
 		return extractor.extract(variant, info, this);
 	}
 
-	public void mergeInto(SuperVariant target, MultiLevelInfo targetInfo, SuperVariant source, MultiLevelInfo sourceInfo) {
+	public void mergeInto(VariantContext target, MultiLevelInfo targetInfo, VariantContext source, MultiLevelInfo sourceInfo) {
 		merger.accept(target, targetInfo, source, sourceInfo, this);
 
 	}

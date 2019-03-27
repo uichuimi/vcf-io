@@ -1,4 +1,4 @@
-package org.uichuimi.variant.io.vcf.combine;
+package org.uichuimi.variant.io.vcf;
 
 import java.util.ArrayList;
 import java.util.List;

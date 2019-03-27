@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input;
 
 import org.uichuimi.variant.io.vcf.Coordinate;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
 import org.uichuimi.variant.io.vcf.io.VariantSetFactory;
 import org.uichuimi.variant.io.vcf.io.VariantSetReader;
@@ -14,12 +14,12 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class SuperVcfReader implements AutoCloseable, Iterator<SuperVariant> {
+public class SuperVcfReader implements AutoCloseable, Iterator<VariantContext> {
 
 
 	protected final VcfHeader header;
 	protected final BufferedReader reader;
-	private SuperVariant nextVariant;
+	private VariantContext nextVariant;
 	private SuperVariantFactory variantFactory;
 
 	public SuperVcfReader(InputStream is) {
@@ -34,7 +34,7 @@ public class SuperVcfReader implements AutoCloseable, Iterator<SuperVariant> {
 		variantFactory = new SuperVariantFactory(header);
 	}
 
-	public final Stream<SuperVariant> variants() {
+	public final Stream<VariantContext> variants() {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
 				Spliterator.NONNULL | Spliterator.ORDERED), true);
 	}
@@ -72,14 +72,14 @@ public class SuperVcfReader implements AutoCloseable, Iterator<SuperVariant> {
 	 * @param line each variant line found in file
 	 * @return a variant
 	 */
-	protected SuperVariant createVariant(String line) {
+	protected VariantContext createVariant(String line) {
 		return variantFactory.parse(line);
 	}
 
 	@Override
-	public final SuperVariant next() {
+	public final VariantContext next() {
 		if (hasNext()) {
-			final SuperVariant variant = nextVariant;
+			final VariantContext variant = nextVariant;
 			nextVariant = null;
 			return variant;
 		} else throw new NoSuchElementException();
@@ -92,7 +92,7 @@ public class SuperVcfReader implements AutoCloseable, Iterator<SuperVariant> {
 	 * @return the next variant in the buffer. If there are no more variants in the buffer, returns
 	 * null.
 	 */
-	public SuperVariant peek() {
+	public VariantContext peek() {
 		return hasNext() ? nextVariant : null;
 	}
 
@@ -107,11 +107,11 @@ public class SuperVcfReader implements AutoCloseable, Iterator<SuperVariant> {
 	 * @param coordinate coordinate of the next variant to return
 	 * @return a variant matching coordinate or null
 	 */
-	public SuperVariant next(Coordinate coordinate) {
+	public VariantContext next(Coordinate coordinate) {
 		while (hasNext()) {
 			final int compare = nextVariant.getCoordinate().compareTo(coordinate);
 			if (compare == 0) {
-				final SuperVariant variant = nextVariant;
+				final VariantContext variant = nextVariant;
 				nextVariant = null;
 				return variant;
 			} else if (compare > 0) {

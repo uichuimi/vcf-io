@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input;
 
 import org.uichuimi.variant.io.vcf.Coordinate;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
 import org.uichuimi.variant.io.vcf.header.InfoHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
@@ -37,7 +37,7 @@ public class SuperVariantFactory {
 
 	}
 
-	public final SuperVariant parse(String line) {
+	public final VariantContext parse(String line) {
 		final String[] row = line.split(SEPARATOR);
 
 		final String chrom = row[0];
@@ -45,7 +45,7 @@ public class SuperVariantFactory {
 		final Coordinate coordinate = new Coordinate(chrom, position);
 		final List<String> refs = Arrays.asList(row[3].split(SECONDARY_SEPARATOR));
 		final List<String> alts = Arrays.asList(row[4].split(SECONDARY_SEPARATOR));
-		final SuperVariant variant = new SuperVariant(header, coordinate, refs, alts);
+		final VariantContext variant = new VariantContext(header, coordinate, refs, alts);
 
 		final List<String> ids = row[2].equals(EMPTY_VALUE)
 				? Collections.emptyList()
@@ -64,7 +64,7 @@ public class SuperVariantFactory {
 		return variant;
 	}
 
-	private void parseInfo(SuperVariant variant, String info) {
+	private void parseInfo(VariantContext variant, String info) {
 		final String[] infos = info.split(INFO_SEPARATOR);
 		for (String s : infos) {
 			final String[] keyValue = s.split(KEY_VALUE_SEPARATOR);
@@ -90,7 +90,7 @@ public class SuperVariantFactory {
 		return infoHeaderLine;
 	}
 
-	private void parseFormat(SuperVariant variant, String[] row) {
+	private void parseFormat(VariantContext variant, String[] row) {
 		final String[] keys = row[8].split(":");
 		for (int i = 0; i < header.getSamples().size(); i++) {
 			final String[] format = row[9 + i].split(":");

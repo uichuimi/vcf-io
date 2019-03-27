@@ -26,7 +26,7 @@ package org.uichuimi.variant.io.vcf.combine;
 
 import org.uichuimi.variant.io.vcf.Coordinate;
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.FormatHeaderLine;
 import org.uichuimi.variant.io.vcf.header.InfoHeaderLine;
 import org.uichuimi.variant.io.vcf.header.VcfHeader;
@@ -45,14 +45,14 @@ public class SuperVariantMerger {
 	 * @param header   header for the new Variant
 	 * @return a new Variant containing all the INFO and FORMAT information of the variants list
 	 */
-	public static SuperVariant merge(Collection<SuperVariant> variants, VcfHeader header) {
+	public static VariantContext merge(Collection<VariantContext> variants, VcfHeader header) {
 		if (variants.isEmpty()) return null;
-		final List<SuperVariant> variantList = new ArrayList<>(variants);
+		final List<VariantContext> variantList = new ArrayList<>(variants);
 		if (variantList.size() == 1 && variantList.get(0).getHeader() == header)
 			return variantList.get(0);
-		final SuperVariant variant = baseVariant(variantList, header);
+		final VariantContext variant = baseVariant(variantList, header);
 
-		for (SuperVariant other : variantList) {
+		for (VariantContext other : variantList) {
 			// ID
 			// TODO: 27/03/19 associate id with allele
 			for (String id : other.getIds())
@@ -74,15 +74,15 @@ public class SuperVariantMerger {
 		return variant;
 	}
 
-	private static void mergeInfo(List<SuperVariant> variants, SuperVariant variant) {
+	private static void mergeInfo(List<VariantContext> variants, VariantContext variant) {
 		final List<InfoHeaderLine> infoLines = variant.getHeader().getInfoLines();
 		for (InfoHeaderLine headerLine : infoLines)
-			for (SuperVariant other : variants)
+			for (VariantContext other : variants)
 				headerLine.mergeInto(variant, variant, other, other);
 	}
 
-	private static void mergeSamples(List<SuperVariant> variantList, SuperVariant variant) {
-		for (final SuperVariant other : variantList) {
+	private static void mergeSamples(List<VariantContext> variantList, VariantContext variant) {
+		for (final VariantContext other : variantList) {
 			for (int s = 0; s < other.getHeader().getSamples().size(); s++) {
 				final String sample = other.getHeader().getSamples().get(s);
 				final MultiLevelInfo sourceInfo = other.getSampleInfo(s);
@@ -94,7 +94,7 @@ public class SuperVariantMerger {
 		}
 	}
 
-	private static SuperVariant baseVariant(Collection<SuperVariant> variants, VcfHeader header) {
+	private static VariantContext baseVariant(Collection<VariantContext> variants, VcfHeader header) {
 		// These variants DO have same Coordinate
 		final Coordinate coordinate = variants.iterator().next().getCoordinate();
 		final List<String> references = variants.stream()
@@ -103,7 +103,7 @@ public class SuperVariantMerger {
 		final List<String> alternatives = variants.stream()
 				.flatMap(v -> v.getAlternatives().stream())
 				.distinct().collect(Collectors.toList());
-		return new SuperVariant(header, coordinate, references, alternatives);
+		return new VariantContext(header, coordinate, references, alternatives);
 	}
 
 }

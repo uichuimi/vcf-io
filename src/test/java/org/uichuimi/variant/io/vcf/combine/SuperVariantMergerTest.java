@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.combine;
 
 import org.junit.jupiter.api.Test;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.input.SuperMultipleVcfReader;
 import org.uichuimi.variant.io.vcf.io.SuperVariantWriter;
 
@@ -16,7 +16,7 @@ class SuperVariantMergerTest {
 		final File B = new File("/media/pascual/Resources/uichuimi/NIV025.vcf.gz");
 		try (SuperMultipleVcfReader reader = SuperMultipleVcfReader.getInstance(Arrays.asList(A, B))) {
 			while (reader.hasNext()) {
-				final SuperVariant variant = reader.nextMerged();
+				final VariantContext variant = reader.nextMerged();
 				if (variant.getReferences().size() > 1 || variant.getAlternatives().size() > 1)
 					System.out.println(SuperVariantWriter.toString(variant));
 			}

@@ -31,12 +31,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Stores a vcf. chrom, position, ref, alt, filter and format are Strings. position is an integer, qual a double. Info
- * is stored as a map of key=value. If value is null, key is treated as a flag.
+ * This is the newer approach of a VCF line. A context defines all possible variations in a genomic coordinate. It can
+ * contain 1 or more reference alleles, and 1 or more alternative alleles. It can store information at different levels.
+ *
  *
  * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
  */
-public class SuperVariant extends MultiLevelInfo {
+public class VariantContext extends MultiLevelInfo {
 
 	private final VcfHeader header;
 	private final List<String> alleles;
@@ -50,7 +51,7 @@ public class SuperVariant extends MultiLevelInfo {
 
 	private final MultiLevelInfo[] sampleInfo;
 
-	public SuperVariant(VcfHeader header, Coordinate coordinate, List<String> references, List<String> alternatives) {
+	public VariantContext(VcfHeader header, Coordinate coordinate, List<String> references, List<String> alternatives) {
 		super(references.size(), alternatives.size());
 		this.header = header;
 		this.coordinate = coordinate;

@@ -1,7 +1,7 @@
 package org.uichuimi.variant.io.vcf.input.extractor;
 
 import org.uichuimi.variant.io.vcf.MultiLevelInfo;
-import org.uichuimi.variant.io.vcf.SuperVariant;
+import org.uichuimi.variant.io.vcf.VariantContext;
 import org.uichuimi.variant.io.vcf.header.DataFormatLine;
 
 /**
@@ -19,12 +19,12 @@ public class FlagExtractor extends DataExtractor {
 	}
 
 	@Override
-	public void accept(SuperVariant variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
-		info.getInfo().set(headerLine.getId(), true);
+	public void accept(VariantContext variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
+		info.getGlobal().set(headerLine.getId(), true);
 	}
 
 	@Override
-	public String extract(SuperVariant variant, MultiLevelInfo info, DataFormatLine formatLine) {
+	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
 		throw new UnsupportedOperationException("Flags do not have value in info field");
 	}
 }

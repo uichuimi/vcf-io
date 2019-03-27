@@ -2,6 +2,7 @@ package org.uichuimi.variant.io.vcf.combine;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.uichuimi.variant.io.vcf.GenotypeIndex;
 
 public class GenotpyeIndexTest {
 
