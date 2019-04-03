@@ -44,10 +44,6 @@ public class ComplexHeaderLine implements HeaderLine {
 	private final String key;
 	private final LinkedHashMap<String, String> map = new LinkedHashMap<>();
 
-	/**
-	 * @param key
-	 * @param map
-	 */
 	public ComplexHeaderLine(String key, Map<String, String> map) {
 		this.key = key;
 		this.map.putAll(map);

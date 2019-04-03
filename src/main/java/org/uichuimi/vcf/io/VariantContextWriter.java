@@ -1,101 +1,123 @@
 package org.uichuimi.vcf.io;
 
-import org.uichuimi.vcf.header.FormatHeaderLine;
-import org.uichuimi.vcf.header.InfoHeaderLine;
+import org.uichuimi.vcf.header.VcfHeader;
+import org.uichuimi.vcf.utils.FileUtils;
 import org.uichuimi.vcf.variant.VariantContext;
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.variant.VariantException;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.*;
+import java.util.function.Consumer;
 
 /**
- * Helper class to create the string representation of a VariantContext for
- * <a href=https://samtools.github.io/hts-specs/VCFv4.3.pdf>Variant Call Format</a>.
+ * writes VCF format to an output stream. As header must be the first thing to
+ * write, a valid header must be provided via the <strong>setHeader()</strong>
+ * method. If a call is made to <strong>write(Variant variant)</strong>, but no
+ * call has been made to writeHeader(), then it is implicit call.
+ *
+ * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
-public class VariantContextWriter {
+public class VariantContextWriter implements AutoCloseable {
 
-	private static final String SEPARATOR = "\t";
-	private static final String SECONDARY_SEPARATOR = ",";
-	private static final String INFO_SEPARATOR = ";";
-	private static final String FORMAT_SEPARATOR = ":";
+	private final BufferedWriter writer;
+	private VcfHeader vcfHeader;
+	/**
+	 * By using a function, we avoid having a flag (headerWritten) that will be true only the first time.
+	 */
+	private Consumer<VariantContext> consumer;
 
 	/**
-	 * Creates the VCF representation of the variant.
+	 * Creates a new VariantSetWriter that writes into a File. Once created, a
+	 * FileWriter is hold to file, so try to close this as soon as you finish
+	 * using it.
+	 *
+	 * @param file file to write. It will be overwritten. If it does not exists,
+	 *             it will be created. See {@link FileWriter}
+	 * @throws IOException copied from {@link FileWriter}: if the file exists
+	 *                     but is a directory rather than a regular file, does
+	 *                     not exist but cannot be created, or cannot be opened
+	 *                     for any other reason
 	 */
-	public static String toVcf(VariantContext variant) {
-		final StringBuilder builder = new StringBuilder();
-		builder.append(variant.getCoordinate().getChrom())
-				.append(SEPARATOR).append(variant.getCoordinate().getPosition())
-				.append(SEPARATOR).append(join(variant.getIds()))
-				.append(SEPARATOR).append(join(variant.getReferences()))
-				.append(SEPARATOR).append(join(variant.getAlternatives()))
-				.append(SEPARATOR).append(variant.getQuality())
-				.append(SEPARATOR).append(join(variant.getFilters()))
-				.append(SEPARATOR).append(getInfoString(variant));
-		addSampleData(variant, builder);
-		return builder.toString();
+	public VariantContextWriter(File file) throws IOException {
+		this(FileUtils.getOutputStream(file));
 	}
 
-	private static String join(List<String> values) {
-		if (values.isEmpty()) return VariantSet.EMPTY_VALUE;
-		return String.join(SECONDARY_SEPARATOR, values);
+	/**
+	 * Creates a new VariantSetWriter that writes into an output stream. An
+	 * OutputStreamWriter is opened, so remember to close it when you finish
+	 * using it or use a try-with-resources block.
+	 *
+	 * @param outputStream where to write
+	 */
+	public VariantContextWriter(OutputStream outputStream) {
+		this.writer = new BufferedWriter(new OutputStreamWriter(outputStream));
+		consumer = withHeader();
 	}
 
-	private static String getInfoString(VariantContext variant) {
-		final StringJoiner infoBuilder = new StringJoiner(INFO_SEPARATOR);
-		for (InfoHeaderLine headerLine : variant.getHeader().getInfoLines()) {
-			if (headerLine.getNumber().equals("0")) {
-				// Flags
-				if (variant.getInfo().getGlobal().hasInfo(headerLine.getId()))
-					infoBuilder.add(headerLine.getId());
-			} else {
-				// Others
-				final String value = headerLine.extract(variant, variant.getInfo());
-				if (value != null) infoBuilder.add(headerLine.getId() + "=" + value);
+	/**
+	 * Get consumer for the first line. Writes header and variant.
+	 */
+	private Consumer<VariantContext> withHeader() {
+		return variant -> {
+			try {
+				writeHeader();
+				writeVariant(variant);
+				consumer = withoutHeader();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		}
-		return infoBuilder.toString();
+		};
 	}
 
-	private static void addSampleData(VariantContext variant, StringBuilder builder) {
-		// We are going to collect the sample data in a matrix, ignoring those FORMAT tags that do not contain
-		// information for any sample. After that, we are going to generate the string by sample.
-		final List<String[]> sampleData = new ArrayList<>();
-		final List<String> keys = new ArrayList<>();
-		// keys sampleData
-		// GT   [0/1, 0/1, ./.]
-		// DP   [15, 14, 24]
-		// H2   [51,51, ., .]
-		// Collect FORMAT by key, adding only those where at least one sample has a value
-		for (final FormatHeaderLine headerLine : variant.getHeader().getFormatLines()) {
-			final String[] values = new String[variant.getHeader().getSamples().size()];
-			for (int s = 0; s < variant.getHeader().getSamples().size(); s++) {
-				final String value = headerLine.extract(variant, variant.getSampleInfo(s));
-				if (value != null) values[s] = value;
+	/**
+	 * Get consumer for the rest of lines. Writes the variant.
+	 */
+	private Consumer<VariantContext> withoutHeader() {
+		return variant -> {
+			try {
+				writeVariant(variant);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			if (Arrays.stream(values).allMatch(Objects::isNull)) continue;
-			keys.add(headerLine.getId());
-			sampleData.add(values);
-		}
-
-		builder.append("\t").append(String.join(FORMAT_SEPARATOR, keys));
-
-		// Now we add FORMAT by sample
-		for (int s = 0; s < variant.getHeader().getSamples().size(); s++) {
-			// Collect all values
-			final List<String> sample = new ArrayList<>(keys.size());
-			for (String[] ft : sampleData) sample.add(ft[s]);
-
-			// Remove trailing nulls, leaving at least one value
-			// Can this feature annoy some parsers?
-			while (sample.size() > 1 && sample.get(sample.size() - 1) == null)
-				sample.remove(sample.size() - 1);
-
-			// map nulls to . and join
-			final String sformat = sample.stream()
-					.map(v -> v == null ? VariantSet.EMPTY_VALUE : v)
-					.collect(Collectors.joining(FORMAT_SEPARATOR));
-			builder.append(SEPARATOR).append(sformat);
-		}
+		};
 	}
+
+	public void setHeader(VcfHeader header) {
+		vcfHeader = header;
+	}
+
+	/**
+	 * Writes header into writer. Only first call to this method is effective.
+	 *
+	 * @throws IOException copied from {@link BufferedWriter} write method: if
+	 *                     an I/O error occurs
+	 */
+	private void writeHeader() throws IOException {
+		writer.write(vcfHeader.toString());
+		writer.newLine();
+	}
+
+	private void writeVariant(VariantContext variant) throws IOException {
+		writer.write(VcfFormatter.toVcf(variant));
+		writer.newLine();
+	}
+
+	/**
+	 * Writes a variant. If header has not been yet written, then a call to
+	 * writeHeader is made. This operation changes the
+	 *
+	 * @param variant variant to write
+	 */
+	public void write(VariantContext variant) throws VariantException {
+		if (variant.getHeader() != vcfHeader)
+			throw new VariantException("Variant VcfHeader does not correspond to file VcfHeader");
+		consumer.accept(variant);
+	}
+
+	@Override
+	public void close() throws Exception {
+		writer.flush();
+		writer.close();
+	}
+
+
 }

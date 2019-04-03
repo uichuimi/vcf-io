@@ -33,6 +33,7 @@ public class MultiLevelInfo {
 	private final Info[] genotypes;
 	private final int numberOfAlleles;
 	private final int numberOfGenotypes;
+	private int references;
 
 	/**
 	 * Creates a new {@link MultiLevelInfo} object. The number of reference and alternative alleles are needed to create
@@ -42,6 +43,7 @@ public class MultiLevelInfo {
 	 * @param alternatives number of alternative alleles
 	 */
 	public MultiLevelInfo(int references, int alternatives) {
+		this.references = references;
 		this.numberOfAlleles = references + alternatives;
 		this.numberOfGenotypes = computeGenotypes(numberOfAlleles);
 		this.alleles = new Info[numberOfAlleles];
@@ -67,6 +69,15 @@ public class MultiLevelInfo {
 	public Info getAllele(int index) {
 		if (alleles[index] == null) alleles[index] = new Info();
 		return alleles[index];
+	}
+
+	/**
+	 * Get the information of the alternative allele in index.
+	 *
+	 * @param index relative to alternative alleles only
+	 */
+	public Info getAlternativeAllele(int index) {
+		return getAllele(references + index);
 	}
 
 	/**

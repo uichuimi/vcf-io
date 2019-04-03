@@ -46,16 +46,20 @@ class VariantContextFactory {
 		final List<String> alts = Arrays.asList(row[4].split(SECONDARY_SEPARATOR));
 		final VariantContext variant = new VariantContext(header, coordinate, refs, alts);
 
+		// Ids
 		final List<String> ids = row[2].equals(EMPTY_VALUE)
 				? Collections.emptyList()
 				: Arrays.asList(row[2].split(SECONDARY_SEPARATOR));
+		variant.getIds().addAll(ids);
 
-		final double quality = Double.valueOf(row[5]);
+		// Quality
+		if (!row[5].equals(EMPTY_VALUE))
+			variant.setQuality(Double.valueOf(row[5]));
+
+		// filters
 		final List<String> filter = row[6].equals(EMPTY_VALUE)
 				? Collections.emptyList()
 				: Arrays.asList(row[6].split(SECONDARY_SEPARATOR));
-		variant.getIds().addAll(ids);
-		variant.setQuality(quality);
 		variant.getFilters().addAll(filter);
 
 		if (row.length > 7) parseInfo(variant, row[7]);

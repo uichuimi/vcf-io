@@ -26,18 +26,15 @@ public class AlternativeExtractor extends DataExtractor {
 	public void accept(VariantContext variant, MultiLevelInfo info, DataFormatLine headerLine, String value) {
 		final String[] values = split(value);
 		if (values == null) return;
-		final int offset = variant.getReferences().size();
-		for (int i = 0; i < variant.getAlternatives().size(); i++) {
-			info.getAllele(offset + i).set(headerLine.getId(), headerLine.parse(values[i]));
-		}
+		for (int i = 0; i < variant.getAlternatives().size(); i++)
+			info.getAlternativeAllele(i).set(headerLine.getId(), headerLine.parse(values[i]));
 	}
 
 	@Override
 	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
-		final List<Object> objects = new ArrayList<>();
-		final int offset = variant.getReferences().size();
+		final List<String> objects = new ArrayList<>();
 		for (int i = 0; i < variant.getAlternatives().size(); i++)
-			objects.add(info.getAllele(offset + i).get(formatLine.getId()));
+			objects.add(formatLine.format(info.getAlternativeAllele(i).get(formatLine.getId())));
 		return toValueString(objects);
 	}
 

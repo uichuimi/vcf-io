@@ -31,9 +31,9 @@ public class AlleleExtractor extends DataExtractor {
 	}
 
 	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
-		final List<Object> objects = new ArrayList<>();
+		final List<String> objects = new ArrayList<>();
 		for (int i = 0; i < variant.getInfo().getNumberOfAlleles(); i++)
-			objects.add(info.getAllele(i).get(formatLine.getId()));
+			objects.add(formatLine.format(info.getAllele(i).get(formatLine.getId())));
 		return toValueString(objects);
 	}
 

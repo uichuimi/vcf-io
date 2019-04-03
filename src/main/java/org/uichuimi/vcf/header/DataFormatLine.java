@@ -6,10 +6,14 @@ import org.uichuimi.vcf.variant.MultiLevelInfo;
 import org.uichuimi.vcf.variant.VariantContext;
 import org.uichuimi.vcf.variant.VariantSet;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Map;
 import java.util.function.Function;
 
 public class DataFormatLine extends ComplexHeaderLine {
+
+	private static final NumberFormat DECIMAL = new DecimalFormat("###,###.###");
 
 
 	private final String id;
@@ -17,6 +21,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 	private final String description;
 	private final String number;
 	private final Function<String, ?> parser;
+	private final Function<? super Object, String> formatter;
 	private final DataMerger merger;
 	private final DataExtractor extractor;
 
@@ -30,11 +35,25 @@ public class DataFormatLine extends ComplexHeaderLine {
 		if (id == null || type == null || number == null || description == null)
 			throw new IllegalArgumentException("Missing keys");
 		parser = getParser();
+		formatter = getFormatter();
 		extractor = DataExtractor.getInstance(number);
 		merger = getMerger();
-
 	}
 
+	private Function<? super Object, String> getFormatter() {
+		switch (type) {
+			case "Float":
+				return DECIMAL::format;
+			case "Integer":
+				return String::valueOf;
+			case "Flag":
+				return s -> null;
+			case "String":
+			case "Character":
+			default:
+				return String::valueOf;
+		}
+	}
 
 	private Function<String, ?> getParser() {
 		switch (type) {
@@ -93,6 +112,10 @@ public class DataFormatLine extends ComplexHeaderLine {
 
 	public <T> T parse(String val) {
 		return val.equals(VariantSet.EMPTY_VALUE) ? null : (T) parser.apply(val);
+	}
+
+	public String format(Object obj) {
+		return obj == null ? null : formatter.apply(obj);
 	}
 
 	public void apply(VariantContext variant, MultiLevelInfo info, String value) {

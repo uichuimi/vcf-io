@@ -48,10 +48,10 @@ public abstract class DataExtractor {
 		return values;
 	}
 
-	String toValueString(List<Object> objects) {
+	String toValueString(List<String> objects) {
 		if (objects.stream().allMatch(Objects::isNull)) return null;
 		return objects.stream()
-				.map(o -> o == null ? VariantSet.EMPTY_VALUE : String.valueOf(o))
+				.map(o -> o == null ? VariantSet.EMPTY_VALUE : o)
 				.collect(Collectors.joining(SEPARATOR));
 	}
 

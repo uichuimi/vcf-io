@@ -4,9 +4,6 @@ import org.uichuimi.vcf.header.DataFormatLine;
 import org.uichuimi.vcf.variant.MultiLevelInfo;
 import org.uichuimi.vcf.variant.VariantContext;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 public class ArrayExtractor extends DataExtractor {
 
 	private static ArrayExtractor instance;
@@ -32,7 +29,10 @@ public class ArrayExtractor extends DataExtractor {
 	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
 		final Object[] array = info.getGlobal().getArray(formatLine.getId());
 		if (array == null) return null;
-		return Arrays.stream(array).map(String::valueOf).collect(Collectors.joining(SEPARATOR));
+		final String[] strings = new String[array.length];
+		for (int i = 0; i < array.length; i++)
+			strings[i] = formatLine.format(array[i]);
+		return String.join(SEPARATOR, strings);
 	}
 
 

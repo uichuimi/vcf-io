@@ -27,6 +27,6 @@ public class SimpleExtractor extends DataExtractor {
 
 	@Override
 	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
-		return info.getGlobal().getString(formatLine.getId());
+		return formatLine.format(info.getGlobal().get(formatLine.getId()));
 	}
 }

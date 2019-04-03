@@ -32,9 +32,9 @@ public class GenotypeExtractor extends DataExtractor {
 
 	@Override
 	public String extract(VariantContext variant, MultiLevelInfo info, DataFormatLine formatLine) {
-		final List<Object> objects = new ArrayList<>();
+		final List<String> objects = new ArrayList<>();
 		for (int i = 0; i < variant.getInfo().getNumberOfGenotypes(); i++)
-			objects.add(info.getGenotype(i).get(formatLine.getId()));
+			objects.add(formatLine.format(info.getGenotype(i).get(formatLine.getId())));
 		return toValueString(objects);
 	}
 
