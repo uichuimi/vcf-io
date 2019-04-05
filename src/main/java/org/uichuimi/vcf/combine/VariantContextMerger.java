@@ -56,9 +56,11 @@ public class VariantContextMerger {
 				if (!variant.getIds().contains(id))
 					variant.getIds().add(id);
 
-			// Quality (take the first non null value)
-			if (variant.getQuality() == null && other.getQuality() != null)
+			// Quality (max)
+			if (variant.getQuality() == null)
 				variant.setQuality(other.getQuality());
+			else if (other.getQuality() != null)
+				variant.setQuality(Double.max(variant.getQuality(), other.getQuality()));
 
 			// Filter
 			for (String filter : other.getFilters())
