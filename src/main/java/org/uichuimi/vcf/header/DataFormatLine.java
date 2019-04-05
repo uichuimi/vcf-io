@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 public class DataFormatLine extends ComplexHeaderLine {
 
-	private static final NumberFormat DECIMAL = new DecimalFormat("###,###.###");
+	private static final NumberFormat DECIMAL = new DecimalFormat("#.###");
 
 
 	private final String id;
@@ -58,7 +58,11 @@ public class DataFormatLine extends ComplexHeaderLine {
 	private Function<String, ?> getParser() {
 		switch (type) {
 			case "Float":
-				return Float::valueOf;
+				return s1 -> {
+					final float aFloat = Float.parseFloat(s1);
+					if (Float.isFinite(aFloat)) return aFloat;
+					else return null;
+				};
 			case "Integer":
 				return Integer::valueOf;
 			case "Flag":

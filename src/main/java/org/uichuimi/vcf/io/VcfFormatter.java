@@ -21,7 +21,7 @@ public class VcfFormatter {
 	private static final String INFO_SEPARATOR = ";";
 	private static final String FORMAT_SEPARATOR = ":";
 
-	private static final NumberFormat DECIMAL = new DecimalFormat("###,###.###");
+	private static final NumberFormat DECIMAL = new DecimalFormat("#.###");
 
 	/**
 	 * Creates the VCF representation of the variant.
