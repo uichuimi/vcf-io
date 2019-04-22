@@ -155,7 +155,7 @@ public class VariantTest {
 	public void testInfo() {
 		final Map<String, Object[]> values = new HashMap<>();
 		values.put("AC", new Object[]{1, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1});
-		values.put("AF", new Object[]{.5, 1., .5, .5, .5, 1., 1., 1., 1., 1., 1., 1., 1., .5, .5});
+		values.put("AF", new Float[]{.5f, 1f, .5f, .5f, .5f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, .5f, .5f});
 		values.put("AN", new Object[]{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2});
 		values.put("DB", new Object[]{null, true, null, null, null, null, true, true, true, true, true, true, null,
 				null, null});

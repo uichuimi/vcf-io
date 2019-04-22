@@ -49,7 +49,8 @@ public abstract class DataExtractor {
 	}
 
 	String toValueString(List<String> objects) {
-		if (objects.stream().allMatch(Objects::isNull)) return null;
+		if (objects.stream().allMatch(obj -> Objects.isNull(obj) || VariantSet.EMPTY_VALUE.equals(obj)))
+			return null;
 		return objects.stream()
 				.map(o -> o == null ? VariantSet.EMPTY_VALUE : o)
 				.collect(Collectors.joining(SEPARATOR));

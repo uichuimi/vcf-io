@@ -43,7 +43,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 	private Function<? super Object, String> getFormatter() {
 		switch (type) {
 			case "Float":
-				return DECIMAL::format;
+				return f -> Float.isFinite((Float) f) ? DECIMAL.format(f) : VariantSet.EMPTY_VALUE;
 			case "Integer":
 				return String::valueOf;
 			case "Flag":
@@ -59,13 +59,14 @@ public class DataFormatLine extends ComplexHeaderLine {
 		switch (type) {
 			case "Float":
 				return s1 -> {
-					final float aFloat = Float.parseFloat(s1);
-					if (Float.isFinite(aFloat)) return aFloat;
+					final float f = Float.parseFloat(s1);
+					if (Float.isFinite(f)) return f;
 					else return null;
 				};
 			case "Integer":
 				return Integer::valueOf;
 			case "Flag":
+				// Normally is this function is called, it is because the flag is present, so it must be true
 				return s -> true;
 			case "String":
 			case "Character":
@@ -119,7 +120,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 	}
 
 	public String format(Object obj) {
-		return obj == null ? null : formatter.apply(obj);
+		return obj == null ? VariantSet.EMPTY_VALUE : formatter.apply(obj);
 	}
 
 	public void apply(VariantContext variant, MultiLevelInfo info, String value) {

@@ -54,7 +54,7 @@ class VariantContextFactory {
 
 		// Quality
 		if (!row[5].equals(EMPTY_VALUE))
-			variant.setQuality(Double.valueOf(row[5]));
+			variant.setQuality(Float.valueOf(row[5]));
 
 		// filters
 		final List<String> filter = row[6].equals(EMPTY_VALUE)

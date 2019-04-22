@@ -109,7 +109,7 @@ public class ValueUtils {
 						return Long.valueOf(value);
 					case "float":
 					case "double":
-						return Double.valueOf(value);
+						return Float.valueOf(value);
 					case "boolean":
 					case "flag":
 						return value.matches("(?iu)yes|true|ok");
