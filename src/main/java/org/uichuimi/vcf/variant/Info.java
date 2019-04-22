@@ -72,7 +72,7 @@ public class Info {
 	 */
 	public Object get(String key) {
 		final int i = keys.getOrDefault(key, -1);
-		return i >= 0 && values.size() > i ? values.get(i) : null;
+		return 0 <= i && i < values.size() ? values.get(i) : null;
 	}
 
 	/**
@@ -132,8 +132,7 @@ public class Info {
 	}
 
 	public boolean hasInfo(String key) {
-		final int i = keys.getOrDefault(key, -1);
-		return i >= 0 && values.size() >= i && values.get(i) != null;
+		return get(key) != null;
 	}
 
 	/**
