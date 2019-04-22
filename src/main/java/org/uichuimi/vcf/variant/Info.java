@@ -26,6 +26,7 @@ package org.uichuimi.vcf.variant;
 
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
 /**
@@ -34,8 +35,10 @@ import java.util.function.BiConsumer;
 public class Info {
 
 
-	private static String[] keys = {};
-	private Object[] vals = {};
+	private static Map<String, Integer> keys = new TreeMap<>();
+	private static final AtomicInteger nextIndex = new AtomicInteger();
+
+	private final List<Object> values = new ArrayList<>();
 
 	public void set(String key, Object value) {
 		int index = updateKeys(key);
@@ -43,9 +46,8 @@ public class Info {
 	}
 
 	private void insertValue(Object value, int index) {
-		if (vals.length < index + 1) resizeVals(index + 1);
-		if (value!= null && value.equals(VariantSet.EMPTY_VALUE)) return;
-		vals[index] = value;
+		while (values.size() <= index) values.add(null);
+		values.set(index, value);
 	}
 
 	/**
@@ -54,35 +56,12 @@ public class Info {
 	 * @param key the key of the INFO field to remove
 	 */
 	public void remove(String key) {
-		for (int i = 0; i < keys.length; i++)
-			if (keys[i].equals(key) && vals.length > i) vals[i] = null;
+		final Integer i = keys.get(key);
+		if (i >= 0 && values.size() > i) values.set(i, null);
 	}
 
 	private int updateKeys(String key) {
-		int index = indexOf(key);
-		if (index == -1) {
-			resizeKeys();
-			index = keys.length - 1;
-			keys[index] = key;
-		}
-		return index;
-	}
-
-	private void resizeVals(int size) {
-		final Object[] newVals = new Object[size];
-		System.arraycopy(vals, 0, newVals, 0, vals.length);
-		vals = newVals;
-	}
-
-	private void resizeKeys() {
-		final String[] newKeys = new String[keys.length + 1];
-		System.arraycopy(keys, 0, newKeys, 0, keys.length);
-		keys = newKeys;
-	}
-
-	private int indexOf(String key) {
-		for (int i = 0; i < keys.length; i++) if (keys[i].equals(key)) return i;
-		return -1;
+		return keys.computeIfAbsent(key, k -> nextIndex.getAndIncrement());
 	}
 
 	/**
@@ -92,9 +71,8 @@ public class Info {
 	 * @return the value associated to key or null if not found
 	 */
 	public Object get(String key) {
-		for (int i = 0; i < keys.length; i++)
-			if (keys[i].equals(key) && vals.length > i) return vals[i];
-		return null;
+		final int i = keys.getOrDefault(key, -1);
+		return i >= 0 && values.size() > i ? values.get(i) : null;
 	}
 
 	/**
@@ -154,9 +132,8 @@ public class Info {
 	}
 
 	public boolean hasInfo(String key) {
-		for (int i = 0; i < keys.length; i++)
-			if (keys[i].equals(key)) return vals.length > i && vals[i] != null;
-		return false;
+		final int i = keys.getOrDefault(key, -1);
+		return i >= 0 && values.size() >= i && values.get(i) != null;
 	}
 
 	/**
@@ -179,20 +156,22 @@ public class Info {
 	@Override
 	public String toString() {
 		final List<String> infos = new ArrayList<>();
-		for (int i = 0; i < vals.length; i++) {
-			if (vals[i] != null) {
-				if (vals[i].getClass() == Boolean.class) infos.add(keys[i]);
-				else infos.add(keys[i] + "=" + ValueUtils.getString(vals[i]));
-			}
-		}
+		forEach((key, value) -> {
+			if (value instanceof Boolean) infos.add(key);
+			else infos.add(key + "=" + ValueUtils.getString(value));
+		});
+
 		Collections.sort(infos);
 		return String.join(";", infos);
 	}
 
 	public void forEach(BiConsumer<String, Object> action) {
 		Objects.requireNonNull(action);
-		for (int i = 0; i < vals.length; i++)
-			if (vals[i] != null)
-				action.accept(keys[i], vals[i]);
+		keys.forEach((key, i) -> {
+			if (values.size() <= i) return;
+			final Object value = values.get(i);
+			if (value == null) return;
+			action.accept(key, value);
+		});
 	}
 }
