@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 public class DataFormatLine extends ComplexHeaderLine {
 
-	private static final NumberFormat DECIMAL = new DecimalFormat("#.###");
+	private static final NumberFormat DECIMAL = new DecimalFormat("#.#####");
 
 
 	private final String id;
