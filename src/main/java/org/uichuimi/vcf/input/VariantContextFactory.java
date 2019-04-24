@@ -5,6 +5,7 @@ import org.uichuimi.vcf.header.InfoHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
 import org.uichuimi.vcf.variant.Coordinate;
 import org.uichuimi.vcf.variant.VariantContext;
+import org.uichuimi.vcf.variant.VariantSet;
 
 import java.util.*;
 import java.util.function.Function;
@@ -68,6 +69,7 @@ class VariantContextFactory {
 	}
 
 	private void parseInfo(VariantContext variant, String info) {
+		if (info== null || info.equals(VariantSet.EMPTY_VALUE)) return;
 		final String[] infos = info.split(INFO_SEPARATOR);
 		for (String s : infos) {
 			final String[] keyValue = s.split(KEY_VALUE_SEPARATOR);
