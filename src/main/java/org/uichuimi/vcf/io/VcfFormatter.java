@@ -96,10 +96,14 @@ public class VcfFormatter {
 				sample.remove(sample.size() - 1);
 
 			// map nulls to . and join
-			final String sformat = sample.stream()
-					.map(v -> v == null ? VariantSet.EMPTY_VALUE : v)
-					.collect(Collectors.joining(FORMAT_SEPARATOR));
-			builder.append(SEPARATOR).append(sformat);
+			if (sample.stream().allMatch(Objects::isNull)) {
+				builder.append(SEPARATOR).append(VariantSet.EMPTY_VALUE);
+			} else {
+				final String sformat = sample.stream()
+						.map(v -> v == null ? VariantSet.EMPTY_VALUE : v)
+						.collect(Collectors.joining(FORMAT_SEPARATOR));
+				builder.append(SEPARATOR).append(sformat);
+			}
 		}
 	}
 }
