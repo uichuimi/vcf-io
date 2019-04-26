@@ -120,7 +120,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 	}
 
 	public String format(Object obj) {
-		return obj == null ? VariantSet.EMPTY_VALUE : formatter.apply(obj);
+		return obj == null ? null : formatter.apply(obj);
 	}
 
 	public void apply(VariantContext variant, MultiLevelInfo info, String value) {
