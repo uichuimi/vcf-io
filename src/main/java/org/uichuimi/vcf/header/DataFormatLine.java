@@ -44,12 +44,11 @@ public class DataFormatLine extends ComplexHeaderLine {
 		switch (type) {
 			case "Float":
 				return f -> Float.isFinite((Float) f) ? DECIMAL.format(f) : VariantSet.EMPTY_VALUE;
-			case "Integer":
-				return String::valueOf;
 			case "Flag":
 				return s -> null;
 			case "String":
 			case "Character":
+			case "Integer":
 			default:
 				return String::valueOf;
 		}
