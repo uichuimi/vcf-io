@@ -122,4 +122,9 @@ public class VariantContext {
 	public MultiLevelInfo getInfo() {
 		return info;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("VariantContext{%s, references=%s, alternatives=%s, ids=%s}", coordinate, references, alternatives, ids);
+	}
 }

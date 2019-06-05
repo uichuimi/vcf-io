@@ -24,6 +24,8 @@
 
 package org.uichuimi.vcf.header;
 
+import java.util.Objects;
+
 public class SimpleHeaderLine implements HeaderLine {
 
 	private final String key;
@@ -41,6 +43,20 @@ public class SimpleHeaderLine implements HeaderLine {
 
 	public String getValue() {
 		return value;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		SimpleHeaderLine that = (SimpleHeaderLine) o;
+		return key.equals(that.key) &&
+				value.equals(that.value);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(key, value);
 	}
 
 	@Override

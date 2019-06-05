@@ -73,6 +73,24 @@ public class ComplexHeaderLine implements HeaderLine {
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		final ComplexHeaderLine that = (ComplexHeaderLine) o;
+		if (!Objects.equals(key, that.key)) return false;
+		// Check if both maps are the same, order does not matter
+		if (!map.keySet().equals(that.map.keySet())) return false;
+		for (String key : map.keySet())
+			if (!Objects.equals(map.get(key), that.map.get(key))) return false;
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(key, map);
+	}
+
+	@Override
 	public String toString() {
 		return String.format("##%s=%s", key, toString(map));
 	}
