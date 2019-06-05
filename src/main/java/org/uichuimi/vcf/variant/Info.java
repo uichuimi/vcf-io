@@ -40,7 +40,7 @@ public class Info {
 
 	private final List<Object> values = new ArrayList<>();
 
-	public void set(String key, Object value) {
+	public synchronized void set(String key, Object value) {
 		int index = updateKeys(key);
 		insertValue(value, index);
 	}
@@ -55,7 +55,7 @@ public class Info {
 	 *
 	 * @param key the key of the INFO field to remove
 	 */
-	public void remove(String key) {
+	public synchronized void remove(String key) {
 		final Integer i = keys.get(key);
 		if (i >= 0 && values.size() > i) values.set(i, null);
 	}
