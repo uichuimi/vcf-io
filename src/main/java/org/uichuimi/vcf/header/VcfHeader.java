@@ -58,33 +58,19 @@ public class VcfHeader {
 	}
 
 
+	public List<HeaderLine> getHeaderLines() {
+		return headerLines;
+	}
+
+	public List<String> getSamples() {
+		return samples;
+	}
+
 	public List<ComplexHeaderLine> getComplexHeaders() {
 		return headerLines.stream()
 				.filter(ComplexHeaderLine.class::isInstance)
 				.map(ComplexHeaderLine.class::cast)
 				.collect(Collectors.toList());
-	}
-
-	@Override
-	public String toString() {
-		final StringJoiner joiner = new StringJoiner(System.lineSeparator());
-		headerLines.forEach(headerLine -> joiner.add(headerLine.toString()));
-		joiner.add(getColumnsLine());
-		return joiner.toString();
-	}
-
-	private String getColumnsLine() {
-		final StringJoiner joiner = new StringJoiner("\t");
-		REQUIRED_COLUMNS.forEach(joiner::add);
-		if (!samples.isEmpty()) {
-			joiner.add("FORMAT");
-			samples.forEach(joiner::add);
-		}
-		return "#" + joiner.toString();
-	}
-
-	public List<String> getSamples() {
-		return samples;
 	}
 
 	/**
@@ -94,8 +80,7 @@ public class VcfHeader {
 	 * @return a list with all the IDs of type key
 	 */
 	public List<String> getIdList(String key) {
-		if (cache.containsKey(key))
-			return cache.get(key);
+		if (cache.containsKey(key)) return cache.get(key);
 		final List<String> list = headerLines.stream()
 				.filter(ComplexHeaderLine.class::isInstance)
 				.map(ComplexHeaderLine.class::cast)
@@ -151,16 +136,42 @@ public class VcfHeader {
 				.findFirst().orElse(null);
 	}
 
-	public List<HeaderLine> getHeaderLines() {
-		return headerLines;
-	}
-
 	public List<ComplexHeaderLine> getComplexHeaders(String key) {
 		return headerLines.stream()
 				.filter(ComplexHeaderLine.class::isInstance)
 				.map(ComplexHeaderLine.class::cast)
 				.filter(header -> header.getKey().equals(key))
 				.collect(Collectors.toList());
+	}
+
+	public void add(HeaderLine headerLine) {
+		// 1) find similar line
+		for (HeaderLine line : headerLines) if (line.equals(headerLine)) return;
+		if (headerLine instanceof SimpleHeaderLine) {
+			// insert right after last line with the same key or at the end
+			int i = -1;
+			for (int j = 0; j < headerLines.size(); j++)
+				if (headerLines.get(j).getKey().equals(headerLine.getKey())) i = j;
+			if (i > 0) {
+				headerLines.add(i, headerLine);
+			} else headerLines.add(headerLine);
+		} else if (headerLine instanceof ComplexHeaderLine) {
+			// insert right after last line with the same key and id or at the end
+			final ComplexHeaderLine complexHeaderLine = (ComplexHeaderLine) headerLine;
+			int i = -1;
+			for (int j = 0; j < headerLines.size(); j++) {
+				final HeaderLine line = headerLines.get(j);
+				if (line instanceof ComplexHeaderLine) {
+					if (line.getKey().equals(headerLine.getKey())) i = j;
+					// Avoid adding lines with duplicate key+ID
+					if (((ComplexHeaderLine) line).getValue("ID").equals(complexHeaderLine.getValue("ID")))
+						return;
+				}
+			}
+			if (i > 0) {
+				headerLines.add(i + 1, headerLine);
+			} else headerLines.add(headerLine);
+		} else headerLines.add(headerLine);
 	}
 
 	public static VcfHeader merge(Collection<VcfHeader> headers) {
@@ -220,5 +231,23 @@ public class VcfHeader {
 					.map(InfoHeaderLine.class::cast)
 					.collect(Collectors.toList());
 		return infoLines;
+	}
+
+	@Override
+	public String toString() {
+		final StringJoiner joiner = new StringJoiner(System.lineSeparator());
+		headerLines.forEach(headerLine -> joiner.add(headerLine.toString()));
+		joiner.add(getColumnsLine());
+		return joiner.toString();
+	}
+
+	private String getColumnsLine() {
+		final StringJoiner joiner = new StringJoiner("\t");
+		REQUIRED_COLUMNS.forEach(joiner::add);
+		if (!samples.isEmpty()) {
+			joiner.add("FORMAT");
+			samples.forEach(joiner::add);
+		}
+		return "#" + joiner.toString();
 	}
 }

@@ -14,7 +14,7 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class VariantContextReader implements AutoCloseable, Iterator<VariantContext> {
+public class VariantContextReader implements AutoCloseable, Iterator<VariantContext>, Iterable<VariantContext> {
 
 
 	protected final VcfHeader header;
@@ -34,20 +34,29 @@ public class VariantContextReader implements AutoCloseable, Iterator<VariantCont
 		variantFactory = new VariantContextFactory(header);
 	}
 
+	public final VcfHeader header() {
+		return header;
+	}
+
+	// --------------------------  Iterable  ---------------------------- //
+	@Override
+	public Iterator<VariantContext> iterator() {
+		return this;
+	}
+
+	// --------------------------   Stream   ---------------------------- //
 	public final Stream<VariantContext> variants() {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
 				Spliterator.NONNULL | Spliterator.ORDERED), true);
 	}
 
+	// -----------------------  Autocloseable  -------------------------- //
 	@Override
 	public final void close() throws IOException {
 		reader.close();
 	}
 
-	public final VcfHeader header() {
-		return header;
-	}
-
+	// --------------------------  Iterator  ---------------------------- //
 	@Override
 	public final boolean hasNext() {
 		if (nextVariant != null) return true;
@@ -57,23 +66,12 @@ public class VariantContextReader implements AutoCloseable, Iterator<VariantCont
 				while (line != null && line.startsWith("#"))
 					line = reader.readLine();
 				if (line == null) return false;
-				nextVariant = createVariant(line);
+				nextVariant = variantFactory.parse(line);
 				return true;
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
 		}
-	}
-
-	/**
-	 * This is the only intended method to be overwritten. VariantSetReader encapsulates the logic
-	 * of opening, iterating and closing the file.
-	 *
-	 * @param line each variant line found in file
-	 * @return a variant
-	 */
-	protected VariantContext createVariant(String line) {
-		return variantFactory.parse(line);
 	}
 
 	@Override
@@ -85,24 +83,12 @@ public class VariantContextReader implements AutoCloseable, Iterator<VariantCont
 		} else throw new NoSuchElementException();
 	}
 
-	/**
-	 * Get, but do not remove, next variant in the buffer. Multiple call to this method should
-	 * return the same value.
-	 *
-	 * @return the next variant in the buffer. If there are no more variants in the buffer, returns
-	 * null.
-	 */
-	public VariantContext peek() {
-		return hasNext() ? nextVariant : null;
-	}
-
+	// --------------------------  Specific  ---------------------------- //
 	/**
 	 * Get the next variant which coordinate is equals to the coordinate passed as argument. If this
 	 * reader does not contain a variant with this coordinate, null is returned and all variants
-	 * with coordinate less than
-	 * <em>coordinate</em> will be skipped. Next variant returned by {@link
-	 * VariantSetReader#next()}
-	 * will have coordinate greater than <em>coordinate</em>.
+	 * with coordinate less than <em>coordinate</em> will be skipped. Next variant returned by
+	 * {@link VariantSetReader#next()} will have coordinate greater than <em>coordinate</em>.
 	 *
 	 * @param coordinate coordinate of the next variant to return
 	 * @return a variant matching coordinate or null
@@ -126,4 +112,14 @@ public class VariantContextReader implements AutoCloseable, Iterator<VariantCont
 		return null;
 	}
 
+	/**
+	 * Get, but do not remove, next variant in the buffer. Multiple call to this method should
+	 * return the same value.
+	 *
+	 * @return the next variant in the buffer. If there are no more variants in the buffer, returns
+	 * null.
+	 */
+	public VariantContext peek() {
+		return hasNext() ? nextVariant : null;
+	}
 }
