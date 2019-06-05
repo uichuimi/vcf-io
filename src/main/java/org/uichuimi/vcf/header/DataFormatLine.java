@@ -65,7 +65,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 			case "Integer":
 				return Integer::valueOf;
 			case "Flag":
-				// Normally is this function is called, it is because the flag is present, so it must be true
+				// Normally if this function is called, it is because the flag is present, so it must be true
 				return s -> true;
 			case "String":
 			case "Character":
