@@ -76,7 +76,8 @@ public class VcfHeader {
 	/**
 	 * Get a list with the IDs of the ComplexHeaderLines of type key
 	 *
-	 * @param key the type of ComplexHeaderLines
+	 * @param key
+	 * 		the type of ComplexHeaderLines
 	 * @return a list with all the IDs of type key
 	 */
 	public List<String> getIdList(String key) {
@@ -116,7 +117,8 @@ public class VcfHeader {
 	/**
 	 * Gets the first SimpleHeaderLine that has key
 	 *
-	 * @param key key of the SimpleHeaderLine to match
+	 * @param key
+	 * 		key of the SimpleHeaderLine to match
 	 * @return the first found SimpleHeaderLine
 	 */
 	public SimpleHeaderLine getSimpleHeader(String key) {
@@ -145,6 +147,20 @@ public class VcfHeader {
 	}
 
 	public void add(HeaderLine headerLine) {
+		add(headerLine, false);
+	}
+
+	/**
+	 * Adds a new header line to header. Tries to keep the lines grouped by type
+	 *
+	 * @param headerLine
+	 * 		the new line to add
+	 * @param override
+	 * 		if header line is complex, and there is already a header line with the same type and id,
+	 * 		when override is true, the old header line is removed and the new one is added;
+	 * 		if override is false, the new line is discarded
+	 */
+	public void add(HeaderLine headerLine, boolean override) {
 		// 1) find similar line
 		for (HeaderLine line : headerLines) if (line.equals(headerLine)) return;
 		if (headerLine instanceof SimpleHeaderLine) {
@@ -158,14 +174,16 @@ public class VcfHeader {
 		} else if (headerLine instanceof ComplexHeaderLine) {
 			// insert right after last line with the same key and id or at the end
 			final ComplexHeaderLine complexHeaderLine = (ComplexHeaderLine) headerLine;
+			final ComplexHeaderLine synonym = getComplexHeader(headerLine.getKey(), complexHeaderLine.getValue("ID"));
+			if (synonym != null) {
+				if (override) headerLines.remove(synonym);
+				else return;
+			}
 			int i = -1;
 			for (int j = 0; j < headerLines.size(); j++) {
 				final HeaderLine line = headerLines.get(j);
 				if (line instanceof ComplexHeaderLine) {
 					if (line.getKey().equals(headerLine.getKey())) i = j;
-					// Avoid adding lines with duplicate key+ID
-					if (((ComplexHeaderLine) line).getValue("ID").equals(complexHeaderLine.getValue("ID")))
-						return;
 				}
 			}
 			if (i > 0) {
