@@ -1,8 +1,8 @@
 package org.uichuimi.vcf.combine;
 
 import org.uichuimi.vcf.header.DataFormatLine;
-import org.uichuimi.vcf.variant.MultiLevelInfo;
-import org.uichuimi.vcf.variant.VariantContext;
+import org.uichuimi.vcf.lazy.Variant;
+import org.uichuimi.vcf.lazy.VariantInfo;
 
 /**
  * Merges data with Number=1,2,3,... or Number=.
@@ -20,9 +20,16 @@ public class SimpleMerger implements DataMerger {
 	}
 
 	@Override
-	public void accept(VariantContext target, MultiLevelInfo targetInfo, VariantContext source, MultiLevelInfo sourceInfo, DataFormatLine formatLine) {
-		if (sourceInfo.getGlobal().hasInfo(formatLine.getId()) && !targetInfo.getGlobal().hasInfo(formatLine.getId()))
-			targetInfo.getGlobal().set(formatLine.getId(), sourceInfo.getGlobal().get(formatLine.getId()));
+	public void accept(Variant target, VariantInfo targetInfo, Variant source, VariantInfo sourceInfo, DataFormatLine formatLine) {
+		final String key = formatLine.getId();
+		final Object s = sourceInfo.get(key);
+		final Object t = targetInfo.get(key);
+		targetInfo.set(key, merge(s, t));
+	}
 
+	private Object merge(Object target, Object source) {
+		if (target == null) return source;
+		if (source == null) return target;
+		return source;
 	}
 }

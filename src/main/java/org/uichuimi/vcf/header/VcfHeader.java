@@ -24,7 +24,10 @@
 
 package org.uichuimi.vcf.header;
 
+import org.uichuimi.vcf.lazy.InfoFunction;
+
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -36,13 +39,14 @@ public class VcfHeader {
 
 	private final static List<String> REQUIRED_COLUMNS =
 			Arrays.asList("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO");
-	private static final List<String> FORMAT_ORDER = Arrays.asList("GT", "AD", "DP", "GQ", "PL");
+	private static final InfoFunction DEFAULT_FUNCTION = new InfoFunction("String", "1");
 
 	private final List<String> samples = new ArrayList<>();
 	private final List<HeaderLine> headerLines = new LinkedList<>();
 	private Map<String, List<String>> cache = new LinkedHashMap<>();
-	private List<FormatHeaderLine> formatLines;
-	private List<InfoHeaderLine> infoLines;
+	private Map<String, FormatHeaderLine> formatLines;
+	private Map<String, InfoHeaderLine> infoLines;
+	private Map<String, InfoFunction> functionIndex;
 
 	/**
 	 * An empty VcfHeader. Remember that fileformat must be the first HeaderLine.
@@ -157,8 +161,8 @@ public class VcfHeader {
 	 * 		the new line to add
 	 * @param override
 	 * 		if header line is complex, and there is already a header line with the same type and id,
-	 * 		when override is true, the old header line is removed and the new one is added;
-	 * 		if override is false, the new line is discarded
+	 * 		when override is true, the old header line is removed and the new one is added; if override
+	 * 		is false, the new line is discarded
 	 */
 	public void add(HeaderLine headerLine, boolean override) {
 		// 1) find similar line
@@ -231,24 +235,23 @@ public class VcfHeader {
 
 	}
 
-	public List<FormatHeaderLine> getFormatLines() {
+	public Collection<FormatHeaderLine> getFormatLines() {
 		if (formatLines == null) {
 			formatLines = headerLines.stream()
 					.filter(FormatHeaderLine.class::isInstance)
 					.map(FormatHeaderLine.class::cast)
-					.sorted(Comparator.comparingInt(format -> FORMAT_ORDER.indexOf(format.getId())))
-					.collect(Collectors.toList());
+					.collect(Collectors.toMap(FormatHeaderLine::getId, Function.identity()));
 		}
-		return formatLines;
+		return formatLines.values();
 	}
 
-	public List<InfoHeaderLine> getInfoLines() {
+	public Collection<InfoHeaderLine> getInfoLines() {
 		if (infoLines == null)
 			infoLines = headerLines.stream()
 					.filter(InfoHeaderLine.class::isInstance)
 					.map(InfoHeaderLine.class::cast)
-					.collect(Collectors.toList());
-		return infoLines;
+					.collect(Collectors.toMap(InfoHeaderLine::getId, Function.identity()));
+		return infoLines.values();
 	}
 
 	@Override
@@ -267,5 +270,20 @@ public class VcfHeader {
 			samples.forEach(joiner::add);
 		}
 		return "#" + joiner.toString();
+	}
+
+	public InfoFunction getFunction(String key) {
+		if (functionIndex == null) createFunctionIndex();
+		return functionIndex.getOrDefault(key, DEFAULT_FUNCTION);
+	}
+
+	private void createFunctionIndex() {
+		functionIndex = new HashMap<>();
+		for (InfoHeaderLine line : getInfoLines())
+			functionIndex.put(line.getId(), new InfoFunction(line.getType(), line.getNumber()));
+	}
+
+	public InfoHeaderLine getInfoHeader(String key) {
+		return infoLines.computeIfAbsent(key, k -> new InfoHeaderLine(k, "1", "String", ""));
 	}
 }

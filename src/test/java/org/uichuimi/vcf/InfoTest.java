@@ -26,7 +26,8 @@ package org.uichuimi.vcf;
 
 
 import org.junit.jupiter.api.Test;
-import org.uichuimi.vcf.variant.Info;
+import org.uichuimi.vcf.lazy.VariantInfo;
+import org.uichuimi.vcf.variant.VariantSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,19 +38,19 @@ public class InfoTest {
 
 	@Test
 	void testInfo() {
-		final Info info = new Info();
+		final VariantInfo info = new VariantInfo(null, VariantSet.EMPTY_VALUE);
 		info.set("this", "hello");
 		info.set("that", "hi");
 		info.set("those", 17);
 		info.set("number", -14.67);
 		info.set("true", true);
 		info.set("false", false);
-		assertEquals("hello", info.getString("this"));
-		assertEquals("hi", info.getString("that"));
-		assertEquals(17, info.getNumber("those"));
-		assertEquals(-14.67, (double) info.getNumber("number"), 0.001);
-		assertEquals(true, info.getBoolean("true"));
-		assertEquals(false, info.getBoolean("false"));
+		assertEquals("hello", info.get("this"));
+		assertEquals("hi", info.get("that"));
+		assertEquals(17, (int) info.get("those"));
+		assertEquals(-14.67, info.get("number"), 0.001);
+		assertEquals(true, info.get("true"));
+		assertEquals(false, info.get("false"));
 	}
 
 

@@ -22,16 +22,17 @@
  *
  */
 
-package org.uichuimi.vcf;
+package org.uichuimi.vcf.lazy;
 
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.uichuimi.vcf.io.VariantSetFactory;
-import org.uichuimi.vcf.variant.Genotype;
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.header.VcfHeader;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -40,7 +41,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class VariantTest {
 
-	private final VariantSet file = VariantSetFactory.create(getClass().getResourceAsStream("/files/Sample1.vcf"));
+	private static VcfHeader header;
+	private static List<Variant> variants;
+
+	@BeforeAll
+	public static void setUp() {
+		final InputStream resource = VariantTest.class.getResourceAsStream("/files/Sample1.vcf");
+		try (VariantReader reader = new VariantReader(resource)) {
+			header = reader.header();
+			variants = reader.variants().collect(Collectors.toList());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	/*
     -> FORMATS
     AD                .   Integer   "Allelic depths for the ref and alt alleles in the order listed"
@@ -88,49 +101,52 @@ public class VariantTest {
 
 	@Test
 	void testVcfFile() {
-		for (Variant variant : file.getVariants())
-			Assertions.assertEquals(file.getHeader(), variant.getVcfHeader());
+		for (Variant variant : variants)
+			assertEquals(header, variant.getHeader());
 	}
 
 	@Test
 	void testChrom() {
 		final String[] chroms = {"1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "7", "7", "7"};
 		int i = 0;
-		for (Variant variant : file.getVariants())
-			assertEquals(chroms[i++], variant.getChrom());
+		for (Variant variant : variants)
+			assertEquals(chroms[i++], variant.getCoordinate().getChrom());
 	}
 
 	@Test
 	void testPos() {
 		final int[] pos = {13273, 69511, 133160, 139213, 139233, 651149, 715348, 752566, 752721, 752894, 754182, 754192, 150968234, 150972189, 150979714};
 		int i = 0;
-		for (Variant variant : file.getVariants())
-			assertEquals(pos[i++], variant.getPosition());
+		for (Variant variant : variants)
+			assertEquals(pos[i++], variant.getCoordinate().getPosition());
 	}
 
 	@Test
 	void testId() {
-		final String[] values = {".", "rs75062661", ".", ".", ".", ".", "rs3131984", "rs3094315", "rs3131972", "rs3131971", "rs3131969", "rs3131968", ".", ".", "."};
+		final String[] values = {"", "rs75062661", "", "", "", "", "rs3131984", "rs3094315", "rs3131972", "rs3131971", "rs3131969", "rs3131968", "", "", ""};
 		int i = 0;
-		for (Variant variant : file.getVariants())
-			assertEquals(values[i++], variant.getId());
+		for (Variant variant : variants) {
+			final String value = values[i++];
+			final List<String> expected = value.isEmpty() ? Collections.emptyList() : Arrays.asList(value.split(","));
+			assertEquals(expected, variant.getIdentifiers());
+		}
 	}
 
 	@Test
 	public void testRef() {
 		final String[] values = {"G", "A", "G", "A", "C", "C", "T", "G", "A", "T", "A", "A", "C", "G", "T"};
 		int i = 0;
-		for (Variant variant : file.getVariants())
-			assertEquals(values[i++], variant.getRef());
+		for (Variant variant : variants)
+			assertEquals(Arrays.asList(values[i++].split(",")), variant.getReferences());
 	}
 
 	@Test
 	public void testAlt() {
-		final Object[] values = {"C", "G", "A", "G,C", "A", "T", "G", "A", "G", "C", "G", "G", "T",
+		final String[] values = {"C", "G", "A", "G,C", "A", "T", "G", "A", "G", "C", "G", "G", "T",
 				"A", "A"};
 		int i = 0;
-		for (Variant variant : file.getVariants())
-			assertEquals(values[i++], variant.getAlt());
+		for (Variant variant : variants)
+			assertEquals(Arrays.asList(values[i++].split(",")), variant.getAlternatives());
 	}
 
 	@Test
@@ -138,8 +154,8 @@ public class VariantTest {
 		final Object[] quals = {124.77, 1592.77, 118.77, 67.77, 69.77, 40.74, 85.28, 190.84, 1228.77, 440.77, 62.74,
 				null, 58.28, 667.77, 75.78};
 		int i = 0;
-		for (Variant variant : file.getVariants())
-			assertEquals(quals[i++], variant.getQual());
+		for (Variant variant : variants)
+			assertEquals(quals[i++], variant.getQuality());
 	}
 
 	@Test
@@ -147,31 +163,34 @@ public class VariantTest {
 		final String[] values = {null, null, null, null, null, null, null, null,
 				null, "PASS", null, null, null, null, null};
 		int i = 0;
-		for (Variant variant : file.getVariants())
-			assertEquals(values[i++], variant.getFilter());
+		for (Variant variant : variants) {
+			final String value = values[i++];
+			final List<String> expected = value == null ? Collections.emptyList() : Arrays.asList(value.split(","));
+			assertEquals(expected, variant.getFilters());
+		}
 	}
 
 	@Test
 	public void testInfo() {
 		final Map<String, Object[]> values = new HashMap<>();
-		values.put("AC", new Object[]{1, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1});
-		values.put("AF", new Float[]{.5f, 1f, .5f, .5f, .5f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, .5f, .5f});
-		values.put("AN", new Object[]{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2});
+		values.put("AC", Stream.of(1, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1).map(Collections::singletonList).toArray());
+		values.put("AF", Stream.of(.5f, 1f, .5f, .5f, .5f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, .5f, .5f).map(Collections::singletonList).toArray());
+		values.put("AN", new Integer[]{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2});
 		values.put("DB", new Object[]{null, true, null, null, null, null, true, true, true, true, true, true, null,
 				null, null});
 		for (Map.Entry<String, Object[]> entry : values.entrySet()) {
 			int i = 0;
-			for (Variant variant : file.getVariants()) {
+			for (Variant variant : variants) {
 				final String message = String.format("at line %d for ID=%s", i, entry.getKey());
-				Assertions.assertEquals(entry.getValue()[i++],
+				assertEquals(entry.getValue()[i++],
 						variant.getInfo().get(entry.getKey()), message);
 			}
 		}
 		int i = 0;
-		final Boolean[] db = new Boolean[]{false, true, false, false, false, false, true, true, true, true, true, true, false,
-				false, false};
-		for (Variant variant : file.getVariants()) {
-			Assertions.assertEquals(db[i++], variant.getInfo().getBoolean("DB"), String.format("at line %d for ID=DB", i));
+		final Boolean[] db = new Boolean[]{null, true, null, null, null, null, true, true, true,
+				true, true, true, null, null, null};
+		for (Variant variant : variants) {
+			assertEquals(db[i++], variant.getInfo().get("DB"), String.format("at line %d for ID=DB", i));
 		}
 	}
 
@@ -185,9 +204,9 @@ public class VariantTest {
 		values.put("PL", new String[]{"153,0,428", "1621,176,0", "147,0,89", "96,0,334", "98,0,308", "68,6,0", "113,9,0", "219,18,0", "1257,114,0", "469,45,0", "90,6,0", "90,6,0", "86,9,0", "696,0,1021", "104,0,25"});
 		for (Map.Entry<String, Object[]> entry : values.entrySet()) {
 			int i = 0;
-			for (Variant variant : file.getVariants()) {
+			for (Variant variant : variants) {
 				final String message = String.format("line %d, key %s", i, entry.getKey());
-				Assertions.assertEquals(entry.getValue()[i++], variant.getSampleInfo().getFormat("sample01", entry.getKey()), message);
+				assertEquals(entry.getValue()[i++], variant.getSampleInfo().get(0).get(entry.getKey()), message);
 			}
 		}
 	}
@@ -195,61 +214,51 @@ public class VariantTest {
 	@Test
 	public void testSetId() {
 		// Given
-		final Variant variant = new Variant("1", 14, "A", "T", null);
+		final Variant variant = new Variant(null, "1\t14\t.\tA\tT\t.\t.\t.");
 		// When
-		variant.setId("rs00002");
+		variant.setIdentifiers(Collections.singletonList("rs00002"));
 		// Then
-		assertEquals("rs00002", variant.getId());
+		assertEquals(Collections.singletonList("rs00002"), variant.getIdentifiers());
 	}
 
 	@Test
 	public void testSetQual() {
 		// Given
-		final Variant variant = new Variant("1", 14, "A", "T", null);
+		final Variant variant = new Variant(null, "1\t14\t.\tA\tT\t.\t.\t.");
 		// When
-		variant.setQual(123.45);
+		variant.setQuality(123.45);
 		// Then
-		assertEquals(123.45, variant.getQual(), 0.001);
+		assertEquals(123.45, variant.getQuality(), 0.001);
 	}
 
 	@Test
 	public void testCompare() {
-//        for (int i = 0; i < file.getVariants().size() - 1; i++) {
-//            assertEquals(-1, file.getVariants().get(i).compareTo(file.getVariants().get(i + 1)));
+//        for (int i = 0; i < variants.size() - 1; i++) {
+//            assertEquals(-1, variants.get(i).compareTo(variants.get(i + 1)));
 //        }
 	}
 
 	@Test
 	public void testAddInfo() {
-		final Variant variant = new Variant("1", 14, "A", "T", null);
+		final Variant variant = new Variant(new VcfHeader(), "1\t14\t.\tA\tT\t.\t.\t.");
 		variant.getInfo().set("DP", "23");
-		Assertions.assertEquals("23", variant.getInfo().get("DP"));
+		assertEquals("23", variant.getInfo().get("DP"));
 	}
 
 	@Test
 	public void testModifySamples() {
-		final Variant variant = new Variant("1", 15000, "A", "C,T", file.getHeader());
-//        variant.getSampleInfo().setFormat("pepe", "GT", "0/0");
-		Assertions.assertEquals(null, variant.getSampleInfo().getFormat("pepe", "GT"));
-		variant.getVcfHeader().getSamples().add("pepe");
-		variant.getSampleInfo().setFormat("pepe", "GT", "0/1");
-		Assertions.assertEquals("0/1", variant.getSampleInfo().getFormat("pepe", "GT"));
+		final Variant variant = new Variant(header, "1\t15000\t.\tA\tC,T\t.\t.\t.\t.\t.");
+		//        variant.getSampleInfo().setFormat("pepe", "GT", "0/0");
+		assertEquals(1, variant.getSampleInfo().size());
+		variant.getHeader().getSamples().add("pepe");
+		variant.getSampleInfo(1).set("GT", "0/1");
+		assertEquals("0/1", variant.getSampleInfo().get(1).get("GT"));
 	}
 
 	@Test
 	public void testGenotype() {
-		final Variant variant = file.getVariants().stream().findFirst().get();
-		Assertions.assertEquals(Genotype.HETEROZYGOUS, variant.getSampleInfo().getGenotype("sample01"));
-	}
-
-	@Test
-	public void testHgvs() {
-		Variant variant = new Variant("1", 19, "A", "AT", null);
-		Assertions.assertEquals("chr1:g.19_20insT", variant.getHgvs());
-		variant = new Variant("1", 20, "AT", "A", null);
-		Assertions.assertEquals("chr1:g.21del", variant.getHgvs());
-		variant = new Variant("1", 20, "ATC", "A", null);
-		Assertions.assertEquals("chr1:g.21_22del", variant.getHgvs());
+		final Variant variant = variants.get(0);
+//		assertEquals(Genotype.HETEROZYGOUS, variant.getSampleInfo().getGenotype("sample01"));
 	}
 
 }

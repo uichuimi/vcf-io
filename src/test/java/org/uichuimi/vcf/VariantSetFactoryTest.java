@@ -29,7 +29,8 @@ import org.uichuimi.vcf.header.ComplexHeaderLine;
 import org.uichuimi.vcf.header.SimpleHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
 import org.uichuimi.vcf.io.VariantSetFactory;
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.lazy.VariantContextWriter;
+import org.uichuimi.vcf.lazy.VariantReader;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,58 +44,53 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
-public class VariantSetFactoryTest {
+class VariantSetFactoryTest {
 
 	@Test
-	public void testLoadFromFile() {
-		final VariantSet file = VariantSetFactory.createFromFile(getFile("/files/Sample2.vcf"));
-		assertEquals(5, file.getVariants().size());
-		Assertions.assertEquals(6, file.getHeader().getComplexHeaders("INFO").size());
+	void testLoadFromFile() {
+		try (VariantReader reader = new VariantReader(getFile("/files/Sample2.vcf"))) {
+			Assertions.assertEquals(6, reader.header().getComplexHeaders("INFO").size());
+			assertEquals(5, reader.variants().count());
+		} catch (IOException e) {
+			throw new MissingResourceException("", getClass().getName(), "");
+		}
 	}
 
 	@Test
-	public void size() {
-		// Given
-		final File file = getFile("/files/Sample1.vcf");
-		// When
-		final VariantSet variantSet = VariantSetFactory.createFromFile(file);
-		// Then
-		assertEquals(15, variantSet.getVariants().size());
-//        assertEquals(file, variantSet.getFile());
+	void size() {
+		try (VariantReader reader = new VariantReader(getFile("/files/Sample1.vcf"))) {
+			assertEquals(15, reader.variants().count());
+		} catch (IOException e) {
+			throw new MissingResourceException("", getClass().getName(), "");
+		}
 	}
 
 	@Test
 	void testWithOneSample() {
-		// Given
-		final VariantSet variantSet = VariantSetFactory.createFromFile(getFile("/files/Sample1.vcf"));
+		final VcfHeader header = VariantSetFactory.readHeader(getFile("/files/Sample1.vcf"));
 		final List<String> expected = new ArrayList<>(Collections.singletonList("sample01"));
-		final List<String> samples = variantSet.getHeader().getSamples();
-		// Then
+		final List<String> samples = header.getSamples();
 		assertEquals(expected, samples);
+
 	}
 
 	@Test
 	void testWithNoSample() {
-		// Given
-		final VariantSet variantSet = VariantSetFactory.createFromFile(getFile("/files/NoSample.vcf"));
-		final List<String> expected = new ArrayList<>();
-		final List<String> samples = variantSet.getHeader().getSamples();
-		// Then
-		assertEquals(expected, samples);
+		final VcfHeader header = VariantSetFactory.readHeader(getFile("/files/NoSample.vcf"));
+		final List<String> samples = header.getSamples();
+		assertEquals(Collections.emptyList(), samples);
 	}
 
 	@Test
 	void testWithMultipleSample() {
-		// Given
-		final VariantSet variantSet = VariantSetFactory.createFromFile(getFile("/files/MultiSample.vcf"));
+		final VcfHeader header = VariantSetFactory.readHeader(getFile("/files/MultiSample.vcf"));
 		final List<String> expected = Arrays.asList("S_7", "S_75", "S_42", "S_81", "S_8", "S_76", "S_53", "S_82", "S_30", "S_77", "S_70", "S_83", "S_36", "S_78", "S_71", "S_84", "S_37", "S_79", "S_72", "S_85", "S_39", "S_80", "S_73", "S_86", "S_87", "S_99", "S_93", "S_110", "S_88", "S_100", "S_94", "S_111", "S_89", "S_102", "S_95", "S_120", "S_90", "S_103", "S_96", "S_185", "S_91", "S_104", "S_97", "PM", "S_92", "S_105", "S_98", "DAM");
-		final List<String> samples = variantSet.getHeader().getSamples();
-		// Then
+		final List<String> samples = header.getSamples();
 		assertEquals(expected, samples);
 	}
 
 	@Test
-	public void testComplexHeader() {
+	void testComplexHeader() {
 		final VcfHeader header = VariantSetFactory.readHeader(getFile("/files/HeaderTest.vcf"));
 		final VcfHeader expected = new VcfHeader("VCFv4.1");
 		expected.getHeaderLines().add(new SimpleHeaderLine("reference", "human_g1k_v37.fasta"));
@@ -134,7 +130,7 @@ public class VariantSetFactoryTest {
 	}
 
 	@Test
-	public void testSimpleHeader() {
+	void testSimpleHeader() {
 	    /*
          * ##fileformat=VCFv4.1
          * ##reference=file:///home/unidad03/DNA_Sequencing/HomoSapiensGRCh37/human_g1k_v37.fasta
@@ -146,12 +142,16 @@ public class VariantSetFactoryTest {
 	}
 
 	@Test
-	public void testSaveFile() {
-		final VariantSet variantSet = VariantSetFactory.createFromFile(getFile("/files/Sample1.vcf"));
+	void testSaveFile() {
+		final File saveFile = new File(getClass().getResource("/files/").getPath(), "saveFile.vcf");
+		try (VariantReader reader = new VariantReader(getFile("/files/Sample1.vcf"));
+		     VariantContextWriter writer = new VariantContextWriter(saveFile)) {
+			writer.setHeader(reader.getHeader());
+			reader.variants().forEach(writer::write);
+		} catch (Exception e) {
+			throw new MissingResourceException("", getClass().getName(), "");
+		}
 		final File expected = getFile("/files/ExpectedSample1.vcf");
-		final File saveFile;
-		saveFile = new File(getClass().getResource("/files/").getPath(), "saveFile.vcf");
-		variantSet.save(saveFile);
 		assertTrue(filesAreEqual(expected, saveFile));
 	}
 
@@ -160,9 +160,12 @@ public class VariantSetFactoryTest {
 	}
 
 	@Test
-	public void testFormats() {
-		final VariantSet variantSet = VariantSetFactory.createFromFile(getFile("/files/Sample1.vcf"));
-		Assertions.assertEquals(Arrays.asList("AD", "DP", "GQ", "GT", "PL"), variantSet.getHeader().getIdList("FORMAT"));
+	void testFormats() {
+		try (VariantReader reader = new VariantReader(getFile("/files/Sample1.vcf"))) {
+			Assertions.assertEquals(Arrays.asList("AD", "DP", "GQ", "GT", "PL"), reader.getHeader().getIdList("FORMAT"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private boolean filesAreEqual(File expected, File file) {

@@ -1,9 +1,8 @@
 package org.uichuimi.vcf.header;
 
 import org.uichuimi.vcf.combine.*;
-import org.uichuimi.vcf.input.extractor.DataExtractor;
-import org.uichuimi.vcf.variant.MultiLevelInfo;
-import org.uichuimi.vcf.variant.VariantContext;
+import org.uichuimi.vcf.lazy.Variant;
+import org.uichuimi.vcf.lazy.VariantInfo;
 import org.uichuimi.vcf.variant.VariantSet;
 
 import java.text.DecimalFormat;
@@ -23,7 +22,6 @@ public class DataFormatLine extends ComplexHeaderLine {
 	private final Function<String, ?> parser;
 	private final Function<? super Object, String> formatter;
 	private final DataMerger merger;
-	private final DataExtractor extractor;
 
 
 	public DataFormatLine(String key, Map<String, String> map) {
@@ -36,7 +34,6 @@ public class DataFormatLine extends ComplexHeaderLine {
 			throw new IllegalArgumentException("Missing keys");
 		parser = getParser();
 		formatter = getFormatter();
-		extractor = DataExtractor.getInstance(number);
 		merger = getMerger();
 	}
 
@@ -79,17 +76,19 @@ public class DataFormatLine extends ComplexHeaderLine {
 		if (id.equals("GT")) return GtMerger.getInstance();
 		// a number
 		try {
-			final int n = Integer.valueOf(number);
-			if (n == 0) return FlagMerger.getInstance();
-			if (n > 0) return SimpleMerger.getInstance();
+			Integer.valueOf(number);
+			// If 0, it is a Flag, merge by value
+			// If 1, it is a Simple value, merge by value
+			// If >1, it is a List, merge by value
+			return SimpleMerger.getInstance();
 		} catch (NumberFormatException ignored) {
 		}
 		// not a number
 		switch (number) {
 			case "R":
-			case "A":
-				// Note, A should work, cause values for reference are null, so nothing is copied
 				return AlleleMerger.getInstance();
+			case "A":
+				return AlternativeMerger.getInstance();
 			case "G":
 				return GenotypeMerger.getInstance();
 			case ".":
@@ -122,15 +121,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 		return obj == null ? null : formatter.apply(obj);
 	}
 
-	public void apply(VariantContext variant, MultiLevelInfo info, String value) {
-		extractor.accept(variant, info, this, value);
-	}
-
-	public String extract(VariantContext variant, MultiLevelInfo info) {
-		return extractor.extract(variant, info, this);
-	}
-
-	public void mergeInto(VariantContext target, MultiLevelInfo targetInfo, VariantContext source, MultiLevelInfo sourceInfo) {
+	public void mergeInto(Variant target, VariantInfo targetInfo, Variant source, VariantInfo sourceInfo) {
 		merger.accept(target, targetInfo, source, sourceInfo, this);
 
 	}

@@ -26,9 +26,11 @@ package org.uichuimi.vcf.io;
 
 import org.uichuimi.vcf.header.*;
 import org.uichuimi.vcf.variant.VariantException;
-import org.uichuimi.vcf.variant.VariantSet;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,37 +43,6 @@ public class VariantSetFactory {
 	private static final Pattern HEADER_LINE = Pattern.compile("##([^=]+)=(.+)");
 	private static final Pattern COMPLEX_HEADER = Pattern.compile("<(.*)>");
 	private static final Pattern FIELDS_LINE = Pattern.compile("#CHROM(.*)");
-
-	public static VariantSet create(InputStream inputStream) {
-		final VariantSet variantSet = new VariantSet();
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-			readLines(reader, variantSet);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return variantSet;
-	}
-
-	public static VariantSet createFromFile(File file) {
-		final VariantSet variantSet = new VariantSet();
-		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-			readLines(reader, variantSet);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return variantSet;
-	}
-
-	private static void readLines(final BufferedReader reader, VariantSet variantSet) throws VariantException {
-		reader.lines().forEach(line -> {
-			if (line.startsWith("#")) addHeader(variantSet.getHeader(), line);
-			else try {
-				variantSet.getVariants().add(VariantFactory.createVariant(line, variantSet.getHeader()));
-			} catch (VariantException e) {
-				e.printStackTrace();
-			}
-		});
-	}
 
 	private static void addHeader(VcfHeader header, String line) {
 		final Matcher metaLine = HEADER_LINE.matcher(line);
@@ -122,6 +93,11 @@ public class VariantSetFactory {
 		}
 	}
 
+	/**
+	 * Opeand
+	 * @param file
+	 * @return
+	 */
 	public static VcfHeader readHeader(File file) {
 		final VcfHeader header = new VcfHeader();
 		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -130,13 +106,19 @@ public class VariantSetFactory {
 				if (line.startsWith("#")) addHeader(header, line);
 				else break;
 			}
-//            reader.lines().filter(line -> line.startsWith("#")).forEach(line -> addHeader(header, line));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return header;
 	}
 
+	/**
+	 * Returns the header in the reader, and leaves the reader at the exact point of the first
+	 * variant.
+	 *
+	 * @param reader
+	 * @return
+	 */
 	public static VcfHeader readHeader(BufferedReader reader) {
 		final VcfHeader header = new VcfHeader();
 		try {

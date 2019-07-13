@@ -1,8 +1,7 @@
-package org.uichuimi.vcf.io;
+package org.uichuimi.vcf.lazy;
 
 import org.uichuimi.vcf.header.VcfHeader;
 import org.uichuimi.vcf.utils.FileUtils;
-import org.uichuimi.vcf.variant.VariantContext;
 import org.uichuimi.vcf.variant.VariantException;
 
 import java.io.*;
@@ -23,7 +22,7 @@ public class VariantContextWriter implements AutoCloseable {
 	/**
 	 * By using a function, we avoid having a flag (headerWritten) that will be true only the first time.
 	 */
-	private Consumer<VariantContext> consumer;
+	private Consumer<Variant> consumer;
 
 	/**
 	 * Creates a new VariantSetWriter that writes into a File. Once created, a
@@ -56,7 +55,7 @@ public class VariantContextWriter implements AutoCloseable {
 	/**
 	 * Get consumer for the first line. Writes header and variant.
 	 */
-	private Consumer<VariantContext> withHeader() {
+	private Consumer<Variant> withHeader() {
 		return variant -> {
 			try {
 				writeHeader();
@@ -71,7 +70,7 @@ public class VariantContextWriter implements AutoCloseable {
 	/**
 	 * Get consumer for the rest of lines. Writes the variant.
 	 */
-	private Consumer<VariantContext> withoutHeader() {
+	private Consumer<Variant> withoutHeader() {
 		return variant -> {
 			try {
 				writeVariant(variant);
@@ -96,8 +95,8 @@ public class VariantContextWriter implements AutoCloseable {
 		writer.newLine();
 	}
 
-	private void writeVariant(VariantContext variant) throws IOException {
-		writer.write(VcfFormatter.toVcf(variant));
+	private void writeVariant(Variant variant) throws IOException {
+		writer.write(VariantFormatter.toVcf(variant));
 		writer.newLine();
 	}
 
@@ -107,7 +106,7 @@ public class VariantContextWriter implements AutoCloseable {
 	 *
 	 * @param variant variant to write
 	 */
-	public void write(VariantContext variant) throws VariantException {
+	public void write(Variant variant) throws VariantException {
 		if (variant.getHeader() != vcfHeader)
 			throw new VariantException("Variant VcfHeader does not correspond to file VcfHeader");
 		consumer.accept(variant);

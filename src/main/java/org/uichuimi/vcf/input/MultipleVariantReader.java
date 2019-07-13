@@ -1,27 +1,28 @@
-package org.uichuimi.vcf.io;
+package org.uichuimi.vcf.input;
 
-import org.uichuimi.vcf.Variant;
 import org.uichuimi.vcf.combine.VariantMerger;
 import org.uichuimi.vcf.header.ComplexHeaderLine;
 import org.uichuimi.vcf.header.SimpleHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
+import org.uichuimi.vcf.lazy.Variant;
+import org.uichuimi.vcf.lazy.VariantReader;
+import org.uichuimi.vcf.utils.FileUtils;
 import org.uichuimi.vcf.variant.Coordinate;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Variant>> {
+public class MultipleVariantReader implements AutoCloseable, Iterator<Collection<Variant>> {
 
-	private final Collection<VariantSetReader> readers;
+	private final Collection<VariantReader> readers;
 	private final VcfHeader header = new VcfHeader();
 
-	public MultipleVcfReader(Collection<InputStream> inputStreams) {
+	public MultipleVariantReader(Collection<InputStream> inputStreams) {
 		this.readers = new ArrayList<>(inputStreams.size());
-		for (InputStream inputStream : inputStreams) readers.add(new VariantSetReader(inputStream));
+		for (InputStream inputStream : inputStreams) readers.add(new VariantReader(inputStream));
 		mergeHeaders();
 	}
 
@@ -29,10 +30,10 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 	 * Secondary constructor. As Java does not allow override constructors with generics, we provide
 	 * the files constructors with a getInstance pattern.
 	 */
-	public static MultipleVcfReader getInstance(Collection<File> files) throws FileNotFoundException {
+	public static MultipleVariantReader getInstance(Collection<File> files) throws IOException {
 		final List<InputStream> is = new ArrayList<>(files.size());
-		for (File file : files) is.add(new FileInputStream(file));
-		return new MultipleVcfReader(is);
+		for (File file : files) is.add(FileUtils.getInputStream(file));
+		return new MultipleVariantReader(is);
 	}
 
 	public VcfHeader getHeader() {
@@ -41,12 +42,12 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 
 	@Override
 	public void close() throws Exception {
-		for (VariantSetReader reader : readers) reader.close();
+		for (VariantReader reader : readers) reader.close();
 	}
 
 	@Override
 	public boolean hasNext() {
-		return readers.stream().anyMatch(VariantSetReader::hasNext);
+		return readers.stream().anyMatch(VariantReader::hasNext);
 	}
 
 	@Override
@@ -64,7 +65,7 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 
 	private Coordinate nextCoordinate() {
 		return readers.stream()
-				.map(VariantSetReader::peek)
+				.map(VariantReader::peek)
 				.filter(Objects::nonNull)
 				.map(Variant::getCoordinate)
 				.min(Coordinate::compareTo)
@@ -74,13 +75,13 @@ public class MultipleVcfReader implements AutoCloseable, Iterator<Collection<Var
 	private void mergeHeaders() {
 		// Samples
 		readers.stream()
-				.map(VariantSetReader::header)
+				.map(VariantReader::header)
 				.flatMap(vcfHeader -> vcfHeader.getSamples().stream())
 				.distinct()
 				.forEach(header.getSamples()::add);
 		// header lines
 		readers.stream()
-				.map(VariantSetReader::header).forEach(vcfHeader ->
+				.map(VariantReader::header).forEach(vcfHeader ->
 				vcfHeader.getHeaderLines().forEach(sourceHeader -> {
 					if (sourceHeader instanceof SimpleHeaderLine)
 						addSimpleHeader((SimpleHeaderLine) sourceHeader);

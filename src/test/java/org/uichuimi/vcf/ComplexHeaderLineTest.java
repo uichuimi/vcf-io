@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.header.ComplexHeaderLine;
 import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.InfoHeaderLine;
-import org.uichuimi.vcf.variant.VariantSet;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -50,7 +49,6 @@ class ComplexHeaderLineTest {
 
 	@Test
 	void testComplete() {
-		final VariantSet variantSet = new VariantSet();
 		final Map<String, String> map = new TreeMap<>();
 		//##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
 		map.put("ID", "DP");
