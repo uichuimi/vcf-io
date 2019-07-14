@@ -198,12 +198,16 @@ public class VcfHeader {
 	}
 
 	public Collection<InfoHeaderLine> getInfoLines() {
+		indexInfoLines();
+		return infoLines.values();
+	}
+
+	private void indexInfoLines() {
 		if (infoLines == null)
 			infoLines = headerLines.stream()
 					.filter(InfoHeaderLine.class::isInstance)
 					.map(InfoHeaderLine.class::cast)
 					.collect(Collectors.toMap(InfoHeaderLine::getId, Function.identity()));
-		return infoLines.values();
 	}
 
 	@Override
@@ -225,6 +229,7 @@ public class VcfHeader {
 	}
 
 	public InfoHeaderLine getInfoHeader(String key) {
+		indexInfoLines();
 		return infoLines.computeIfAbsent(key, k -> new InfoHeaderLine(k, "1", "String", ""));
 	}
 }

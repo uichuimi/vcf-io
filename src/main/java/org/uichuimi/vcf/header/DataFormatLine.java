@@ -18,11 +18,12 @@ public class DataFormatLine extends ComplexHeaderLine {
 	DataFormatLine(String key, Map<String, String> map) {
 		super(key, map);
 		id = map.get("ID");
-		type = VcfType.valueOf(map.get("Type"));
 		number = map.get("Number");
 		description = map.get("Description");
-		if (id == null || number == null || description == null)
+		final String type = map.get("Type");
+		if (id == null || number == null || description == null || type == null)
 			throw new IllegalArgumentException("Missing keys");
+		this.type = VcfType.valueOf(type);
 		this.array = !number.equals("0") && !number.equals("1");
 		this.merger = getMerger();
 	}

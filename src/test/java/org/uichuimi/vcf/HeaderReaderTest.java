@@ -143,12 +143,13 @@ class HeaderReaderTest {
 
 	@Test
 	void testSaveFile() {
-		final File saveFile = new File(getClass().getResource("/files/").getPath(), "saveFile.vcf");
+		final File saveFile = getFile("/files/saveFile.vcf");
 		try (VariantReader reader = new VariantReader(getFile("/files/Sample1.vcf"));
 		     VariantWriter writer = new VariantWriter(saveFile)) {
 			writer.setHeader(reader.getHeader());
 			reader.variants().forEach(writer::write);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new MissingResourceException("", getClass().getName(), "");
 		}
 		final File expected = getFile("/files/ExpectedSample1.vcf");
