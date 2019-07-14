@@ -28,7 +28,7 @@ import org.uichuimi.vcf.variant.VariantException;
 
 import java.util.*;
 
-public class ComplexHeaderLine implements HeaderLine {
+public class ComplexHeaderLine implements HeaderLine<Map<String, String>> {
 
 	private static final Map<String, List<String>> REQUIRED_KEYS = new TreeMap<>();
 
@@ -49,7 +49,8 @@ public class ComplexHeaderLine implements HeaderLine {
 		this.map.putAll(map);
 	}
 
-	public Map<String, String> getMap() {
+	@Override
+	public Map<String, String> getValue() {
 		return map;
 	}
 

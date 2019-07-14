@@ -27,8 +27,15 @@ package org.uichuimi.vcf.header;
 /**
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
-public interface HeaderLine {
+public interface HeaderLine<T> {
 
+	/**
+	 * Get the key of the header line. All VCF header lines are in the format key=value.
+	 *
+	 * @return the key
+	 */
 	String getKey();
+
+	T getValue();
 
 }

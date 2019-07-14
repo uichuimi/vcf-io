@@ -26,11 +26,16 @@ package org.uichuimi.vcf;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.uichuimi.vcf.combine.VariantMerger;
 import org.uichuimi.vcf.header.ComplexHeaderLine;
+import org.uichuimi.vcf.header.FormatHeaderLine;
+import org.uichuimi.vcf.header.InfoHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
+import org.uichuimi.vcf.lazy.Variant;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class VariantMergerTest {
 
@@ -38,20 +43,9 @@ class VariantMergerTest {
 
 	@BeforeEach
 	void before() {
-		final Map<String, String> gt = new LinkedHashMap<>();
-		gt.put("ID", "GT");
-		gt.put("Number", "1");
-		gt.put("Type", "String");
-		gt.put("Description", "Genotype");
-		final ComplexHeaderLine gtLine = new ComplexHeaderLine("FORMAT", gt);
 
-		final Map<String, String> dp = new LinkedHashMap<>();
-		dp.put("ID", "DP");
-		dp.put("Number", "1");
-		dp.put("Type", "Float");
-		dp.put("Description", "Read depth");
-		final ComplexHeaderLine dpLine = new ComplexHeaderLine("INFO", dp);
-
+		final ComplexHeaderLine dpLine = new InfoHeaderLine("DP", "1", "Float", "Read depth");
+		final FormatHeaderLine gtLine = new FormatHeaderLine("GT", "1", "String", "Genotype");
 
 		header1 = new VcfHeader("VCFv4.2");
 		header1.getSamples().add("S1");
@@ -72,38 +66,42 @@ class VariantMergerTest {
 
 	@Test
 	void testBasicMerge() {
-//		//1   155776549   . CT  C   192.74  .   .   GT:AD:DP:GQ:PL  1/1:0,9:9:27:230,27,0
-//		final Variant v1 = new Variant("1", 155776549, "CT", "C", header1);
-//		v1.getSampleInfo().setFormat("S1","GT", "1/1");
-//
-//		// 1   155776549   . CT  C   114.74  .   .   GT:AD:DP:GQ:PL  0/1:2,7:9:27:152,0,27
-//		final Variant v2 = new Variant("1", 155776549, "CT", "C", header2);
-//		v2.getSampleInfo().setFormat("S2", "GT", "0/1");
-//
-//		final Variant merge = VariantMerger.merge(Arrays.asList(v1, v2), targetHeader);
-//
-//		assertEquals("1/1", merge.getSampleInfo().getFormat("S1", "GT"));
-//		assertEquals("0/1", merge.getSampleInfo().getFormat("S2", "GT"));
+		//1   155776549   . CT  C   192.74  .   .   GT:AD:DP:GQ:PL  1/1:0,9:9:27:230,27,0
+		final Variant v1 = new Variant(header1, "1\t155776549\t.\tCT\tC\t10\t.\t.");
+		final int s1 = header1.getSamples().indexOf("S1");
+		v1.getSampleInfo(s1).set("GT", "1/1");
+
+		// 1   155776549   . CT  C   114.74  .   .   GT:AD:DP:GQ:PL  0/1:2,7:9:27:152,0,27
+		final Variant v2 = new Variant(header2, "1\t155776549\t.\tCT\tC\t20\t.\t.");
+		final int s2 = header2.getSamples().indexOf("S2");
+		v2.getSampleInfo(s2).set("GT", "0/1");
+
+		final Variant merge = VariantMerger.merge(Arrays.asList(v1, v2), targetHeader);
+		final int ts1 = targetHeader.getSamples().indexOf("S1");
+		final int ts2 = targetHeader.getSamples().indexOf("S2");
+
+		assertEquals("1/1", merge.getSampleInfo(ts1).get("GT"));
+		assertEquals("0/1", merge.getSampleInfo(ts2).get("GT"));
 	}
 
 	@Test
 	public void testThreeAlleles() {
-//		//1   155776549   . CT  C   192.74  .   .   GT:AD:DP:GQ:PL  1/1:0,9:9:27:230,27,0
-//		final Variant v1 = new Variant("1", 31653746, "AACAC", "A", header1);
-//		v1.getSampleInfo().setFormat("S1","GT", "1/1");
-//
-//		// 1   155776549   . CT  C   114.74  .   .   GT:AD:DP:GQ:PL  0/1:2,7:9:27:152,0,27
-//		final Variant v2 = new Variant("1", 31653746, "AACAC", "A,AACACAC", header2);
-//		v2.getSampleInfo().setFormat("S2", "GT", "1/2");
-//
-//		final Variant merge = VariantMerger.merge(Arrays.asList(v1, v2), targetHeader);
-//
-//		final String[] expected = {"AACAC", "A", "AACACAC"};
-//		for (int i = 0; i < expected.length; i++)
-//			assertEquals(merge.getAlleles()[i], expected[i]);
-//
-//		assertEquals("1/1", merge.getSampleInfo().getFormat("S1", "GT"));
-//		assertEquals("1/2", merge.getSampleInfo().getFormat("S2", "GT"));
+		//1   155776549   . CT  C   192.74  .   .   GT:AD:DP:GQ:PL  1/1:0,9:9:27:230,27,0
+		final Variant v1 = new Variant(header1, "1\t31653746\trs1\tAACAC\tA\t12.9\t21\t.\tDP=10");
+		v1.setFormat("S1", "GT", "1/1");
+
+		// 1   155776549   . CT  C   114.74  .   .   GT:AD:DP:GQ:PL  0/1:2,7:9:27:152,0,27
+		final Variant v2 = new Variant(header2, "1\t31653746\trs1\tAACAC\tA,AACACAC\t400\tPASS\t.");
+		v2.setFormat("S2", "GT", "1/2");
+
+		final Variant merge = VariantMerger.merge(Arrays.asList(v1, v2), targetHeader);
+
+		final String[] expected = {"AACAC", "A", "AACACAC"};
+		for (int i = 0; i < expected.length; i++)
+			assertEquals(merge.getAlleles().get(i), expected[i]);
+
+		assertEquals("1/1", merge.getFormat("S1", "GT"));
+		assertEquals("1/2", merge.getFormat("S2", "GT"));
 	}
 
 	@Test

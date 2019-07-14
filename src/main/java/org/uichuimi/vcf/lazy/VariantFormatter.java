@@ -2,7 +2,7 @@ package org.uichuimi.vcf.lazy;
 
 import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.InfoHeaderLine;
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -13,57 +13,52 @@ import java.util.stream.Collectors;
  * Helper class to create the string representation of a Variant for
  * <a href=https://samtools.github.io/hts-specs/VCFv4.3.pdf>Variant Call Format</a>.
  */
-public class VariantFormatter {
-
-	private static final String SEPARATOR = "\t";
-	private static final String SECONDARY_SEPARATOR = ",";
-	private static final String INFO_SEPARATOR = ";";
-	private static final String FORMAT_SEPARATOR = ":";
+class VariantFormatter {
 
 	private static final NumberFormat DECIMAL = new DecimalFormat("#.###");
-	public static final List<String> FORMAT_ORDER = Arrays.asList("GT", "AD", "DP", "GQ", "PL");
+	private static final List<String> FORMAT_ORDER = Arrays.asList("GT", "AD", "DP", "GQ", "PL");
 
 	/**
 	 * Creates the VCF representation of the variant.
 	 */
-	public static String toVcf(Variant variant) {
+	static String toVcf(Variant variant) {
 		final StringBuilder builder = new StringBuilder();
 		builder.append(variant.getCoordinate().getChrom())
-				.append(SEPARATOR).append(variant.getCoordinate().getPosition())
-				.append(SEPARATOR).append(join(variant.getIdentifiers()))
-				.append(SEPARATOR).append(join(variant.getReferences()))
-				.append(SEPARATOR).append(join(variant.getAlternatives()))
-				.append(SEPARATOR).append(toString(variant.getQuality()))
-				.append(SEPARATOR).append(join(variant.getFilters()))
-				.append(SEPARATOR).append(getInfoString(variant));
+				.append(VcfConstants.DELIMITER).append(variant.getCoordinate().getPosition())
+				.append(VcfConstants.DELIMITER).append(join(variant.getIdentifiers()))
+				.append(VcfConstants.DELIMITER).append(join(variant.getReferences()))
+				.append(VcfConstants.DELIMITER).append(join(variant.getAlternatives()))
+				.append(VcfConstants.DELIMITER).append(toString(variant.getQuality()))
+				.append(VcfConstants.DELIMITER).append(join(variant.getFilters()))
+				.append(VcfConstants.DELIMITER).append(getInfoString(variant));
 		addSampleData(variant, builder);
 		return builder.toString();
 	}
 
 	private static String join(List<String> values) {
-		if (values.isEmpty()) return VariantSet.EMPTY_VALUE;
-		return String.join(SECONDARY_SEPARATOR, values);
+		if (values.isEmpty()) return VcfConstants.EMPTY_VALUE;
+		return String.join(VcfConstants.ARRAY_DELIMITER, values);
 	}
 
 	private static String getInfoString(Variant variant) {
-		final StringJoiner infoBuilder = new StringJoiner(INFO_SEPARATOR);
+		final StringJoiner infoBuilder = new StringJoiner(VcfConstants.INFO_DELIMITER);
 		variant.getInfo().forEach((key, value) -> {
 			final InfoHeaderLine line = variant.getHeader().getInfoHeader(key);
 			if (line.getNumber().equals("0")) infoBuilder.add(key);
 			else if (line.getNumber().equals("1")) {
-				infoBuilder.add(String.format("%s=%s", key, toString(value)));
+				infoBuilder.add(key + VcfConstants.KEY_VALUE_DELIMITER + toString(value));
 			} else {
 				final String v = ((List<?>) value).stream()
 						.map(VariantFormatter::toString)
-						.collect(Collectors.joining(","));
-				infoBuilder.add(String.format("%s=%s", key, v));
+						.collect(Collectors.joining(VcfConstants.ARRAY_DELIMITER));
+				infoBuilder.add(key + VcfConstants.KEY_VALUE_DELIMITER + v);
 			}
 		});
 		return infoBuilder.toString();
 	}
 
 	private static String toString(Object value) {
-		if (value == null) return VariantSet.EMPTY_VALUE;
+		if (value == null) return VcfConstants.EMPTY_VALUE;
 		if (value instanceof Double || value instanceof Float) return DECIMAL.format(value);
 		return String.valueOf(value);
 	}
@@ -91,7 +86,7 @@ public class VariantFormatter {
 			sampleData.add(values);
 		}
 
-		builder.append("\t").append(String.join(FORMAT_SEPARATOR, keys));
+		builder.append(VcfConstants.DELIMITER).append(String.join(VcfConstants.FORMAT_DELIMITER, keys));
 
 		// Now we add FORMAT by sample
 		for (int s = 0; s < variant.getHeader().getSamples().size(); s++) {
@@ -106,12 +101,12 @@ public class VariantFormatter {
 
 			// map nulls to . and join
 			if (sample.stream().allMatch(Objects::isNull)) {
-				builder.append(SEPARATOR).append(VariantSet.EMPTY_VALUE);
+				builder.append(VcfConstants.DELIMITER).append(VcfConstants.EMPTY_VALUE);
 			} else {
 				final String sformat = sample.stream()
-						.map(v -> v == null ? VariantSet.EMPTY_VALUE : v)
-						.collect(Collectors.joining(FORMAT_SEPARATOR));
-				builder.append(SEPARATOR).append(sformat);
+						.map(v -> v == null ? VcfConstants.EMPTY_VALUE : v)
+						.collect(Collectors.joining(VcfConstants.FORMAT_DELIMITER));
+				builder.append(VcfConstants.DELIMITER).append(sformat);
 			}
 		}
 	}

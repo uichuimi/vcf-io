@@ -1,8 +1,8 @@
 package org.uichuimi.vcf.combine;
 
 import org.uichuimi.vcf.header.DataFormatLine;
+import org.uichuimi.vcf.lazy.Info;
 import org.uichuimi.vcf.lazy.Variant;
-import org.uichuimi.vcf.lazy.VariantInfo;
 
 /**
  * Merges data with Number=1,2,3,... or Number=.
@@ -20,7 +20,7 @@ public class SimpleMerger implements DataMerger {
 	}
 
 	@Override
-	public void accept(Variant target, VariantInfo targetInfo, Variant source, VariantInfo sourceInfo, DataFormatLine formatLine) {
+	public void accept(Variant target, Info targetInfo, Variant source, Info sourceInfo, DataFormatLine formatLine) {
 		final String key = formatLine.getId();
 		final Object s = sourceInfo.get(key);
 		final Object t = targetInfo.get(key);

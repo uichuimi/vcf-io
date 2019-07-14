@@ -27,8 +27,8 @@ package org.uichuimi.vcf.combine;
 import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.InfoHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
+import org.uichuimi.vcf.lazy.Info;
 import org.uichuimi.vcf.lazy.Variant;
-import org.uichuimi.vcf.lazy.VariantInfo;
 import org.uichuimi.vcf.variant.Coordinate;
 
 import java.util.Collection;
@@ -83,8 +83,8 @@ public class VariantMerger {
 			for (int s = 0; s < other.getHeader().getSamples().size(); s++) {
 				final String sample = other.getHeader().getSamples().get(s);
 				final int vs = variant.getHeader().getSamples().indexOf(sample);
-				final VariantInfo sourceInfo = other.getSampleInfo(s);
-				final VariantInfo targetInfo = variant.getSampleInfo(vs);
+				final Info sourceInfo = other.getSampleInfo(s);
+				final Info targetInfo = variant.getSampleInfo(vs);
 				for (FormatHeaderLine formatLine : variant.getHeader().getFormatLines())
 					formatLine.mergeInto(variant, targetInfo, other, sourceInfo);
 			}

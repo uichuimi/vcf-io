@@ -1,6 +1,6 @@
 package org.uichuimi.vcf.lazy;
 
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,11 +8,9 @@ import java.util.function.Function;
 
 public class ListProperty<T> extends LazyProperty<List<T>> {
 
-	private final static String ARRAY_SEPARATOR = ",";
-
 	private Function<String, T> parser;
 
-	public ListProperty(List<T> value) {
+	ListProperty(List<T> value) {
 		super(value);
 	}
 	/**
@@ -27,8 +25,8 @@ public class ListProperty<T> extends LazyProperty<List<T>> {
 
 	@Override
 	protected List<T> parse(String raw) {
-		if (raw.equals(VariantSet.EMPTY_VALUE)) return new ArrayList<>();
-		final String[] data = raw.split(ARRAY_SEPARATOR);
+		if (raw.equals(VcfConstants.EMPTY_VALUE)) return new ArrayList<>();
+		final String[] data = raw.split(VcfConstants.ARRAY_DELIMITER);
 		final List<T> ts = new ArrayList<>(data.length);
 		for (String datum : data) ts.add(parser.apply(datum));
 		return ts;

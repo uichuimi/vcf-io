@@ -1,16 +1,19 @@
 package org.uichuimi.vcf.lazy;
 
+import org.jetbrains.annotations.NotNull;
 import org.uichuimi.vcf.header.VcfHeader;
 import org.uichuimi.vcf.variant.Coordinate;
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * Representation of a line in a VCF file. A variant actually can store more than one genetic
+ * variation, as far as they share the same coordinate.
+ */
 public class Variant {
-
-	private static final String VCF_SEPARATOR = "\t";
 
 	private VcfHeader header;
 	private CoordinateProperty coordinate;
@@ -20,21 +23,27 @@ public class Variant {
 	private ListProperty<String> identifiers;
 	private ListProperty<String> filters;
 	private DoubleProperty quality;
-	private VariantInfo info;
-	private LazyProperty<List<VariantInfo>> sampleInfo;
+	private Info info;
+	private LazyProperty<List<Info>> sampleInfo;
 	private int genotypes = -1;
 
 
+	/**
+	 * Creates a variant
+	 *
+	 * @param header
+	 * @param line
+	 */
 	public Variant(VcfHeader header, String line) {
 		this.header = header;
-		final String[] data = line.split(VCF_SEPARATOR);
+		final String[] data = line.split(VcfConstants.DELIMITER);
 		coordinate = new CoordinateProperty(data[0], data[1]);
 		identifiers = new ListProperty<>(data[2], Function.identity());
 		references = new ListProperty<>(data[3], Function.identity());
 		alternatives = new ListProperty<>(data[4], Function.identity());
 		quality = new DoubleProperty(data[5]);
 		filters = new ListProperty<>(data[6], Function.identity());
-		info = new VariantInfo(header, data[7]);
+		info = new Info(header, data[7]);
 		sampleInfo = new SampleInfoProperty(header, data);
 	}
 
@@ -44,9 +53,9 @@ public class Variant {
 		this.references = new ListProperty<>(references);
 		this.alternatives = new ListProperty<>(alternatives);
 		identifiers = new ListProperty<>(new ArrayList<>());
-		quality = new DoubleProperty(VariantSet.EMPTY_VALUE);
+		quality = new DoubleProperty(VcfConstants.EMPTY_VALUE);
 		filters = new ListProperty<>(new ArrayList<>());
-		info = new VariantInfo(header, VariantSet.EMPTY_VALUE);
+		info = new Info(header, VcfConstants.EMPTY_VALUE);
 		sampleInfo = new SampleInfoProperty(header, new String[0]);
 	}
 
@@ -68,8 +77,10 @@ public class Variant {
 
 	/**
 	 * Get a list of all alleles (references plus alternatives)
+	 *
 	 * @return all alleles of the variant
 	 */
+	@NotNull
 	public List<String> getAlleles() {
 		// 3913906669
 		if (alleles == null) {
@@ -92,20 +103,16 @@ public class Variant {
 		return quality.getValue();
 	}
 
-	public VariantInfo getInfo() {
+	public Info getInfo() {
 		return info;
 	}
 
-	public List<VariantInfo> getSampleInfo() {
+	public List<Info> getSampleInfo() {
 		return sampleInfo.getValue();
 	}
 
-	public void setIdentifiers(List<String> identifiers) {
-		this.identifiers.setValue(identifiers);
-	}
-
 	public void setQuality(double quality) {
-		this.quality.setValue(quality);
+		this.quality = new DoubleProperty(quality);
 	}
 
 	/**
@@ -116,12 +123,12 @@ public class Variant {
 	 * 		the index of sample in 'header.samples'
 	 * @return the Info associate to the sample in position
 	 */
-	public VariantInfo getSampleInfo(int position) {
-		final List<VariantInfo> samples = sampleInfo.getValue();
+	public Info getSampleInfo(int position) {
+		final List<Info> samples = sampleInfo.getValue();
 		if (samples.size() > position) return samples.get(position);
 		if (header.getSamples().size() > position)
 			while (samples.size() < header.getSamples().size())
-				samples.add(new VariantInfo(header, VariantSet.EMPTY_VALUE));
+				samples.add(new Info(header, VcfConstants.EMPTY_VALUE));
 		return samples.get(position);
 	}
 
@@ -135,6 +142,24 @@ public class Variant {
 		int numberOfGenotypes = 0;
 		for (int i = 1; i <= numberOfAlleles; i++) numberOfGenotypes += i;
 		return numberOfGenotypes;
+	}
+
+	public <T> T getInfo(String key) {
+		return getInfo().get(key);
+	}
+
+	public <T> void setInfo(String key, T value) {
+		getInfo().set(key, value);
+	}
+
+	public <T> T getFormat(String sample, String key) {
+		final int index = getHeader().getSamples().indexOf(sample);
+		return getSampleInfo(index).get(key);
+	}
+
+	public <T> void setFormat(String sample, String key, T value) {
+		final int index = getHeader().getSamples().indexOf(sample);
+		getSampleInfo(index).set(key, value);
 	}
 
 	@Override

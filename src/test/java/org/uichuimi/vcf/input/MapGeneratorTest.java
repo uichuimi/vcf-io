@@ -22,7 +22,7 @@
  *
  */
 
-package org.uichuimi.vcf.io;
+package org.uichuimi.vcf.input;
 
 import org.junit.jupiter.api.Test;
 

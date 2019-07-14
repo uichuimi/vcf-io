@@ -11,6 +11,18 @@ public class InfoHeaderLine extends DataFormatLine {
 		super(INFO, map);
 	}
 
+	/**
+	 * Creates a INFO header line with the required properties.
+	 *
+	 * @param id
+	 * 		ID
+	 * @param number
+	 * 		Number
+	 * @param type
+	 * 		Type
+	 * @param description
+	 * 		Description
+	 */
 	public InfoHeaderLine(String id, String number, String type, String description) {
 		this(new LinkedHashMap<String, String>() {{
 			put("ID", id);

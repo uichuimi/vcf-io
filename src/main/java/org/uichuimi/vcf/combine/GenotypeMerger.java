@@ -1,8 +1,8 @@
 package org.uichuimi.vcf.combine;
 
 import org.uichuimi.vcf.header.DataFormatLine;
+import org.uichuimi.vcf.lazy.Info;
 import org.uichuimi.vcf.lazy.Variant;
-import org.uichuimi.vcf.lazy.VariantInfo;
 import org.uichuimi.vcf.variant.GenotypeIndex;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class GenotypeMerger implements DataMerger {
 	}
 
 	@Override
-	public void accept(Variant target, VariantInfo targetInfo, Variant source, VariantInfo sourceInfo, DataFormatLine formatLine) {
+	public void accept(Variant target, Info targetInfo, Variant source, Info sourceInfo, DataFormatLine formatLine) {
 		final List s = sourceInfo.get(formatLine.getId());
 		final List t = targetInfo.get(formatLine.getId());
 		for (int i = 0; i < source.getNumberOfGenotypes(); i++) {

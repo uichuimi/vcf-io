@@ -25,11 +25,34 @@
 package org.uichuimi.vcf.variant;
 
 /**
- * Stores in memory a Vcf file data. Variant Call Format (VCF) Version 4.2.
- *
  * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
  */
-public class VariantSet {
+public class VcfConstants {
 
+	/**
+	 * Represents a missing or null value.
+	 */
 	public static final String EMPTY_VALUE = ".";
+	/**
+	 * Main VCF separator. Delimits the main columns CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO,
+	 * FORMAT and samples.
+	 */
+	public static final String DELIMITER = "\t";
+	/**
+	 * Delimiter for arrays. Arrays are present in the INFO and sample columns for values with
+	 * Number = A, R, G or > 1.
+	 */
+	public static final String ARRAY_DELIMITER = ",";
+	/**
+	 * Delimiter of the INFO field. Delimits the INFO field in key=value pairs.
+	 */
+	public static final String INFO_DELIMITER = ";";
+	/**
+	 * Delimiter for the FORMAT and samples columns. The FORMAT column contains the keys.
+	 */
+	public static final String FORMAT_DELIMITER = ":";
+	/**
+	 * Each key and value pair is delimited by the = symbol
+	 */
+	public static final String KEY_VALUE_DELIMITER = "=";
 }

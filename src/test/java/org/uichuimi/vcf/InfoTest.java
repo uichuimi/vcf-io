@@ -26,8 +26,8 @@ package org.uichuimi.vcf;
 
 
 import org.junit.jupiter.api.Test;
-import org.uichuimi.vcf.lazy.VariantInfo;
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.lazy.Info;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -38,7 +38,7 @@ public class InfoTest {
 
 	@Test
 	void testInfo() {
-		final VariantInfo info = new VariantInfo(null, VariantSet.EMPTY_VALUE);
+		final Info info = new Info(null, VcfConstants.EMPTY_VALUE);
 		info.set("this", "hello");
 		info.set("that", "hi");
 		info.set("those", 17);

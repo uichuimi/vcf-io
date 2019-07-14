@@ -26,7 +26,11 @@ package org.uichuimi.vcf.header;
 
 import java.util.Objects;
 
-public class SimpleHeaderLine implements HeaderLine {
+/**
+ * A header line whose value is a simple string. A VCF header may contain more than one simple line
+ * with the same key.
+ */
+public class SimpleHeaderLine implements HeaderLine<String> {
 
 	private final String key;
 	private final String value;
@@ -37,6 +41,7 @@ public class SimpleHeaderLine implements HeaderLine {
 		this.value = value;
 	}
 
+	@Override
 	public String getKey() {
 		return key;
 	}

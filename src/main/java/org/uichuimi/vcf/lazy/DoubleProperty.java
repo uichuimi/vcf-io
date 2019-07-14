@@ -1,16 +1,25 @@
 package org.uichuimi.vcf.lazy;
 
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.variant.VcfConstants;
 
-public class DoubleProperty extends LazyProperty<Double> {
+import java.util.function.Function;
 
-	public DoubleProperty(String raw) {
-		super(raw);
-	}
+/**
+ * A property that contains a double value.
+ */
+class DoubleProperty extends ObjectProperty<Double> {
 
-	@Override
-	protected Double parse(String raw) {
-		if (raw.equals(VariantSet.EMPTY_VALUE)) return null;
+	private static final Function<String, Double> function = raw -> {
+		if (raw.equals(VcfConstants.EMPTY_VALUE)) return null;
 		return Double.valueOf(raw);
+	};
+
+	DoubleProperty(Double value) {
+		super(value);
 	}
+
+	DoubleProperty(String raw) {
+		super(raw, function);
+	}
+
 }

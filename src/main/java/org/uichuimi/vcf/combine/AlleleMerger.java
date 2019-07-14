@@ -1,8 +1,8 @@
 package org.uichuimi.vcf.combine;
 
 import org.uichuimi.vcf.header.DataFormatLine;
+import org.uichuimi.vcf.lazy.Info;
 import org.uichuimi.vcf.lazy.Variant;
-import org.uichuimi.vcf.lazy.VariantInfo;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ public class AlleleMerger implements DataMerger {
 	}
 
 	@Override
-	public void accept(Variant target, VariantInfo targetInfo, Variant source, VariantInfo sourceInfo, DataFormatLine formatLine) {
+	public void accept(Variant target, Info targetInfo, Variant source, Info sourceInfo, DataFormatLine formatLine) {
 		final List t = targetInfo.get(formatLine.getId());
 		final List s = sourceInfo.get(formatLine.getId());
 

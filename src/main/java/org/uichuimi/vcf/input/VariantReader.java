@@ -1,7 +1,8 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.input;
 
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.io.VariantSetFactory;
+import org.uichuimi.vcf.lazy.Variant;
+import org.uichuimi.vcf.utils.FileUtils;
 import org.uichuimi.vcf.variant.Coordinate;
 
 import java.io.*;
@@ -12,30 +13,45 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * Reads a VCF file or input stream. Variants can be iterated in several ways: as an iterator, as an
+ * iterable an as a stream.
+ * <p>
+ * NOTE: to benefit from {@link Iterator} and {@link Iterable} interfaces, reading exceptions have
+ * been encapsulated into {@link UncheckedIOException}, so take into account than even if compiler
+ * does not enforce to capture this exceptions, iterating over a reader may produce {@link
+ * IOException} as normal readers.
+ */
 public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable<Variant> {
 
-
-	private final VcfHeader header;
+	private VcfHeader header;
 	private final BufferedReader reader;
 	private Variant nextVariant;
 
-	public VariantReader(InputStream is) {
-		reader = new BufferedReader(new InputStreamReader(is));
-		header = VariantSetFactory.readHeader(reader);
-	}
-
-	public VariantReader(File file) throws FileNotFoundException {
-		header = VariantSetFactory.readHeader(file);
-		reader = new BufferedReader(new FileReader(file));
+	/**
+	 * Creates a reader from a file. File can be zipped or gzipped. If file is zipped, it is read to
+	 * place the reader into the first byte of the first file.
+	 *
+	 * @param file
+	 * 		input file
+	 * @throws IOException
+	 * 		if file is unreachable or unreadable
+	 */
+	public VariantReader(File file) throws IOException {
+		this(FileUtils.getInputStream(file));
 	}
 
 	/**
-	 * get the header. Kept for retro compatibility.
+	 * Creates a reader from an input stream. Header is read.
 	 *
-	 * @return file header
+	 * @param input
+	 * 		input stream
+	 * @throws IOException
+	 * 		if input is unreadable
 	 */
-	public final VcfHeader header() {
-		return header;
+	public VariantReader(InputStream input) throws IOException {
+		reader = new BufferedReader(new InputStreamReader(input));
+		header = HeaderReader.readHeader(reader);
 	}
 
 	/**
@@ -47,6 +63,12 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 		return header;
 	}
 
+	// -----------------------  Autocloseable  -------------------------- //
+	@Override
+	public final void close() throws IOException {
+		reader.close();
+	}
+
 	// --------------------------  Iterable  ---------------------------- //
 	@Override
 	public Iterator<Variant> iterator() {
@@ -54,20 +76,34 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 	}
 
 	// --------------------------   Stream   ---------------------------- //
+
+	/**
+	 * Generates a stream that provides variants in the order they are read as using this class as
+	 * iterator or iterable.
+	 *
+	 * @return a stream of variants
+	 */
 	public final Stream<Variant> variants() {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
-				Spliterator.NONNULL | Spliterator.ORDERED), true);
-	}
-
-	// -----------------------  Autocloseable  -------------------------- //
-	@Override
-	public final void close() throws IOException {
-		reader.close();
+				Spliterator.NONNULL | Spliterator.ORDERED), false);
 	}
 
 	// --------------------------  Iterator  ---------------------------- //
+
+	/**
+	 * Copied from {@link Iterator} interface:
+	 * <p>
+	 * Returns {@code true} if the iteration has more elements. (In other words, returns {@code
+	 * true} if {@link #next} would return an element rather than throwing an exception.)
+	 * <p>
+	 * NOTE: this method may throw an {@link UncheckedIOException} as it is reading from an
+	 * InputStream source. The exception has been encapsulated into an unchecked exception because
+	 * this method is overriding the interface.
+	 *
+	 * @return {@code true} if the iteration has more elements
+	 */
 	@Override
-	public final boolean hasNext() {
+	public boolean hasNext() {
 		if (nextVariant != null) return true;
 		else {
 			try {
@@ -75,7 +111,7 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 				while (line != null && line.startsWith("#"))
 					line = reader.readLine();
 				if (line == null) return false;
-				nextVariant = new Variant(header, line);
+				nextVariant = new Variant(getHeader(), line);
 				return true;
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
@@ -98,7 +134,7 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 	 * Get the next variant which coordinate is equals to the coordinate passed as argument. If this
 	 * reader does not contain a variant with this coordinate, null is returned and all variants
 	 * with coordinate less than <em>coordinate</em> will be skipped. Next variant returned by
-	 * {@link VariantSetReader#next()} will have coordinate greater than <em>coordinate</em>.
+	 * {@link VariantReader#next()} will have coordinate greater than <em>coordinate</em>.
 	 *
 	 * @param coordinate
 	 * 		coordinate of the next variant to return

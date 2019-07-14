@@ -1,13 +1,17 @@
 package org.uichuimi.vcf.lazy;
 
 import org.uichuimi.vcf.header.VcfHeader;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SampleInfoProperty extends LazyProperty<List<VariantInfo>> {
+/**
+ * Stores the raw representation of the FORMAT columns of a variant, and only creates the
+ * VariantInfo objects under request.
+ */
+class SampleInfoProperty extends LazyProperty<List<Info>> {
 
-	private static final String FORMAT_SEPARATOR = ":";
 	private String[] data;
 	private VcfHeader header;
 
@@ -18,12 +22,13 @@ public class SampleInfoProperty extends LazyProperty<List<VariantInfo>> {
 	}
 
 	@Override
-	protected List<VariantInfo> parse(String raw) {
+	protected List<Info> parse(String raw) {
 		if (data.length < 9) return new ArrayList<>();
-		final String [] fields = data[8].split(FORMAT_SEPARATOR);
+		final String[] fields = data[8].split(VcfConstants.FORMAT_DELIMITER);
 		final int samples = data.length - 9;
-		final List<VariantInfo> infos = new ArrayList<>(samples);
-		for (int s = 0; s < samples; s++) infos.add(new SampleVariantInfo(header, fields, data[9 + s]));
+		final List<Info> infos = new ArrayList<>(samples);
+		for (int s = 0; s < samples; s++)
+			infos.add(new SampleInfo(header, fields, data[9 + s]));
 		return infos;
 	}
 }

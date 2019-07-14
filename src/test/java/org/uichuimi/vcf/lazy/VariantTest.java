@@ -27,6 +27,7 @@ package org.uichuimi.vcf.lazy;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.header.VcfHeader;
+import org.uichuimi.vcf.input.VariantReader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +49,7 @@ public class VariantTest {
 	public static void setUp() {
 		final InputStream resource = VariantTest.class.getResourceAsStream("/files/Sample1.vcf");
 		try (VariantReader reader = new VariantReader(resource)) {
-			header = reader.header();
+			header = reader.getHeader();
 			variants = reader.variants().collect(Collectors.toList());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -216,7 +217,7 @@ public class VariantTest {
 		// Given
 		final Variant variant = new Variant(null, "1\t14\t.\tA\tT\t.\t.\t.");
 		// When
-		variant.setIdentifiers(Collections.singletonList("rs00002"));
+		variant.getIdentifiers().add("rs00002");
 		// Then
 		assertEquals(Collections.singletonList("rs00002"), variant.getIdentifiers());
 	}

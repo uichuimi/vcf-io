@@ -1,74 +1,41 @@
 package org.uichuimi.vcf.header;
 
 import org.uichuimi.vcf.combine.*;
-import org.uichuimi.vcf.lazy.Variant;
-import org.uichuimi.vcf.lazy.VariantInfo;
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.lazy.*;
+import org.uichuimi.vcf.variant.VcfType;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Map;
-import java.util.function.Function;
 
 public class DataFormatLine extends ComplexHeaderLine {
 
-	private static final NumberFormat DECIMAL = new DecimalFormat("#.#####");
-
-
 	private final String id;
-	private final String type;
+	private final VcfType type;
 	private final String description;
 	private final String number;
-	private final Function<String, ?> parser;
-	private final Function<? super Object, String> formatter;
 	private final DataMerger merger;
+	private final boolean array;
 
-
-	public DataFormatLine(String key, Map<String, String> map) {
+	DataFormatLine(String key, Map<String, String> map) {
 		super(key, map);
 		id = map.get("ID");
-		type = map.get("Type");
+		type = VcfType.valueOf(map.get("Type"));
 		number = map.get("Number");
 		description = map.get("Description");
-		if (id == null || type == null || number == null || description == null)
+		if (id == null || number == null || description == null)
 			throw new IllegalArgumentException("Missing keys");
-		parser = getParser();
-		formatter = getFormatter();
-		merger = getMerger();
+		this.array = !number.equals("0") && !number.equals("1");
+		this.merger = getMerger();
 	}
 
-	private Function<? super Object, String> getFormatter() {
-		switch (type) {
-			case "Float":
-				return f -> Float.isFinite((Float) f) ? DECIMAL.format(f) : VariantSet.EMPTY_VALUE;
-			case "Flag":
-				return s -> null;
-			case "String":
-			case "Character":
-			case "Integer":
-			default:
-				return String::valueOf;
-		}
-	}
-
-	private Function<String, ?> getParser() {
-		switch (type) {
-			case "Float":
-				return s1 -> {
-					final float f = Float.parseFloat(s1);
-					if (Float.isFinite(f)) return f;
-					else return null;
-				};
-			case "Integer":
-				return Integer::valueOf;
-			case "Flag":
-				// Normally if this function is called, it is because the flag is present, so it must be true
-				return s -> true;
-			case "String":
-			case "Character":
-			default:
-				return Function.identity();
-		}
+	/**
+	 * Creates a non initialized property
+	 *
+	 * @param raw
+	 * 		raw value of property
+	 * @return a property with the proper type and number
+	 */
+	public LazyProperty<?> getProperty(String raw) {
+		return array ? new ListProperty<>(raw, type.getValueExtractor()) : new ObjectProperty<>(raw, type.getValueExtractor());
 	}
 
 	private DataMerger getMerger() {
@@ -109,19 +76,11 @@ public class DataFormatLine extends ComplexHeaderLine {
 		return number;
 	}
 
-	public String getType() {
+	public VcfType getType() {
 		return type;
 	}
 
-	public <T> T parse(String val) {
-		return val.equals(VariantSet.EMPTY_VALUE) ? null : (T) parser.apply(val);
-	}
-
-	public String format(Object obj) {
-		return obj == null ? null : formatter.apply(obj);
-	}
-
-	public void mergeInto(Variant target, VariantInfo targetInfo, Variant source, VariantInfo sourceInfo) {
+	public void mergeInto(Variant target, Info targetInfo, Variant source, Info sourceInfo) {
 		merger.accept(target, targetInfo, source, sourceInfo, this);
 
 	}

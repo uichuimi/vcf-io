@@ -1,6 +1,7 @@
 package org.uichuimi.vcf.lazy;
 
 import org.uichuimi.vcf.header.VcfHeader;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,12 +14,15 @@ import java.util.function.BiConsumer;
  * List of properties of a variant stored as a dictionary (key=value). This class is equivalent to
  * <em>INFO</em> field of a VCF line, or to each of the FORMAT fields as well.
  */
-public class VariantInfo {
+public class Info {
 
-	private static final String INFO_SEPARATOR = ";";
-	private static final String KEY_VALUE_SEPARATOR = "=";
-	private static Map<String, Integer> keys = new TreeMap<>();
-	private static final AtomicInteger nextIndex = new AtomicInteger();
+	private static final AtomicInteger NEXT_INDEX = new AtomicInteger();
+	/**
+	 * As variants usually share most of the INFO keys, instead of storing a map per variant, the
+	 * keys are stored in a global map pointing to a values list. Thus every variant has a values
+	 * list, but all share the keys.
+	 */
+	private static final Map<String, Integer> keys = new TreeMap<>();
 
 	private final List<LazyProperty<?>> values = new ArrayList<>();
 	private final VcfHeader header;
@@ -31,7 +35,7 @@ public class VariantInfo {
 	 * @param raw
 	 * 		a string containing the INFO field of a Vcf line
 	 */
-	public VariantInfo(VcfHeader header, String raw) {
+	public Info(VcfHeader header, String raw) {
 		this.header = header;
 		this.raw = raw;
 	}
@@ -46,7 +50,7 @@ public class VariantInfo {
 	 * @return the property associated to key, or null if not present
 	 */
 	public <T> T get(String key) {
-		extratValues();
+		extractValues();
 		final Integer index = keys.get(key);
 		if (index == null) return null;
 		if (values.size() <= index) return null;
@@ -56,6 +60,7 @@ public class VariantInfo {
 
 	/**
 	 * Stores a new property in this INFO field. If key already exists, value will be overwritten.
+	 * If value is null, then the property is removed.
 	 *
 	 * @param key
 	 * 		key of the property to store
@@ -65,13 +70,14 @@ public class VariantInfo {
 	 * 		type of the property
 	 */
 	public synchronized <T> void set(String key, T value) {
-		set(key, new ObjectProperty<>(value));
+		set(key, value == null ? null : new ObjectProperty<T>(value));
 	}
 
 	private void parseRaw() {
-		final String[] data = raw.split(INFO_SEPARATOR);
+		if (raw.equals(VcfConstants.EMPTY_VALUE)) return;
+		final String[] data = raw.split(VcfConstants.INFO_DELIMITER);
 		for (String datum : data) {
-			final String[] element = datum.split(KEY_VALUE_SEPARATOR);
+			final String[] element = datum.split(VcfConstants.KEY_VALUE_DELIMITER);
 			if (element.length > 1) setLazy(element[0], element[1]);
 			else set(element[0], true);
 		}
@@ -88,7 +94,7 @@ public class VariantInfo {
 	}
 
 	public void forEach(BiConsumer<String, Object> consumer) {
-		extratValues();
+		extractValues();
 		keys.forEach((key, index) -> {
 			if (values.size() > index) {
 				final LazyProperty<?> property = values.get(index);
@@ -97,7 +103,7 @@ public class VariantInfo {
 		});
 	}
 
-	private void extratValues() {
+	private void extractValues() {
 		if (raw != null) {
 			parseRaw();
 			raw = null;
@@ -105,8 +111,8 @@ public class VariantInfo {
 	}
 
 	private void setLazy(String key, String value) {
-		final InfoFunction function = header.getFunction(key);
-		set(key, function.getProperty(value));
+		final LazyProperty<?> property = header.getInfoHeader(key).getProperty(value);
+		set(key, property);
 
 	}
 
@@ -121,7 +127,7 @@ public class VariantInfo {
 	}
 
 	private int updateKeys(String key) {
-		return keys.computeIfAbsent(key, k -> nextIndex.getAndIncrement());
+		return keys.computeIfAbsent(key, k -> NEXT_INDEX.getAndIncrement());
 	}
 
 

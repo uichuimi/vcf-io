@@ -24,14 +24,14 @@
 
 package org.uichuimi.vcf.header;
 
-import org.uichuimi.vcf.lazy.InfoFunction;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Stores headers of Variant Call Format Version 4.2.
+ * Stores headers of Variant Call Format Version 4.3
  *
  * @author Lorente Arencibia, Pascual (pasculorente@gmail.com)
  */
@@ -39,14 +39,12 @@ public class VcfHeader {
 
 	private final static List<String> REQUIRED_COLUMNS =
 			Arrays.asList("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO");
-	private static final InfoFunction DEFAULT_FUNCTION = new InfoFunction("String", "1");
 
 	private final List<String> samples = new ArrayList<>();
 	private final List<HeaderLine> headerLines = new LinkedList<>();
 	private Map<String, List<String>> cache = new LinkedHashMap<>();
 	private Map<String, FormatHeaderLine> formatLines;
 	private Map<String, InfoHeaderLine> infoLines;
-	private Map<String, InfoFunction> functionIndex;
 
 	/**
 	 * An empty VcfHeader. Remember that fileformat must be the first HeaderLine.
@@ -96,10 +94,6 @@ public class VcfHeader {
 		return list;
 	}
 
-	public int indexOf(String sample) {
-		return samples.indexOf(sample);
-	}
-
 	public List<SimpleHeaderLine> getSimpleHeaders() {
 		return headerLines.stream()
 				.filter(hLine -> hLine.getClass() == SimpleHeaderLine.class)
@@ -112,10 +106,7 @@ public class VcfHeader {
 	}
 
 	public boolean hasSimpleHeader(String key) {
-		return headerLines.stream()
-				.filter(hLine -> hLine.getClass() == SimpleHeaderLine.class)
-				.map(headerLine -> (SimpleHeaderLine) headerLine)
-				.anyMatch(headerLine -> headerLine.getKey().equals(key));
+		return getSimpleHeader(key) != null;
 	}
 
 	/**
@@ -196,45 +187,6 @@ public class VcfHeader {
 		} else headerLines.add(headerLine);
 	}
 
-	public static VcfHeader merge(Collection<VcfHeader> headers) {
-		final VcfHeader header = new VcfHeader();
-		// Samples
-		headers.stream().map(VcfHeader::getSamples)
-				.flatMap(Collection::stream)
-				.distinct()
-				.forEach(header.getSamples()::add);
-		// header lines
-		headers.forEach(h -> h.getHeaderLines().forEach(sourceHeader -> {
-			if (sourceHeader instanceof SimpleHeaderLine) {
-				addSimpleHeader(header, (SimpleHeaderLine) sourceHeader);
-			}
-			if (sourceHeader instanceof ComplexHeaderLine) {
-				addComplexHeader(header, (ComplexHeaderLine) sourceHeader);
-			}
-		}));
-
-		return header;
-	}
-
-	private static void addSimpleHeader(VcfHeader header, SimpleHeaderLine sourceHeader) {
-		if (headerContains(header, sourceHeader)) return;
-		header.getHeaderLines().add(sourceHeader);
-	}
-
-	private static boolean headerContains(VcfHeader header, SimpleHeaderLine sourceHeader) {
-		for (SimpleHeaderLine headerLine : header.getSimpleHeaders())
-			if (headerLine.getKey().equals(sourceHeader.getKey())
-					&& headerLine.getValue().equals(sourceHeader.getValue()))
-				return true;
-		return false;
-	}
-
-	private static void addComplexHeader(VcfHeader header, ComplexHeaderLine sourceHeader) {
-		if (header.hasComplexHeader(sourceHeader.getKey(), sourceHeader.getValue("ID"))) return;
-		header.getHeaderLines().add(sourceHeader);
-
-	}
-
 	public Collection<FormatHeaderLine> getFormatLines() {
 		if (formatLines == null) {
 			formatLines = headerLines.stream()
@@ -263,24 +215,13 @@ public class VcfHeader {
 	}
 
 	private String getColumnsLine() {
-		final StringJoiner joiner = new StringJoiner("\t");
+		final StringJoiner joiner = new StringJoiner(VcfConstants.DELIMITER);
 		REQUIRED_COLUMNS.forEach(joiner::add);
 		if (!samples.isEmpty()) {
 			joiner.add("FORMAT");
 			samples.forEach(joiner::add);
 		}
 		return "#" + joiner.toString();
-	}
-
-	public InfoFunction getFunction(String key) {
-		if (functionIndex == null) createFunctionIndex();
-		return functionIndex.getOrDefault(key, DEFAULT_FUNCTION);
-	}
-
-	private void createFunctionIndex() {
-		functionIndex = new HashMap<>();
-		for (InfoHeaderLine line : getInfoLines())
-			functionIndex.put(line.getId(), new InfoFunction(line.getType(), line.getNumber()));
 	}
 
 	public InfoHeaderLine getInfoHeader(String key) {

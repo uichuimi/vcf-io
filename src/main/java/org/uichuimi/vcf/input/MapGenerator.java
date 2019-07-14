@@ -22,36 +22,26 @@
  *
  */
 
-package org.uichuimi.vcf.io;
+package org.uichuimi.vcf.input;
 
 import java.util.LinkedHashMap;
 
 /**
- * Returns a LinkedHashMap with the content of the line parsed. So
- * "ID=AC,Number=A,Type=Integer" becomes a map. This class is convenient to
- * parse almost any VCF header lines.
- *
- * @author UICHUIMI
+ * Returns a LinkedHashMap with the content of the line parsed. So "ID=AC,Number=A,Type=Integer"
+ * becomes a map. This class is convenient to parse almost any VCF header lines.
  */
-public class MapGenerator {
+class MapGenerator {
 
 	private final static char QUOTE = '"';
 	private final static char COMMA = ',';
 	private final static char EQUALS = '=';
 
-//    private static int cursor;
-//    private static String key;
-//    private static String value;
-//    private static LinkedHashMap<String, String> map;
-//    private static String line;
-//    private static boolean isKey;
-
 	/**
-	 * @param line line to map, without ##INFO neither ##FORMAT neither &lt;
-	 *             neither &gt;
+	 * @param line
+	 * 		line to map, without ##INFO neither ##FORMAT neither &lt; neither &gt;
 	 * @return a map with the content of the line
 	 */
-	public synchronized static LinkedHashMap<String, String> parse(String line) {
+	synchronized static LinkedHashMap<String, String> parse(String line) {
 		return privateParse(line);
 	}
 
@@ -79,31 +69,6 @@ public class MapGenerator {
 		return status.map;
 	}
 
-	//    private static LinkedHashMap<String, String> start() {
-//        while (cursor < line.length()) nextCharacter();
-//        return map;
-//    }
-//
-//    private static void nextCharacter() {
-//        switch (line.charAt(cursor)) {
-//            case QUOTE:
-//                putQuotedValue();
-//                break;
-//            case EQUALS:
-//                // Equals symbol: cursor at next position and expected a value
-//                cursor++;
-//                isKey = false;
-//                break;
-//            case COMMA:
-//                // Comma symbol, cursor at next position and expected a key
-//                cursor++;
-//                isKey = true;
-//                break;
-//            default:
-//                putUnquotedValue();
-//        }
-//    }
-//
 	private static void putUnquotedValue(Status status) {
 		int end = endOfToken(status);
 		if (status.isKey)
@@ -146,7 +111,7 @@ public class MapGenerator {
 		String line;
 		int cursor = 0;
 
-		public Status(String line) {
+		Status(String line) {
 			this.line = line;
 		}
 	}

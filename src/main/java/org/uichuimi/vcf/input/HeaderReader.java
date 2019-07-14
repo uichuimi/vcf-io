@@ -22,23 +22,25 @@
  *
  */
 
-package org.uichuimi.vcf.io;
+package org.uichuimi.vcf.input;
 
 import org.uichuimi.vcf.header.*;
+import org.uichuimi.vcf.utils.FileUtils;
 import org.uichuimi.vcf.variant.VariantException;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Creates a VariantSet by reading a text file (usually a .vcf). Created by uichuimi on 25/05/16.
+ * Deals with the header of VCF files. This class methods should be invoked first when reading any
+ * VCF file.
  */
-public class VariantSetFactory {
+public class HeaderReader {
 
 	private static final Pattern HEADER_LINE = Pattern.compile("##([^=]+)=(.+)");
 	private static final Pattern COMPLEX_HEADER = Pattern.compile("<(.*)>");
@@ -64,7 +66,6 @@ public class VariantSetFactory {
 		try {
 			final ComplexHeaderLine complexHeaderLine = getComplexHeaderLine(key, map);
 			header.getHeaderLines().add(complexHeaderLine);
-//            header.addComplexHeader(type, map);
 		} catch (VariantException e) {
 			e.printStackTrace();
 		}
@@ -84,56 +85,54 @@ public class VariantSetFactory {
 	private static void addFormatLine(VcfHeader header, String line) {
 		final Matcher matcher = FIELDS_LINE.matcher(line);
 		if (matcher.matches()) {
-			final String[] split = line.split("\t");
+			final String[] split = line.split(VcfConstants.DELIMITER);
 			int numberOfSamples = split.length - 9;
 			if (numberOfSamples > 0)
 				for (int i = 0; i < numberOfSamples; i++)
 					header.getSamples().add(split[i + 9]);
-//            if (numberOfSamples > 0) samples.addAll(Arrays.asList(split).subList(9, numberOfSamples));
 		}
 	}
 
 	/**
-	 * Opeand
+	 * Reads the header of a VCF file.
+	 *
 	 * @param file
-	 * @return
+	 * 		file to be read
+	 * @return the header of the file
+	 * @throws IOException
+	 * 		any exception caused when reading the file, including {@link java.io.FileNotFoundException}
 	 */
-	public static VcfHeader readHeader(File file) {
+	public static VcfHeader readHeader(File file) throws IOException {
 		final VcfHeader header = new VcfHeader();
-		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+		try (BufferedReader reader = FileUtils.getBufferedReader(file)) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				if (line.startsWith("#")) addHeader(header, line);
 				else break;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return header;
 	}
 
 	/**
-	 * Returns the header in the reader, and leaves the reader at the exact point of the first
-	 * variant.
+	 * Reads a header in the reader, and leaves the reader at the exact point of the first variant.
 	 *
 	 * @param reader
-	 * @return
+	 * 		an open reader
+	 * @return the header present in reader
+	 * @throws IOException
+	 * 		any exception caused when reading the reader
 	 */
-	public static VcfHeader readHeader(BufferedReader reader) {
+	public static VcfHeader readHeader(BufferedReader reader) throws IOException {
 		final VcfHeader header = new VcfHeader();
-		try {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				if (line.startsWith("##")) addHeader(header, line);
-				else if (line.startsWith("#CHROM")) {
-					addHeader(header, line);
-					break;
-				}
+		String line;
+		while ((line = reader.readLine()) != null) {
+			if (line.startsWith("##")) addHeader(header, line);
+			else if (line.startsWith("#CHROM")) {
+				addHeader(header, line);
+				break;
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
-
 		return header;
 	}
 }

@@ -26,7 +26,7 @@ package org.uichuimi.vcf;
 
 import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.lazy.VariantReader;
+import org.uichuimi.vcf.input.VariantReader;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,7 @@ class VcfHeaderTest {
 	void testFromFile() {
 		final File file = new File(getClass().getResource("/files/Sample2.vcf").getPath());
 		try (VariantReader reader = new VariantReader(file)) {
-			final VcfHeader header = reader.header();
+			final VcfHeader header = reader.getHeader();
 //        assertEquals(5, header.getSimpleHeaders().size());
 			assertEquals(18, header.getHeaderLines().size());
 			assertEquals(5, header.getSimpleHeaders().size());

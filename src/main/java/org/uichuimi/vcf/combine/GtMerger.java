@@ -1,9 +1,9 @@
 package org.uichuimi.vcf.combine;
 
 import org.uichuimi.vcf.header.DataFormatLine;
+import org.uichuimi.vcf.lazy.Info;
 import org.uichuimi.vcf.lazy.Variant;
-import org.uichuimi.vcf.lazy.VariantInfo;
-import org.uichuimi.vcf.variant.VariantSet;
+import org.uichuimi.vcf.variant.VcfConstants;
 
 /**
  * Merges the unique format GT.
@@ -21,13 +21,13 @@ public class GtMerger implements DataMerger {
 	}
 
 	@Override
-	public void accept(Variant target, VariantInfo targetInfo, Variant source, VariantInfo sourceInfo, DataFormatLine formatLine) {
+	public void accept(Variant target, Info targetInfo, Variant source, Info sourceInfo, DataFormatLine formatLine) {
 		// key is expected to be GT
 		final String key = formatLine.getId();
 		final String gt = sourceInfo.get(key);
 		if (gt == null) return;
 		// if any of the alleles is ., dont merge
-		if (gt.contains(VariantSet.EMPTY_VALUE)) return;
+		if (gt.contains(VcfConstants.EMPTY_VALUE)) return;
 		String sep;
 		String[] gts;
 		if (gt.contains("/")) {
