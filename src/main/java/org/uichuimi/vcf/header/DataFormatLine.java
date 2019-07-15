@@ -1,8 +1,7 @@
 package org.uichuimi.vcf.header;
 
 import org.uichuimi.vcf.combine.*;
-import org.uichuimi.vcf.lazy.*;
-import org.uichuimi.vcf.variant.VcfType;
+import org.uichuimi.vcf.variant.*;
 
 import java.util.Map;
 
@@ -23,7 +22,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 		final String type = map.get("Type");
 		if (id == null || number == null || description == null || type == null)
 			throw new IllegalArgumentException("Missing keys");
-		this.type = VcfType.valueOf(type);
+		this.type = VcfType.getInstance(type);
 		this.array = !number.equals("0") && !number.equals("1");
 		this.merger = getMerger();
 	}
@@ -83,6 +82,5 @@ public class DataFormatLine extends ComplexHeaderLine {
 
 	public void mergeInto(Variant target, Info targetInfo, Variant source, Info sourceInfo) {
 		merger.accept(target, targetInfo, source, sourceInfo, this);
-
 	}
 }

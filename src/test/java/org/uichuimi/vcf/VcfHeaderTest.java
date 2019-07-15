@@ -26,7 +26,7 @@ package org.uichuimi.vcf;
 
 import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.input.VariantReader;
+import org.uichuimi.vcf.io.VariantReader;
 
 import java.io.File;
 import java.io.IOException;

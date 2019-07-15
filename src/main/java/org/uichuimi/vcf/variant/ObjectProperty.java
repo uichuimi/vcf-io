@@ -1,4 +1,4 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.variant;
 
 import java.util.function.Function;
 
@@ -18,7 +18,7 @@ public class ObjectProperty<T> extends LazyProperty<T> {
 	 * @param value
 	 * 		a non null value
 	 */
-	ObjectProperty(T value) {
+	public ObjectProperty(T value) {
 		super(value);
 	}
 

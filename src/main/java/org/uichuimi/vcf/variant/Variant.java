@@ -1,9 +1,7 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.variant;
 
 import org.jetbrains.annotations.NotNull;
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.variant.Coordinate;
-import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +30,9 @@ public class Variant {
 	 * Creates a variant
 	 *
 	 * @param header
+	 * 		the header of the VCF file this variant belongs to
 	 * @param line
+	 * 		the raw line read from the file
 	 */
 	public Variant(VcfHeader header, String line) {
 		this.header = header;

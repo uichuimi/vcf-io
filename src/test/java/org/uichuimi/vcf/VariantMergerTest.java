@@ -24,6 +24,7 @@
 
 package org.uichuimi.vcf;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.combine.VariantMerger;
@@ -31,9 +32,16 @@ import org.uichuimi.vcf.header.ComplexHeaderLine;
 import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.InfoHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.lazy.Variant;
+import org.uichuimi.vcf.io.HeaderReader;
+import org.uichuimi.vcf.io.MultipleVariantReader;
+import org.uichuimi.vcf.variant.Variant;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -49,19 +57,19 @@ class VariantMergerTest {
 
 		header1 = new VcfHeader("VCFv4.2");
 		header1.getSamples().add("S1");
-		header1.getHeaderLines().add(gtLine);
-		header1.getHeaderLines().add(dpLine);
+		header1.addHeaderLine(gtLine);
+		header1.addHeaderLine(dpLine);
 
 		header2 = new VcfHeader("VCFv4.2");
 		header2.getSamples().add("S2");
-		header2.getHeaderLines().add(gtLine);
-		header2.getHeaderLines().add(dpLine);
+		header2.addHeaderLine(gtLine);
+		header2.addHeaderLine(dpLine);
 
 		targetHeader = new VcfHeader("VCFv4.2");
 		targetHeader.getSamples().add("S1");
 		targetHeader.getSamples().add("S2");
-		targetHeader.getHeaderLines().add(gtLine);
-		targetHeader.getHeaderLines().add(dpLine);
+		targetHeader.addHeaderLine(gtLine);
+		targetHeader.addHeaderLine(dpLine);
 	}
 
 	@Test
@@ -105,7 +113,14 @@ class VariantMergerTest {
 	}
 
 	@Test
-	public void testDP() {
+	public void testOne() {
+		try (MultipleVariantReader reader = new MultipleVariantReader(Collections.singletonList(getClass().getResourceAsStream("/files/MergeTestHeader.vcf")))) {
+			final Variant variant = reader.iterator().next().iterator().next();
+			Assertions.assertEquals(37, variant.<Integer>getInfo("DP"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 //		final Variant v1 = new Variant("1", 1, "A", "C", header1);
 //		v1.getInfo().set("DP", 8);
 //		final Variant v2 = new Variant("1", 1, "A", "C", header2);
@@ -113,6 +128,16 @@ class VariantMergerTest {
 //		final Variant merge = VariantMerger.merge(Arrays.asList(v1, v2), targetHeader);
 //		// TODO: 27/03/19 this test will not work. It is not merger task to recompute stats
 ////		assertEquals(17, (int)merge.getInfo().get("DP"));
+	}
+
+	private VcfHeader readHeader() {
+		final InputStream resource = getClass().getResourceAsStream("/files/MergeTestHeader.vcf");
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource))) {
+			return HeaderReader.readHeader(reader);
+		} catch (IOException e) {
+			Assertions.fail();
+		}
+		return null;
 	}
 
 }

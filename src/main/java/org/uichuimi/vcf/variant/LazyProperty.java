@@ -1,4 +1,4 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.variant;
 
 /**
  * Stores a value as a raw string until the getter is called for the first time. In that moment, the
@@ -42,7 +42,7 @@ public abstract class LazyProperty<T> {
 	 *
 	 * @return the value of the property
 	 */
-	T getValue() {
+	public T getValue() {
 		if (value == null) {
 			value = parse(raw);
 			raw = null;

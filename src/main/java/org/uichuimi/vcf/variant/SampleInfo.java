@@ -1,7 +1,7 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.variant;
 
+import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.variant.VcfConstants;
 
 /**
  * Although the info of a sample has the same structure as the variant info, its creation is
@@ -9,11 +9,13 @@ import org.uichuimi.vcf.variant.VcfConstants;
  */
 public class SampleInfo extends Info {
 
+	private VcfHeader header;
 	private String[] fields;
 	private String raw;
 
 	public SampleInfo(VcfHeader header, String[] fields, String raw) {
 		super(header, null);
+		this.header = header;
 		this.fields = fields;
 		this.raw = raw;
 	}
@@ -35,7 +37,11 @@ public class SampleInfo extends Info {
 
 	private void parseRaw() {
 		final String[] values = raw.split(VcfConstants.FORMAT_DELIMITER);
-		for (int i = 0; i < fields.length; i++) set(fields[i], values[i]);
+		for (int i = 0; i < fields.length; i++) {
+			final FormatHeaderLine header = this.header.getFormatHeader(fields[i]);
+			final String raw = values[i];
+			set(fields[i], header.getProperty(raw));
+		}
 	}
 
 }

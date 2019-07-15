@@ -1,7 +1,8 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.io;
 
 import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.InfoHeaderLine;
+import org.uichuimi.vcf.variant.Variant;
 import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.text.DecimalFormat;
@@ -73,13 +74,24 @@ class VariantFormatter {
 		// DP   [15, 14, 24]
 		// H2   [51,51, ., .]
 		// Collect FORMAT by key, adding only those where at least one sample has a value
-		final List<FormatHeaderLine> formatLines = new ArrayList<>(variant.getHeader().getFormatLines());
+		final List<FormatHeaderLine> formatLines = new ArrayList<>(variant.getHeader().getFormatLines().values());
 		formatLines.sort(Comparator.comparingInt(fl -> FORMAT_ORDER.indexOf(fl.getId())));
 		for (final FormatHeaderLine headerLine : formatLines) {
 			final String[] values = new String[variant.getHeader().getSamples().size()];
-			for (int s = 0; s < variant.getHeader().getSamples().size(); s++) {
-				final String value = toString(variant.getSampleInfo().get(s).get(headerLine.getId()));
-				if (value != null) values[s] = value;
+			if (headerLine.getNumber().equals("1")) {
+				for (int s = 0; s < variant.getHeader().getSamples().size(); s++) {
+					final String value = toString(variant.getSampleInfo().get(s).get(headerLine.getId()));
+					if (value != null) values[s] = value;
+				}
+			} else {
+				for (int s = 0; s < variant.getHeader().getSamples().size(); s++) {
+					final List<?> content = variant.getSampleInfo(s).get(headerLine.getId());
+					final String value = content == null ? null : content.stream()
+							.map(VariantFormatter::toString)
+							.collect(Collectors.joining(","));
+					if (value != null) values[s] = value;
+				}
+
 			}
 			if (Arrays.stream(values).allMatch(Objects::isNull)) continue;
 			keys.add(headerLine.getId());

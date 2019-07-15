@@ -1,12 +1,12 @@
-package org.uichuimi.vcf.input;
+package org.uichuimi.vcf.io;
 
+import org.jetbrains.annotations.NotNull;
 import org.uichuimi.vcf.combine.VariantMerger;
-import org.uichuimi.vcf.header.ComplexHeaderLine;
-import org.uichuimi.vcf.header.SimpleHeaderLine;
-import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.lazy.Variant;
+import org.uichuimi.vcf.header.*;
 import org.uichuimi.vcf.utils.FileUtils;
 import org.uichuimi.vcf.variant.Coordinate;
+import org.uichuimi.vcf.variant.Variant;
+import org.uichuimi.vcf.variant.VariantException;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +44,13 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 	/**
 	 * Secondary constructor. As Java does not allow override constructors with generics, we provide
 	 * the files constructors with a getInstance pattern.
+	 *
+	 * @param files
+	 * 		list of files to be read simultaneously
+	 * @return an instance of {@link MultipleVariantReader} with all files open in {@link
+	 * InputStream}
+	 * @throws IOException
+	 * 		if any of the files is not accessible or readable
 	 */
 	public static MultipleVariantReader getInstance(Collection<File> files) throws IOException {
 		final List<InputStream> is = new ArrayList<>(files.size());
@@ -65,17 +72,21 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 		// header lines
 		readers.stream()
 				.map(VariantReader::getHeader).forEach(vcfHeader ->
-				vcfHeader.getHeaderLines().forEach(sourceHeader -> {
-					if (sourceHeader instanceof SimpleHeaderLine)
-						addSimpleHeader((SimpleHeaderLine) sourceHeader);
-					if (sourceHeader instanceof ComplexHeaderLine)
-						addComplexHeader((ComplexHeaderLine) sourceHeader);
+				vcfHeader.getHeaderLines().forEach(headerLine -> {
+					if (headerLine instanceof FormatHeaderLine)
+						addFormatHeader((FormatHeaderLine) headerLine);
+					else if (headerLine instanceof InfoHeaderLine)
+						addInfoHeader((InfoHeaderLine) headerLine);
+					else if (headerLine instanceof SimpleHeaderLine)
+						addSimpleHeader((SimpleHeaderLine) headerLine);
+					else if (headerLine instanceof ComplexHeaderLine)
+						addComplexHeader((ComplexHeaderLine) headerLine);
 				}));
 	}
 
 	private void addSimpleHeader(SimpleHeaderLine sourceHeader) {
 		if (headerContains(sourceHeader)) return;
-		header.getHeaderLines().add(sourceHeader);
+		header.addHeaderLine(sourceHeader);
 	}
 
 	private boolean headerContains(SimpleHeaderLine sourceHeader) {
@@ -88,8 +99,30 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 
 	private void addComplexHeader(ComplexHeaderLine sourceHeader) {
 		if (headerContains(sourceHeader)) return;
-		header.getHeaderLines().add(sourceHeader);
+		header.addHeaderLine(sourceHeader);
+	}
 
+	private void addFormatHeader(FormatHeaderLine formatLine) {
+		final FormatHeaderLine sourceFormatLine = header.getFormatLines().get(formatLine.getId());
+		assertCompatibles(formatLine, sourceFormatLine);
+		header.addHeaderLine(formatLine);
+	}
+
+	private void assertCompatibles(DataFormatLine formatLine, DataFormatLine sourceFormatLine) {
+		if (sourceFormatLine != null) {
+			if (!sourceFormatLine.getNumber().equals(formatLine.getNumber())) {
+				throw new VariantException(String.format("Number mismatch between %s and %s, cannot merge", sourceFormatLine, formatLine));
+			}
+			if (sourceFormatLine.getType() != formatLine.getType()) {
+				throw new VariantException(String.format("Type mismatch between %s and %s, cannot merge", sourceFormatLine, formatLine));
+			}
+		}
+	}
+
+	private void addInfoHeader(InfoHeaderLine infoHeaderLine) {
+		final InfoHeaderLine sourceFormatLine = header.getInfoLines().get(infoHeaderLine.getId());
+		assertCompatibles(infoHeaderLine, sourceFormatLine);
+		header.addHeaderLine(infoHeaderLine);
 	}
 
 	private boolean headerContains(ComplexHeaderLine sourceHeader) {
@@ -127,6 +160,7 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 	}
 
 	// --------------------------  Iterable  ---------------------------- //
+	@NotNull
 	@Override
 	public Iterator<Collection<Variant>> iterator() {
 		return this;

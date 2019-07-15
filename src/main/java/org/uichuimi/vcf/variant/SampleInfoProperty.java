@@ -1,7 +1,6 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.variant;
 
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,12 +9,12 @@ import java.util.List;
  * Stores the raw representation of the FORMAT columns of a variant, and only creates the
  * VariantInfo objects under request.
  */
-class SampleInfoProperty extends LazyProperty<List<Info>> {
+public class SampleInfoProperty extends LazyProperty<List<Info>> {
 
 	private String[] data;
 	private VcfHeader header;
 
-	SampleInfoProperty(VcfHeader header, String[] data) {
+	public SampleInfoProperty(VcfHeader header, String[] data) {
 		super("");
 		this.header = header;
 		this.data = data;

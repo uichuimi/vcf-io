@@ -27,9 +27,9 @@ package org.uichuimi.vcf.combine;
 import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.InfoHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.lazy.Info;
-import org.uichuimi.vcf.lazy.Variant;
 import org.uichuimi.vcf.variant.Coordinate;
+import org.uichuimi.vcf.variant.Info;
+import org.uichuimi.vcf.variant.Variant;
 
 import java.util.Collection;
 import java.util.List;
@@ -74,7 +74,7 @@ public class VariantMerger {
 
 	private static void mergeInfo(Collection<Variant> variants, Variant variant) {
 		for (Variant other : variants)
-			for (InfoHeaderLine headerLine : variant.getHeader().getInfoLines())
+			for (InfoHeaderLine headerLine : variant.getHeader().getInfoLines().values())
 				headerLine.mergeInto(variant, variant.getInfo(), other, other.getInfo());
 	}
 
@@ -85,7 +85,7 @@ public class VariantMerger {
 				final int vs = variant.getHeader().getSamples().indexOf(sample);
 				final Info sourceInfo = other.getSampleInfo(s);
 				final Info targetInfo = variant.getSampleInfo(vs);
-				for (FormatHeaderLine formatLine : variant.getHeader().getFormatLines())
+				for (FormatHeaderLine formatLine : variant.getHeader().getFormatLines().values())
 					formatLine.mergeInto(variant, targetInfo, other, sourceInfo);
 			}
 		}

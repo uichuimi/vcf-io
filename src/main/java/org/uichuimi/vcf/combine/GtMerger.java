@@ -1,8 +1,8 @@
 package org.uichuimi.vcf.combine;
 
 import org.uichuimi.vcf.header.DataFormatLine;
-import org.uichuimi.vcf.lazy.Info;
-import org.uichuimi.vcf.lazy.Variant;
+import org.uichuimi.vcf.variant.Info;
+import org.uichuimi.vcf.variant.Variant;
 import org.uichuimi.vcf.variant.VcfConstants;
 
 /**

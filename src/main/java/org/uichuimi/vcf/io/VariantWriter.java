@@ -1,7 +1,8 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.io;
 
 import org.uichuimi.vcf.header.VcfHeader;
 import org.uichuimi.vcf.utils.FileUtils;
+import org.uichuimi.vcf.variant.Variant;
 import org.uichuimi.vcf.variant.VariantException;
 
 import java.io.*;

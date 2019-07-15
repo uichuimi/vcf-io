@@ -1,9 +1,9 @@
 package org.uichuimi.vcf.combine;
 
 import org.uichuimi.vcf.header.DataFormatLine;
-import org.uichuimi.vcf.lazy.Info;
-import org.uichuimi.vcf.lazy.Variant;
 import org.uichuimi.vcf.variant.GenotypeIndex;
+import org.uichuimi.vcf.variant.Info;
+import org.uichuimi.vcf.variant.Variant;
 
 import java.util.List;
 
@@ -25,7 +25,10 @@ public class GenotypeMerger implements DataMerger {
 	@Override
 	public void accept(Variant target, Info targetInfo, Variant source, Info sourceInfo, DataFormatLine formatLine) {
 		final List s = sourceInfo.get(formatLine.getId());
-		final List t = targetInfo.get(formatLine.getId());
+		if (s == null) return;  // Nothing to merge
+		List t = getOrCreate(targetInfo, formatLine);
+		while (t.size() < target.getNumberOfGenotypes()) t.add(null);
+
 		for (int i = 0; i < source.getNumberOfGenotypes(); i++) {
 			final Object value = s.get(i);
 			if (value == null) continue;
@@ -41,6 +44,15 @@ public class GenotypeMerger implements DataMerger {
 		}
 	}
 
+
+	private List getOrCreate(Info targetInfo, DataFormatLine formatLine) {
+		List t = targetInfo.get(formatLine.getId());
+		if (t == null) {
+			t = formatLine.getType().newList();
+			targetInfo.set(formatLine.getId(), t);
+		}
+		return t;
+	}
 	private Object merge(Object target, Object source) {
 		if (target == null) return source;
 		if (source == null) return target;

@@ -22,7 +22,7 @@
  *
  */
 
-package org.uichuimi.vcf.input;
+package org.uichuimi.vcf.io;
 
 import org.uichuimi.vcf.header.*;
 import org.uichuimi.vcf.utils.FileUtils;
@@ -58,14 +58,14 @@ public class HeaderReader {
 		final Matcher contentMatcher = COMPLEX_HEADER.matcher(value);
 		if (contentMatcher.matches())
 			addComplexHeader(header, key, contentMatcher.group(1));
-		else header.getHeaderLines().add(new SimpleHeaderLine(key, value));
+		else header.addHeaderLine(new SimpleHeaderLine(key, value));
 	}
 
 	private static void addComplexHeader(VcfHeader header, String key, String group) {
 		final Map<String, String> map = MapGenerator.parse(group);
 		try {
 			final ComplexHeaderLine complexHeaderLine = getComplexHeaderLine(key, map);
-			header.getHeaderLines().add(complexHeaderLine);
+			header.addHeaderLine(complexHeaderLine);
 		} catch (VariantException e) {
 			e.printStackTrace();
 		}

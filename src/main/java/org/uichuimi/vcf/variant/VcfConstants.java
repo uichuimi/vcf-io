@@ -40,7 +40,7 @@ public class VcfConstants {
 	public static final String DELIMITER = "\t";
 	/**
 	 * Delimiter for arrays. Arrays are present in the INFO and sample columns for values with
-	 * Number = A, R, G or > 1.
+	 * Number = A, R, G or a number greater than 1.
 	 */
 	public static final String ARRAY_DELIMITER = ",";
 	/**

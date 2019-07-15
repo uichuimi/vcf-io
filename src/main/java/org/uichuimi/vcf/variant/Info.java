@@ -1,7 +1,6 @@
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.variant;
 
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +58,31 @@ public class Info {
 	}
 
 	/**
+	 * Get the property assigned to key. If property is not available, gets null. This methods adds
+	 * an extra security layer by checking the type and throwing a ClassCastException before
+	 * returning.
+	 *
+	 * @param key
+	 * 		key of the property to get
+	 * @param <T>
+	 * 		type of the property
+	 * @return the property associated to key, or null if not present
+	 * @throws ClassCastException
+	 * 		if property is not of class type
+	 */
+	public <T> T get(String key, Class<T> type) {
+		extractValues();
+		final Integer index = keys.get(key);
+		if (index == null) return null;
+		if (values.size() <= index) return null;
+		final LazyProperty<?> property = values.get(index);
+		if (property == null) return null;
+		if (!type.isInstance(property.getValue()))
+			throw new ClassCastException(String.format("%s cannot be converted to %s for key %s", property.getValue().getClass(), type.getTypeName(), key));
+		return (T) property.getValue();
+	}
+
+	/**
 	 * Stores a new property in this INFO field. If key already exists, value will be overwritten.
 	 * If value is null, then the property is removed.
 	 *
@@ -70,7 +94,7 @@ public class Info {
 	 * 		type of the property
 	 */
 	public synchronized <T> void set(String key, T value) {
-		set(key, value == null ? null : new ObjectProperty<T>(value));
+		set(key, value == null ? null : new ObjectProperty<>(value));
 	}
 
 	private void parseRaw() {
@@ -86,7 +110,8 @@ public class Info {
 	/**
 	 * Returns whether this info contains a property associated to key.
 	 *
-	 * @param key key of the property
+	 * @param key
+	 * 		key of the property
 	 * @return true if property exists, false otherwise
 	 */
 	public boolean contains(String key) {
@@ -116,7 +141,7 @@ public class Info {
 
 	}
 
-	private <T> void set(String key, LazyProperty<T> property) {
+	<T> void set(String key, LazyProperty<T> property) {
 		int index = updateKeys(key);
 		insertProperty(index, property);
 	}

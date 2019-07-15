@@ -26,7 +26,7 @@ package org.uichuimi.vcf;
 
 
 import org.junit.jupiter.api.Test;
-import org.uichuimi.vcf.lazy.Info;
+import org.uichuimi.vcf.variant.Info;
 import org.uichuimi.vcf.variant.VcfConstants;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

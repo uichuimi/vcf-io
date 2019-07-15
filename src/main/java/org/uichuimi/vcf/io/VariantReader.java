@@ -1,9 +1,9 @@
-package org.uichuimi.vcf.input;
+package org.uichuimi.vcf.io;
 
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.lazy.Variant;
 import org.uichuimi.vcf.utils.FileUtils;
 import org.uichuimi.vcf.variant.Coordinate;
+import org.uichuimi.vcf.variant.Variant;
 
 import java.io.*;
 import java.util.Iterator;

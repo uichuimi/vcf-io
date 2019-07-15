@@ -1,6 +1,4 @@
-package org.uichuimi.vcf.lazy;
-
-import org.uichuimi.vcf.variant.VcfConstants;
+package org.uichuimi.vcf.variant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +8,7 @@ public class ListProperty<T> extends LazyProperty<List<T>> {
 
 	private Function<String, T> parser;
 
-	ListProperty(List<T> value) {
+	public ListProperty(List<T> value) {
 		super(value);
 	}
 	/**

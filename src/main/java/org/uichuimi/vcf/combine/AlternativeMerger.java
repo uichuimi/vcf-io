@@ -1,8 +1,8 @@
 package org.uichuimi.vcf.combine;
 
 import org.uichuimi.vcf.header.DataFormatLine;
-import org.uichuimi.vcf.lazy.Info;
-import org.uichuimi.vcf.lazy.Variant;
+import org.uichuimi.vcf.variant.Info;
+import org.uichuimi.vcf.variant.Variant;
 
 import java.util.List;
 
@@ -23,8 +23,9 @@ public class AlternativeMerger implements DataMerger {
 
 	@Override
 	public void accept(Variant target, Info targetInfo, Variant source, Info sourceInfo, DataFormatLine formatLine) {
-		final List s = sourceInfo.get(formatLine.getId());
-		final List t = targetInfo.get(formatLine.getId());
+		final List s = sourceInfo.get(formatLine.getId(), List.class);
+		if (s == null) return;  // Nothing to merge
+		List t = getOrCreate(targetInfo, formatLine);
 
 		final int alternativeAlleles = target.getAlternatives().size();
 		// target should contain all alleles
@@ -37,6 +38,15 @@ public class AlternativeMerger implements DataMerger {
 			final Object value = s.get(a);
 			t.set(index, merge(t.get(index), value));
 		}
+	}
+
+	private List getOrCreate(Info targetInfo, DataFormatLine formatLine) {
+		List t = targetInfo.get(formatLine.getId());
+		if (t == null) {
+			t = formatLine.getType().newList();
+			targetInfo.set(formatLine.getId(), t);
+		}
+		return t;
 	}
 
 	private Object merge(Object target, Object source) {

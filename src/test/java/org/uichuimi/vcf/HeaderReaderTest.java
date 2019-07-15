@@ -28,9 +28,9 @@ import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.header.ComplexHeaderLine;
 import org.uichuimi.vcf.header.SimpleHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.input.HeaderReader;
-import org.uichuimi.vcf.input.VariantReader;
-import org.uichuimi.vcf.lazy.VariantWriter;
+import org.uichuimi.vcf.io.HeaderReader;
+import org.uichuimi.vcf.io.VariantReader;
+import org.uichuimi.vcf.io.VariantWriter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -49,7 +49,7 @@ class HeaderReaderTest {
 	@Test
 	void testLoadFromFile() {
 		try (VariantReader reader = new VariantReader(getFile("/files/Sample2.vcf"))) {
-			Assertions.assertEquals(6, reader.getHeader().getComplexHeaders("INFO").size());
+			Assertions.assertEquals(6, reader.getHeader().getInfoLines().size());
 			assertEquals(5, reader.variants().count());
 		} catch (IOException e) {
 			throw new MissingResourceException("", getClass().getName(), "");
@@ -93,37 +93,37 @@ class HeaderReaderTest {
 	void testComplexHeader() throws IOException {
 		final VcfHeader header = HeaderReader.readHeader(getFile("/files/HeaderTest.vcf"));
 		final VcfHeader expected = new VcfHeader("VCFv4.1");
-		expected.getHeaderLines().add(new SimpleHeaderLine("reference", "human_g1k_v37.fasta"));
+		expected.addHeaderLine(new SimpleHeaderLine("reference", "human_g1k_v37.fasta"));
 		final LinkedHashMap<String, String> filter1 = new LinkedHashMap<>();
 		filter1.put("ID", "LowQual");
 		filter1.put("Description", "Low quality");
-		expected.getHeaderLines().add(new ComplexHeaderLine("FILTER", filter1));
+		expected.addHeaderLine(new ComplexHeaderLine("FILTER", filter1));
 
 		final LinkedHashMap<String, String> infoMap1 = new LinkedHashMap<>();
 		infoMap1.put("ID", "MistZone");
 		infoMap1.put("Number", "0");
 		infoMap1.put("Type", "Flag");
 		infoMap1.put("Description", "If present, indicates that the position is in an MIST Zone");
-		expected.getHeaderLines().add(new ComplexHeaderLine("INFO", infoMap1));
+		expected.addHeaderLine(new ComplexHeaderLine("INFO", infoMap1));
 
 		final LinkedHashMap<String, String> infoMap2 = new LinkedHashMap<>();
 		infoMap2.put("ID", "AF");
 		infoMap2.put("Number", "A");
 		infoMap2.put("Type", "Float");
 		infoMap2.put("Description", "Allele Frequency, for each ALT allele, in the same order as listed");
-		expected.getHeaderLines().add(new ComplexHeaderLine("INFO", infoMap2));
+		expected.addHeaderLine(new ComplexHeaderLine("INFO", infoMap2));
 
 		final LinkedHashMap<String, String> contigMap1 = new LinkedHashMap<>();
 		contigMap1.put("ID", "1");
 		contigMap1.put("length", "249250621");
 		contigMap1.put("assembly", "b37");
-		expected.getHeaderLines().add(new ComplexHeaderLine("contig", contigMap1));
+		expected.addHeaderLine(new ComplexHeaderLine("contig", contigMap1));
 
 		final LinkedHashMap<String, String> contig2 = new LinkedHashMap<>();
 		contig2.put("ID", "2");
 		contig2.put("length", "243199373");
 		contig2.put("assembly", "b37");
-		expected.getHeaderLines().add(new ComplexHeaderLine("contig", contig2));
+		expected.addHeaderLine(new ComplexHeaderLine("contig", contig2));
 
 		// Not the best way, but valid
 		assertEquals(expected.toString(), header.toString());
@@ -143,8 +143,9 @@ class HeaderReaderTest {
 
 	@Test
 	void testSaveFile() {
-		final File saveFile = getFile("/files/saveFile.vcf");
-		try (VariantReader reader = new VariantReader(getFile("/files/Sample1.vcf"));
+		final File savePath = getFile("/files/Sample1.vcf").getParentFile();
+		final File saveFile = new File(savePath, "/saveFile.vcf");
+		try (VariantReader reader = new VariantReader(getClass().getResourceAsStream("/files/Sample1.vcf"));
 		     VariantWriter writer = new VariantWriter(saveFile)) {
 			writer.setHeader(reader.getHeader());
 			reader.variants().forEach(writer::write);

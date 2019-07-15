@@ -27,7 +27,6 @@ package org.uichuimi.vcf.header;
 import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -43,8 +42,10 @@ public class VcfHeader {
 	private final List<String> samples = new ArrayList<>();
 	private final List<HeaderLine> headerLines = new LinkedList<>();
 	private Map<String, List<String>> cache = new LinkedHashMap<>();
-	private Map<String, FormatHeaderLine> formatLines;
-	private Map<String, InfoHeaderLine> infoLines;
+	private final Map<String, FormatHeaderLine> formatLines = new HashMap<>();
+	private final Map<String, InfoHeaderLine> infoLines = new HashMap<>();
+	private final Map<String, Map<String, ComplexHeaderLine>> complexLines = new LinkedHashMap<>();
+	private final Map<String, Integer> index = new LinkedHashMap<>();
 
 	/**
 	 * An empty VcfHeader. Remember that fileformat must be the first HeaderLine.
@@ -53,26 +54,41 @@ public class VcfHeader {
 	}
 
 	/**
-	 * Creates a Vcf file with specified fileformat
+	 * Creates a Vcf file with specified fileformat. fileformat must be the value of the frist line,
+	 * like <em>VCFv4.1</em>.
+	 *
+	 * @param fileformat
+	 * 		VCF version as written in the first line
 	 */
 	public VcfHeader(String fileformat) {
 		headerLines.add(new SimpleHeaderLine("fileformat", fileformat));
 	}
 
 
+	/**
+	 * Get an unmodifiable list of header lines. To modify this list use {@link
+	 * VcfHeader#addHeaderLine(HeaderLine)} or {@link VcfHeader#addHeaderLine(HeaderLine, boolean)}
+	 *
+	 * @return an unmodifiable list of the header lines
+	 */
 	public List<HeaderLine> getHeaderLines() {
-		return headerLines;
+		return Collections.unmodifiableList(headerLines);
+	}
+
+	public Map<String, Map<String, ComplexHeaderLine>> getComplexLines() {
+		return complexLines;
+	}
+
+	public Map<String, FormatHeaderLine> getFormatLines() {
+		return formatLines;
+	}
+
+	public Map<String, InfoHeaderLine> getInfoLines() {
+		return infoLines;
 	}
 
 	public List<String> getSamples() {
 		return samples;
-	}
-
-	public List<ComplexHeaderLine> getComplexHeaders() {
-		return headerLines.stream()
-				.filter(ComplexHeaderLine.class::isInstance)
-				.map(ComplexHeaderLine.class::cast)
-				.collect(Collectors.toList());
 	}
 
 	/**
@@ -84,12 +100,7 @@ public class VcfHeader {
 	 */
 	public List<String> getIdList(String key) {
 		if (cache.containsKey(key)) return cache.get(key);
-		final List<String> list = headerLines.stream()
-				.filter(ComplexHeaderLine.class::isInstance)
-				.map(ComplexHeaderLine.class::cast)
-				.filter(header -> header.getKey().equals(key))
-				.map(header -> header.getValue("ID"))
-				.collect(Collectors.toList());
+		final List<String> list = new ArrayList<>(complexLines.get(key).keySet());
 		cache.put(key, list);
 		return list;
 	}
@@ -125,24 +136,11 @@ public class VcfHeader {
 	}
 
 	public ComplexHeaderLine getComplexHeader(String key, String id) {
-		return headerLines.stream()
-				.filter(header -> header instanceof ComplexHeaderLine)
-				.map(header -> (ComplexHeaderLine) header)
-				.filter(header -> header.getKey().equals(key))
-				.filter(header -> header.getValue("ID").equals(id))
-				.findFirst().orElse(null);
+		return complexLines.getOrDefault(key, Collections.emptyMap()).get(id);
 	}
 
-	public List<ComplexHeaderLine> getComplexHeaders(String key) {
-		return headerLines.stream()
-				.filter(ComplexHeaderLine.class::isInstance)
-				.map(ComplexHeaderLine.class::cast)
-				.filter(header -> header.getKey().equals(key))
-				.collect(Collectors.toList());
-	}
-
-	public void add(HeaderLine headerLine) {
-		add(headerLine, false);
+	public void addHeaderLine(HeaderLine headerLine) {
+		addHeaderLine(headerLine, false);
 	}
 
 	/**
@@ -155,59 +153,33 @@ public class VcfHeader {
 	 * 		when override is true, the old header line is removed and the new one is added; if override
 	 * 		is false, the new line is discarded
 	 */
-	public void add(HeaderLine headerLine, boolean override) {
+	public void addHeaderLine(HeaderLine headerLine, boolean override) {
 		// 1) find similar line
-		for (HeaderLine line : headerLines) if (line.equals(headerLine)) return;
+		if (headerLines.contains(headerLine)) return;
 		if (headerLine instanceof SimpleHeaderLine) {
 			// insert right after last line with the same key or at the end
-			int i = -1;
-			for (int j = 0; j < headerLines.size(); j++)
-				if (headerLines.get(j).getKey().equals(headerLine.getKey())) i = j;
-			if (i > 0) {
-				headerLines.add(i, headerLine);
-			} else headerLines.add(headerLine);
+			headerLines.add(headerLine);
 		} else if (headerLine instanceof ComplexHeaderLine) {
 			// insert right after last line with the same key and id or at the end
 			final ComplexHeaderLine complexHeaderLine = (ComplexHeaderLine) headerLine;
-			final ComplexHeaderLine synonym = getComplexHeader(headerLine.getKey(), complexHeaderLine.getValue("ID"));
+			final String key = complexHeaderLine.getKey();
+			final String id = complexHeaderLine.getValue("ID");
+			final ComplexHeaderLine synonym = getComplexHeader(headerLine.getKey(), id);
 			if (synonym != null) {
 				if (override) headerLines.remove(synonym);
 				else return;
 			}
-			int i = -1;
-			for (int j = 0; j < headerLines.size(); j++) {
-				final HeaderLine line = headerLines.get(j);
-				if (line instanceof ComplexHeaderLine) {
-					if (line.getKey().equals(headerLine.getKey())) i = j;
-				}
+			headerLines.add(headerLine);
+			if (complexHeaderLine instanceof FormatHeaderLine) {
+				final FormatHeaderLine fhl = (FormatHeaderLine) complexHeaderLine;
+				formatLines.put(fhl.getId(), fhl);
+			} else if (complexHeaderLine instanceof InfoHeaderLine) {
+				final InfoHeaderLine ihl = (InfoHeaderLine) complexHeaderLine;
+				infoLines.put(ihl.getId(), ihl);
 			}
-			if (i > 0) {
-				headerLines.add(i + 1, headerLine);
-			} else headerLines.add(headerLine);
+			if (id != null)
+				complexLines.computeIfAbsent(key, k -> new LinkedHashMap<>()).put(id, complexHeaderLine);
 		} else headerLines.add(headerLine);
-	}
-
-	public Collection<FormatHeaderLine> getFormatLines() {
-		if (formatLines == null) {
-			formatLines = headerLines.stream()
-					.filter(FormatHeaderLine.class::isInstance)
-					.map(FormatHeaderLine.class::cast)
-					.collect(Collectors.toMap(FormatHeaderLine::getId, Function.identity()));
-		}
-		return formatLines.values();
-	}
-
-	public Collection<InfoHeaderLine> getInfoLines() {
-		indexInfoLines();
-		return infoLines.values();
-	}
-
-	private void indexInfoLines() {
-		if (infoLines == null)
-			infoLines = headerLines.stream()
-					.filter(InfoHeaderLine.class::isInstance)
-					.map(InfoHeaderLine.class::cast)
-					.collect(Collectors.toMap(InfoHeaderLine::getId, Function.identity()));
 	}
 
 	@Override
@@ -229,7 +201,11 @@ public class VcfHeader {
 	}
 
 	public InfoHeaderLine getInfoHeader(String key) {
-		indexInfoLines();
-		return infoLines.computeIfAbsent(key, k -> new InfoHeaderLine(k, "1", "String", ""));
+		return infoLines.computeIfAbsent(key, k -> new InfoHeaderLine(k, "1", "String", k));
 	}
+
+	public FormatHeaderLine getFormatHeader(String key) {
+		return formatLines.computeIfAbsent(key, k -> new FormatHeaderLine(k, "1", "String", k));
+	}
+
 }

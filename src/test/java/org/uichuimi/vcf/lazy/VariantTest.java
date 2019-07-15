@@ -27,7 +27,8 @@ package org.uichuimi.vcf.lazy;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.header.VcfHeader;
-import org.uichuimi.vcf.input.VariantReader;
+import org.uichuimi.vcf.io.VariantReader;
+import org.uichuimi.vcf.variant.Variant;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -199,10 +200,12 @@ public class VariantTest {
 	public void testFormat() {
 		final Map<String, Object[]> values = new HashMap<>();
 		values.put("GT", new String[]{"0/1", "1/1", "0/1", "0/1", "0/1", "1/1", "1/1", "1/1", "1/1", "1/1", "1/1", "1/1", "1/1", "0/1", "0/1"});
-		values.put("AD", new String[]{"18,8", "0,59", "3,5", "7,3", "6,3", "0,2", "0,3", "0,6", "0,38", "0,15", "0,2", "0,2", "0,3", "34,25", "1,3"});
-		values.put("DP", new String[]{"26", "59", "8", "10", "9", "2", "3", "6", "38", "15", "2", "2", "3", "59", "4"});
-		values.put("GQ", new String[]{"99", "99", "89", "96", "98", "6", "9", "18", "99", "45", "6", "6", "9", "99", "25"});
-		values.put("PL", new String[]{"153,0,428", "1621,176,0", "147,0,89", "96,0,334", "98,0,308", "68,6,0", "113,9,0", "219,18,0", "1257,114,0", "469,45,0", "90,6,0", "90,6,0", "86,9,0", "696,0,1021", "104,0,25"});
+		final Integer[][] ad = {{18, 8}, {0, 59}, {3, 5}, {7, 3}, {6, 3}, {0, 2}, {0, 3}, {0, 6}, {0, 38}, {0, 15}, {0, 2}, {0, 2}, {0, 3}, {34, 25}, {1, 3}};
+		values.put("AD", Stream.of(ad).map(Arrays::asList).toArray());
+		values.put("DP", new Integer[]{26, 59, 8, 10, 9, 2, 3, 6, 38, 15, 2, 2, 3, 59, 4});
+		values.put("GQ", new Integer[]{99, 99, 89, 96, 98, 6, 9, 18, 99, 45, 6, 6, 9, 99, 25});
+		final Integer[][] pl = {{153, 0, 428}, {1621, 176, 0}, {147, 0, 89}, {96, 0, 334}, {98, 0, 308}, {68, 6, 0}, {113, 9, 0}, {219, 18, 0}, {1257, 114, 0}, {469, 45, 0}, {90, 6, 0}, {90, 6, 0}, {86, 9, 0}, {696, 0, 1021}, {104, 0, 25}};
+		values.put("PL", Stream.of(pl).map(Arrays::asList).toArray());
 		for (Map.Entry<String, Object[]> entry : values.entrySet()) {
 			int i = 0;
 			for (Variant variant : variants) {
