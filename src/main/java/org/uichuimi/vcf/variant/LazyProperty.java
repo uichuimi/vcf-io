@@ -18,8 +18,11 @@ public abstract class LazyProperty<T> {
 	 *
 	 * @param raw
 	 * 		raw value of the property
+	 * @throws NullPointerException if raw is null
 	 */
 	LazyProperty(String raw) {
+//		if (raw == null)
+//			throw new NullPointerException("value cannot be null");
 		this.raw = raw;
 	}
 
@@ -32,8 +35,8 @@ public abstract class LazyProperty<T> {
 	 * 		if value is null
 	 */
 	LazyProperty(T value) {
-		if (value == null)
-			throw new NullPointerException("value cannot be null");
+//		if (value == null)
+//			throw new NullPointerException("value cannot be null");
 		this.value = value;
 	}
 
@@ -43,7 +46,7 @@ public abstract class LazyProperty<T> {
 	 * @return the value of the property
 	 */
 	public T getValue() {
-		if (value == null) {
+		if (value == null && raw != null) {
 			value = parse(raw);
 			raw = null;
 		}
