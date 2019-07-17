@@ -110,13 +110,17 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 
 	private void assertCompatibles(DataFormatLine formatLine, DataFormatLine sourceFormatLine) {
 		if (sourceFormatLine != null) {
-			if (!sourceFormatLine.getNumber().equals(formatLine.getNumber())) {
+			if (!compatible(sourceFormatLine.getNumber(), formatLine.getNumber())) {
 				throw new VariantException(String.format("Number mismatch between %s and %s, cannot merge", sourceFormatLine, formatLine));
 			}
 			if (sourceFormatLine.getType() != formatLine.getType()) {
 				throw new VariantException(String.format("Type mismatch between %s and %s, cannot merge", sourceFormatLine, formatLine));
 			}
 		}
+	}
+
+	private boolean compatible(String n1, String n2) {
+		return n1.equals(n2) || n1.equals(".") || n2.equals(".");
 	}
 
 	private void addInfoHeader(InfoHeaderLine infoHeaderLine) {
@@ -126,7 +130,7 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 	}
 
 	private boolean headerContains(ComplexHeaderLine sourceHeader) {
-		return header.hasComplexHeader(sourceHeader.getKey(), sourceHeader.getValue("ID"));
+		return header.hasComplexHeader(sourceHeader.getKey(), sourceHeader.getId());
 	}
 
 	// -----------------------  Autocloseable  -------------------------- //
@@ -167,7 +171,7 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 	}
 
 	public Iterator<Variant> mergedIterator() {
-		return new Iterator<Variant>() {
+		return new Iterator<>() {
 			@Override
 			public boolean hasNext() {
 				return MultipleVariantReader.this.hasNext();
