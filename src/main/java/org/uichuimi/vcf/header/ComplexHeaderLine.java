@@ -24,28 +24,23 @@
 
 package org.uichuimi.vcf.header;
 
-import org.uichuimi.vcf.variant.VariantException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.StringJoiner;
 
-import java.util.*;
-
+/**
+ * An structured meta information line.
+ */
 public class ComplexHeaderLine implements HeaderLine<Map<String, String>> {
 
-	private static final Map<String, List<String>> REQUIRED_KEYS = new TreeMap<>();
-
-	static {
-		REQUIRED_KEYS.put("INFO", Arrays.asList("ID", "Number", "Type", "Description"));
-		REQUIRED_KEYS.put("FORMAT", Arrays.asList("ID", "Number", "Type", "Description"));
-		REQUIRED_KEYS.put("FILTER", Arrays.asList("ID", "Description"));
-		REQUIRED_KEYS.put("ALT", Arrays.asList("ID", "Description"));
-		REQUIRED_KEYS.put("contig", Collections.singletonList("ID"));
-		REQUIRED_KEYS.put("SAMPLE", Collections.singletonList("ID"));
-	}
-
 	private final String key;
+	private final String id;
 	private final LinkedHashMap<String, String> map = new LinkedHashMap<>();
 
 	public ComplexHeaderLine(String key, Map<String, String> map) {
 		this.key = key;
+		this.id = map.get("ID");
 		this.map.putAll(map);
 	}
 
@@ -58,19 +53,12 @@ public class ComplexHeaderLine implements HeaderLine<Map<String, String>> {
 		return key;
 	}
 
+	public String getId() {
+		return id;
+	}
+
 	public String getValue(String key) {
 		return map.get(key);
-	}
-
-	public void setValue(String key, String value) {
-		map.put(key, value);
-	}
-
-	private void checkRequiredKeys(String type, Map<String, String> map) throws VariantException {
-		if (REQUIRED_KEYS.containsKey(type))
-			for (String key : REQUIRED_KEYS.get(type))
-				if (!map.containsKey(key))
-					throw new VariantException("INFO headers must contain '" + key + "' key");
 	}
 
 	@Override

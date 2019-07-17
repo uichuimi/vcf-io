@@ -41,11 +41,10 @@ public class VcfHeader {
 
 	private final List<String> samples = new ArrayList<>();
 	private final List<HeaderLine> headerLines = new LinkedList<>();
-	private Map<String, List<String>> cache = new LinkedHashMap<>();
+	private final Map<String, List<String>> cache = new LinkedHashMap<>();
 	private final Map<String, FormatHeaderLine> formatLines = new HashMap<>();
 	private final Map<String, InfoHeaderLine> infoLines = new HashMap<>();
 	private final Map<String, Map<String, ComplexHeaderLine>> complexLines = new LinkedHashMap<>();
-	private final Map<String, Integer> index = new LinkedHashMap<>();
 
 	/**
 	 * An empty VcfHeader. Remember that fileformat must be the first HeaderLine.
@@ -54,7 +53,7 @@ public class VcfHeader {
 	}
 
 	/**
-	 * Creates a Vcf file with specified fileformat. fileformat must be the value of the frist line,
+	 * Creates a Vcf file with specified fileformat. fileformat must be the value of the first line,
 	 * like <em>VCFv4.1</em>.
 	 *
 	 * @param fileformat
@@ -63,7 +62,6 @@ public class VcfHeader {
 	public VcfHeader(String fileformat) {
 		headerLines.add(new SimpleHeaderLine("fileformat", fileformat));
 	}
-
 
 	/**
 	 * Get an unmodifiable list of header lines. To modify this list use {@link
@@ -116,10 +114,6 @@ public class VcfHeader {
 		return getComplexHeader(type, id) != null;
 	}
 
-	public boolean hasSimpleHeader(String key) {
-		return getSimpleHeader(key) != null;
-	}
-
 	/**
 	 * Gets the first SimpleHeaderLine that has key
 	 *
@@ -163,7 +157,7 @@ public class VcfHeader {
 			// insert right after last line with the same key and id or at the end
 			final ComplexHeaderLine complexHeaderLine = (ComplexHeaderLine) headerLine;
 			final String key = complexHeaderLine.getKey();
-			final String id = complexHeaderLine.getValue("ID");
+			final String id = complexHeaderLine.getId();
 			final ComplexHeaderLine synonym = getComplexHeader(headerLine.getKey(), id);
 			if (synonym != null) {
 				if (override) headerLines.remove(synonym);
