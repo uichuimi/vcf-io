@@ -103,16 +103,16 @@ public class Variant {
 		return quality.getValue();
 	}
 
+	public void setQuality(Double quality) {
+		this.quality = new DoubleProperty(quality);
+	}
+
 	public Info getInfo() {
 		return info;
 	}
 
 	public List<Info> getSampleInfo() {
 		return sampleInfo.getValue();
-	}
-
-	public void setQuality(double quality) {
-		this.quality = new DoubleProperty(quality);
 	}
 
 	/**

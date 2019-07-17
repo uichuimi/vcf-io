@@ -22,13 +22,12 @@
  *
  */
 
-package org.uichuimi.vcf.lazy;
+package org.uichuimi.vcf.variant;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.header.VcfHeader;
 import org.uichuimi.vcf.io.VariantReader;
-import org.uichuimi.vcf.variant.Variant;
 
 import java.io.IOException;
 import java.io.InputStream;

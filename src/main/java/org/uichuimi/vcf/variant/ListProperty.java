@@ -4,17 +4,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * Contains a list of values separated by commas (,). The value is a list of elements which are
+ * parsed by a parse function.
+ *
+ * @param <T> type of list content
+ */
 public class ListProperty<T> extends LazyProperty<List<T>> {
 
 	private Function<String, T> parser;
 
-	public ListProperty(List<T> value) {
+		public ListProperty(List<T> value) {
 		super(value);
 	}
+
 	/**
-	 *
-	 * @param raw the raw string
-	 * @param parser a parser that will be applied to each element
+	 * @param raw
+	 * 		the raw string
+	 * @param parser
+	 * 		a parser that will be applied to each element
 	 */
 	public ListProperty(String raw, Function<String, T> parser) {
 		super(raw);
