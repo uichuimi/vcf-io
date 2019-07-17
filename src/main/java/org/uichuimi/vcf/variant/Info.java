@@ -141,7 +141,7 @@ public class Info {
 
 	}
 
-	private <T> void set(String key, LazyProperty<T> property) {
+	protected  <T> void set(String key, LazyProperty<T> property) {
 		int index = updateKeys(key);
 		insertProperty(index, property);
 	}
