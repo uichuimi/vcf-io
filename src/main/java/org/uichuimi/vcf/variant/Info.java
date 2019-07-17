@@ -97,16 +97,6 @@ public class Info {
 		set(key, value == null ? null : new ObjectProperty<>(value));
 	}
 
-	private void parseRaw() {
-		if (raw.equals(VcfConstants.EMPTY_VALUE)) return;
-		final String[] data = raw.split(VcfConstants.INFO_DELIMITER);
-		for (String datum : data) {
-			final String[] element = datum.split(VcfConstants.KEY_VALUE_DELIMITER);
-			if (element.length > 1) setLazy(element[0], element[1]);
-			else set(element[0], true);
-		}
-	}
-
 	/**
 	 * Returns whether this info contains a property associated to key.
 	 *
@@ -128,6 +118,16 @@ public class Info {
 		});
 	}
 
+	private void parseRaw() {
+		if (raw.equals(VcfConstants.EMPTY_VALUE)) return;
+		final String[] data = raw.split(VcfConstants.INFO_DELIMITER);
+		for (String datum : data) {
+			final String[] element = datum.split(VcfConstants.KEY_VALUE_DELIMITER);
+			if (element.length > 1) setLazy(element[0], element[1]);
+			else set(element[0], true);
+		}
+	}
+
 	private void extractValues() {
 		if (raw != null) {
 			parseRaw();
@@ -141,7 +141,7 @@ public class Info {
 
 	}
 
-	<T> void set(String key, LazyProperty<T> property) {
+	private <T> void set(String key, LazyProperty<T> property) {
 		int index = updateKeys(key);
 		insertProperty(index, property);
 	}

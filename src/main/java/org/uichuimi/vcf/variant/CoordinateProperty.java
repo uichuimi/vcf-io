@@ -4,16 +4,16 @@ package org.uichuimi.vcf.variant;
  * Stores <em>chromosome</em> and <em>position</em> of a coordinate as strings. When {@link
  * LazyProperty#getValue()} is called, they are converted into a Coordinate and nullified.
  */
-public class CoordinateProperty extends LazyProperty<Coordinate> {
+class CoordinateProperty extends LazyProperty<Coordinate> {
 
 	private String position;
 
-	public CoordinateProperty(String chromosome, String position) {
+	CoordinateProperty(String chromosome, String position) {
 		super(chromosome);
 		this.position = position;
 	}
 
-	public CoordinateProperty(Coordinate coordinate) {
+	CoordinateProperty(Coordinate coordinate) {
 		super(coordinate);
 	}
 
