@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 class VariantFormatter {
 
 	private static final NumberFormat DECIMAL = new DecimalFormat("#.###");
-	private static final List<String> FORMAT_ORDER = Arrays.asList("GT", "AD", "DP", "GQ", "PL");
 
 	/**
 	 * Creates the VCF representation of the variant.
@@ -55,7 +54,8 @@ class VariantFormatter {
 				infoBuilder.add(key + VcfConstants.KEY_VALUE_DELIMITER + v);
 			}
 		});
-		return infoBuilder.toString();
+		final String info = infoBuilder.toString();
+		return info.isEmpty() ? VcfConstants.EMPTY_VALUE : info;
 	}
 
 	private static String toString(Object value) {
@@ -75,7 +75,10 @@ class VariantFormatter {
 		// H2   [51,51, ., .]
 		// Collect FORMAT by key, adding only those where at least one sample has a value
 		final List<FormatHeaderLine> formatLines = new ArrayList<>(variant.getHeader().getFormatLines().values());
-		formatLines.sort(Comparator.comparingInt(fl -> FORMAT_ORDER.indexOf(fl.getId())));
+		final FormatHeaderLine gt = variant.getHeader().getFormatHeader("GT");
+		formatLines.remove(gt);
+		formatLines.add(0, gt);
+//		formatLines.sort(Comparator.comparingInt(fl -> FORMAT_ORDER.indexOf(fl.getId())));
 		for (final FormatHeaderLine headerLine : formatLines) {
 			final String[] values = new String[variant.getHeader().getSamples().size()];
 			if (headerLine.getNumber().equals("1")) {
@@ -108,7 +111,7 @@ class VariantFormatter {
 
 			// Remove trailing nulls, leaving at least one value
 			// Can this feature annoy some parsers?
-			while (sample.size() > 1 && sample.get(sample.size() - 1) == null)
+			while (sample.size() > 1 && (sample.get(sample.size() - 1) == null || sample.get(sample.size() - 1).equals(VcfConstants.EMPTY_VALUE)))
 				sample.remove(sample.size() - 1);
 
 			// map nulls to . and join

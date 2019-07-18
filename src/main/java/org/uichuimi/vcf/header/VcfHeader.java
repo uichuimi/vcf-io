@@ -42,8 +42,8 @@ public class VcfHeader {
 	private final List<String> samples = new ArrayList<>();
 	private final List<HeaderLine> headerLines = new LinkedList<>();
 	private final Map<String, List<String>> cache = new LinkedHashMap<>();
-	private final Map<String, FormatHeaderLine> formatLines = new HashMap<>();
-	private final Map<String, InfoHeaderLine> infoLines = new HashMap<>();
+	private final Map<String, FormatHeaderLine> formatLines = new LinkedHashMap<>();
+	private final Map<String, InfoHeaderLine> infoLines = new LinkedHashMap<>();
 	private final Map<String, Map<String, ComplexHeaderLine>> complexLines = new LinkedHashMap<>();
 
 	/**

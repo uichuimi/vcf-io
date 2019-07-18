@@ -38,11 +38,13 @@ import java.util.stream.Collectors;
 public class VariantMerger {
 
 	/**
-	 * Returns a new Variant using information from all variants using header as the header of the newly created
-	 * variant.
+	 * Returns a new Variant using information from all variants using header as the header of the
+	 * newly created variant.
 	 *
-	 * @param variants list of variants to merge, all of them must have the same Coordinate
-	 * @param header   header for the new Variant
+	 * @param variants
+	 * 		list of variants to merge, all of them must have the same Coordinate
+	 * @param header
+	 * 		header for the new Variant
 	 * @return a new Variant containing all the INFO and FORMAT information of the variants list
 	 */
 	public static Variant merge(Collection<Variant> variants, VcfHeader header) {
