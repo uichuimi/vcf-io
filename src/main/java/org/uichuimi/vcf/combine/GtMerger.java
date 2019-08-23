@@ -37,8 +37,8 @@ public class GtMerger implements DataMerger {
 			sep = "|";  // This symbol has meaning in a regex and must be escaped
 			gts = gt.split("\\|");
 		}
-		final String a = source.getAlleles().get(Integer.valueOf(gts[0]));
-		final String b = source.getAlleles().get(Integer.valueOf(gts[1]));
+		final String a = source.getAlleles().get(Integer.parseInt(gts[0]));
+		final String b = source.getAlleles().get(Integer.parseInt(gts[1]));
 		final int gt0 = target.getAlleles().indexOf(a);
 		final int gt1 = target.getAlleles().indexOf(b);
 		targetInfo.set(key, gt0 + sep + gt1);

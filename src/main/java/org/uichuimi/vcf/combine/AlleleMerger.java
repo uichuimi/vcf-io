@@ -37,13 +37,13 @@ public class AlleleMerger implements DataMerger {
 		for (int r = 0; r < source.getReferences().size(); r++) {
 			final String allele = source.getReferences().get(r);
 			// Since target should contain all alleles from source, index is always >= 0
-			final int index = target.getReferences().indexOf(allele);
+			final int index = target.getAlleles().indexOf(allele);
 			t.set(index, merge(t.get(index), s.get(r)));
 		}
 		for (int a = 0; a < source.getAlternatives().size(); a++) {
 			final String allele = source.getAlternatives().get(a);
 			// Since target should contain all alleles from source, index is always >= 0
-			final int index = referenceAlleles + target.getAlternatives().indexOf(allele);
+			final int index = target.getAlleles().indexOf(allele);
 			final Object value = s.get(a);
 			t.set(index, merge(t.get(index), value));
 		}

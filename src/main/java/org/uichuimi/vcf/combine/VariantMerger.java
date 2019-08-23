@@ -32,6 +32,7 @@ import org.uichuimi.vcf.variant.Info;
 import org.uichuimi.vcf.variant.Variant;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,6 +86,7 @@ public class VariantMerger {
 			for (int s = 0; s < other.getHeader().getSamples().size(); s++) {
 				final String sample = other.getHeader().getSamples().get(s);
 				final int vs = variant.getHeader().getSamples().indexOf(sample);
+				if (vs < 0) continue;
 				final Info sourceInfo = other.getSampleInfo(s);
 				final Info targetInfo = variant.getSampleInfo(vs);
 				for (FormatHeaderLine formatLine : variant.getHeader().getFormatLines().values())
@@ -100,9 +102,33 @@ public class VariantMerger {
 				.flatMap(v -> v.getReferences().stream())
 				.distinct()
 				.collect(Collectors.toList());
+		if (references.size() > 1) {
+			final String ref = references.stream().max(Comparator.comparingInt(String::length)).orElse(null);
+			// 1) ABC -> AB,     ABCD -> ? (ABD)
+			// 2) ABC -> ABD,    ABCD -> ? (ABDD)
+			// 3) ABC -> ABCD,   ABCD -> ? (ABCDD)
+			for (Variant variant : variants) {
+				if (variant.getReferences().get(0).equals(ref)) continue;
+				final String oref = variant.getReferences().get(0);
+				variant.getReferences().set(0, ref);
+				final List<String> variantAlternatives = variant.getAlternatives();
+				for (int i = 0; i < variantAlternatives.size(); i++) {
+					String alternative = variantAlternatives.get(i);
+					final String alt;
+					if (alternative.length() < oref.length())       // 1)
+						alt = ref.replaceFirst(oref, alternative);
+					else if (alternative.length() == oref.length()) // 2)
+						alt = ref.replaceFirst(oref, alternative);
+					else alt = alternative.replaceFirst(oref, ref); // 3)
+					variantAlternatives.set(i, alt);
+				}
+			}
+			references.retainAll(List.of(ref));
+		}
 		final List<String> alternatives = variants.stream()
 				.flatMap(v -> v.getAlternatives().stream())
 				.distinct()
+				.sorted(Comparator.comparingInt(String::length))
 				.collect(Collectors.toList());
 		return new Variant(header, coordinate, references, alternatives);
 	}
