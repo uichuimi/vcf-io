@@ -55,4 +55,25 @@ public class VcfConstants {
 	 * Each key and value pair is delimited by the = symbol
 	 */
 	public static final String KEY_VALUE_DELIMITER = "=";
+
+	/**
+	 * In INFO and FORMAT header lines, when Type=R, values will be arrays which contain one value
+	 * per allele, both reference and alternative.
+	 */
+	public static final String NUMBER_R = "R";
+	/**
+	 * In INFO and FORMAT header lines, when Type=A, values will be arrays which contain one value
+	 * per alternative allele.
+	 */
+	public static final String NUMBER_A = "A";
+	/**
+	 * In INFO and FORMAT header lines, when Type=G, values will be arrays which contain one value
+	 * per genotype.
+	 */
+	public static final String NUMBER_G = "G";
+	/**
+	 * In INFO and FORMAT header lines, when Type=., values will be arrays which contain an
+	 * undetermined number of values.
+	 */
+	public static final String NUMBER_UNDEFINED = ".";
 }
