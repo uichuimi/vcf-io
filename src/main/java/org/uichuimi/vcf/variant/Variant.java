@@ -82,12 +82,9 @@ public class Variant {
 	 */
 	@NotNull
 	public List<String> getAlleles() {
-		// 3913906669
-		if (alleles == null) {
-			alleles = new ArrayList<>();
-			alleles.addAll(getReferences());
-			alleles.addAll(getAlternatives());
-		}
+		alleles = new ArrayList<>(getReferences().size() + getAlternatives().size());
+		alleles.addAll(getReferences());
+		alleles.addAll(getAlternatives());
 		return alleles;
 	}
 

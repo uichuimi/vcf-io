@@ -11,11 +11,11 @@ import java.util.List;
 public class VariantMergerTest {
 
 	@Test
-	public void differentReferenceAlleles() {
-		//          ref         alt
-		// a:       CCA	        C
-		// b:       CCACACA     C,CCA,CCACA,CCACACACA
-		// merged:  CCACACA     C,CCA,CCACA,CCACACACA
+	public void differentReferenceAlleles() throws Exception {
+		//          ref             alt
+		// A:       [A0]CCA	        [A1]C
+		// B:       [B0]CCACACA     [B1]C, [B2]CCA,    [B3]CCACA, [B4]CCACACACA
+		// merged:  [A0,B0]CCACACA  [B1]C, [B2]CCA, [B3,A1]CCACA, [B4]CCACACACA
 		final InputStream a = getClass().getResourceAsStream("/files/combine/differentReferenceAllelesA.vcf");
 		final InputStream b = getClass().getResourceAsStream("/files/combine/differentReferenceAllelesB.vcf");
 		try (MultipleVariantReader reader = new MultipleVariantReader(List.of(a, b))) {
@@ -26,8 +26,6 @@ public class VariantMergerTest {
 			final int jmg = reader.getHeader().getSamples().indexOf("JMG");
 			// JMG is 1/1 (C/C) in a, thus 3/3 (CCACA/CCACA) in b
 			Assertions.assertEquals("3/3", variant.getSampleInfo(jmg).<String>get("GT"));
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 
