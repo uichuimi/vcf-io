@@ -2,14 +2,12 @@ package org.uichuimi.vcf.io;
 
 import org.uichuimi.vcf.header.VcfHeader;
 import org.uichuimi.vcf.utils.FileUtils;
+import org.uichuimi.vcf.variant.Chromosome;
 import org.uichuimi.vcf.variant.Coordinate;
 import org.uichuimi.vcf.variant.Variant;
 
 import java.io.*;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -26,6 +24,7 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 
 	private VcfHeader header;
 	private final BufferedReader reader;
+	private Chromosome.Namespace namespace;
 	private Variant nextVariant;
 
 	/**
@@ -50,6 +49,11 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 	 * 		if input is unreadable
 	 */
 	public VariantReader(InputStream input) throws IOException {
+		this(input, Chromosome.Namespace.getDefault());
+	}
+
+	public VariantReader(InputStream input, Chromosome.Namespace namespace) throws IOException {
+		this.namespace = namespace;
 		reader = new BufferedReader(new InputStreamReader(input));
 		header = HeaderReader.readHeader(reader);
 	}
@@ -111,7 +115,7 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 				while (line != null && line.startsWith("#"))
 					line = reader.readLine();
 				if (line == null) return false;
-				nextVariant = new Variant(getHeader(), line);
+				nextVariant = new Variant(getHeader(), line, namespace);
 				return true;
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
@@ -157,6 +161,17 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 
 		}
 		return null;
+	}
+
+	public Collection<Variant> nextCollected(Coordinate coordinate) {
+		final List<Variant> variants = new ArrayList<>();
+		while (hasNext()) {
+			final int compare = nextVariant.getCoordinate().compareTo(coordinate);
+			if (compare > 0) break;
+			if (compare == 0) variants.add(nextVariant);
+			nextVariant = null;
+		}
+		return variants;
 	}
 
 	/**
