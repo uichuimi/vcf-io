@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.uichuimi.vcf.combine.VariantMerger;
 import org.uichuimi.vcf.header.*;
 import org.uichuimi.vcf.utils.FileUtils;
+import org.uichuimi.vcf.variant.Chromosome;
 import org.uichuimi.vcf.variant.Coordinate;
 import org.uichuimi.vcf.variant.Variant;
 import org.uichuimi.vcf.variant.VariantException;
@@ -36,8 +37,12 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 	 * 		if any of the inputs is unreadable
 	 */
 	public MultipleVariantReader(Collection<InputStream> inputs) throws IOException {
+		this(inputs, Chromosome.Namespace.getDefault());
+	}
+
+	public MultipleVariantReader(Collection<InputStream> inputs, Chromosome.Namespace namespace) throws IOException {
 		this.readers = new ArrayList<>(inputs.size());
-		for (InputStream inputStream : inputs) readers.add(new VariantReader(inputStream));
+		for (InputStream inputStream : inputs) readers.add(new VariantReader(inputStream, namespace));
 		mergeHeaders();
 	}
 
@@ -56,6 +61,22 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 		final List<InputStream> is = new ArrayList<>(files.size());
 		for (File file : files) is.add(FileUtils.getInputStream(file));
 		return new MultipleVariantReader(is);
+	}
+	/**
+	 * Secondary constructor. As Java does not allow override constructors with generics, we provide
+	 * the files constructors with a getInstance pattern.
+	 *
+	 * @param files
+	 * 		list of files to be read simultaneously
+	 * @return an instance of {@link MultipleVariantReader} with all files open in {@link
+	 * InputStream}
+	 * @throws IOException
+	 * 		if any of the files is not accessible or readable
+	 */
+	public static MultipleVariantReader getInstance(Collection<File> files, Chromosome.Namespace namespace) throws IOException {
+		final List<InputStream> is = new ArrayList<>(files.size());
+		for (File file : files) is.add(FileUtils.getInputStream(file));
+		return new MultipleVariantReader(is, namespace);
 	}
 
 	public VcfHeader getHeader() {

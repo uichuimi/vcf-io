@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class CoordinateTest {
 
-
 	private final static List<Coordinate> SORTED = Arrays.asList(
 			new Coordinate("1", 1456),
 			new Coordinate("1", 1457),
@@ -50,10 +49,10 @@ public class CoordinateTest {
 			new Coordinate("X", 11111),
 			new Coordinate("X", 11112),
 			new Coordinate("Y", 123456),
-			new Coordinate("MT", 11),
-			new Coordinate("GL1", 3455),
-			new Coordinate("GL1", 3456),
-			new Coordinate("HW", 123));
+			new Coordinate("HSCHR15_RANDOM_CTG1", 3455),
+			new Coordinate("HSCHRUN_RANDOM_111", 3456),
+			new Coordinate("HSCHR17_3_CTG1", 123),
+			new Coordinate("MT", 11));
 
 	@Test
 	public void test() {

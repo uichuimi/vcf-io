@@ -35,9 +35,13 @@ public class Variant {
 	 * 		the raw line read from the file
 	 */
 	public Variant(VcfHeader header, String line) {
+		this(header, line, Chromosome.Namespace.getDefault());
+	}
+
+	public Variant(VcfHeader header, String line, Chromosome.Namespace namespace) {
 		this.header = header;
 		final String[] data = line.split(VcfConstants.DELIMITER);
-		coordinate = new CoordinateProperty(data[0], data[1]);
+		coordinate = new CoordinateProperty(data[0], data[1], namespace);
 		identifiers = new ListProperty<>(data[2], Function.identity());
 		references = new ListProperty<>(data[3], Function.identity());
 		alternatives = new ListProperty<>(data[4], Function.identity());

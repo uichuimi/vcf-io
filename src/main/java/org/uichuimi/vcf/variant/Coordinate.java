@@ -24,44 +24,35 @@
 
 package org.uichuimi.vcf.variant;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Objects;
 
 /**
  * A genomic position.
  */
 public class Coordinate implements Comparable<Coordinate> {
 
-	/**
-	 * Standard chromosomes on
-	 * <a href=https://genome-euro.ucsc.edu/cgi-bin/hgGateway?db=hg38&redirect=manual&source=genome.ucsc.edu>
-	 * UCSC reference genome</a>.
-	 */
-	private final static List<String> CHROMOSOMES = new ArrayList<>(Arrays.asList(
-			"chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10",
-			"chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20",
-			"chr21", "chr22", "chrX", "chrY", "chrM"));
+	private final Chromosome chromosome;
+	private final long position;
+	private final Chromosome.Namespace namespace;
 
-	private int chromIndex;
-	private final int position;
-
-	public Coordinate(String chrom, int position) {
-		this.position = position;
-		this.chromIndex = getChromIndex(chrom);
+	public Coordinate(String chrom, long position) {
+		this(Chromosome.Namespace.getDefault(), chrom, position);
 	}
 
-	private int getChromIndex(String chrom) {
-		// New non standard chromosomes are added at the end of the list
-		// Take into account that chromosomes 1,2,3,4 are not considered standard chromosomes.
-		if (!CHROMOSOMES.contains(chrom)) CHROMOSOMES.add(chrom);
-		return CHROMOSOMES.indexOf(chrom);
+	public Coordinate(Chromosome.Namespace namespace, String chromosome, long position) {
+		this(namespace, Chromosome.get(chromosome, namespace), position);
+	}
+
+	public Coordinate(Chromosome.Namespace namespace, Chromosome chromosome, long position) {
+		this.namespace = namespace;
+		this.chromosome = chromosome;
+		this.position = position;
 	}
 
 	@Override
-	public int compareTo(Coordinate other) {
-		final int compare = Integer.compare(chromIndex, other.chromIndex);
-		return compare == 0 ? Integer.compare(position, other.position) : compare;
+	public int compareTo(Coordinate that) {
+		final int compare = this.chromosome.compareTo(that.chromosome);
+		return compare != 0 ? compare : Long.compare(this.position, that.position);
 	}
 
 	@Override
@@ -71,15 +62,19 @@ public class Coordinate implements Comparable<Coordinate> {
 
 	@Override
 	public int hashCode() {
-		return Integer.hashCode(chromIndex) + Integer.hashCode(position);
+		return Objects.hash(namespace, chromosome, position);
 	}
 
 	public String getChrom() {
-		return CHROMOSOMES.get(chromIndex);
+		return namespace.getName(chromosome);
 	}
 
-	public int getPosition() {
+	public long getPosition() {
 		return position;
+	}
+
+	public Chromosome getChromosome() {
+		return chromosome;
 	}
 
 	@Override
@@ -87,7 +82,4 @@ public class Coordinate implements Comparable<Coordinate> {
 		return getChrom() + ":" + position;
 	}
 
-	public void setContig(String contig) {
-		this.chromIndex = getChromIndex(contig);
-	}
 }
