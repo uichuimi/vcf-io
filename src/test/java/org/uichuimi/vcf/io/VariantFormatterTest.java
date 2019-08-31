@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.VcfHeader;
+import org.uichuimi.vcf.variant.Chromosome;
 import org.uichuimi.vcf.variant.Variant;
 
 import java.util.List;
@@ -26,6 +27,6 @@ class VariantFormatterTest {
 		Assertions.assertNull(variant.getSampleInfo(1).get("GT"));
 		Assertions.assertNull(variant.getSampleInfo(2).get("GL"));
 		Assertions.assertEquals(10, variant.getSampleInfo(2).<List<Integer>>get("AD").get(1));
-		Assertions.assertEquals(line, VariantFormatter.toVcf(variant));
+		Assertions.assertEquals(line, VariantFormatter.toVcf(variant, Chromosome.Namespace.getDefault()));
 	}
 }

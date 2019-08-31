@@ -2,6 +2,7 @@ package org.uichuimi.vcf.io;
 
 import org.uichuimi.vcf.header.FormatHeaderLine;
 import org.uichuimi.vcf.header.InfoHeaderLine;
+import org.uichuimi.vcf.variant.Chromosome;
 import org.uichuimi.vcf.variant.Variant;
 import org.uichuimi.vcf.variant.VcfConstants;
 
@@ -21,9 +22,9 @@ class VariantFormatter {
 	/**
 	 * Creates the VCF representation of the variant.
 	 */
-	static String toVcf(Variant variant) {
+	static String toVcf(Variant variant, Chromosome.Namespace namespace) {
 		final StringBuilder builder = new StringBuilder();
-		builder.append(variant.getCoordinate().getChrom())
+		builder.append(variant.getCoordinate().getChromosome().getName(namespace))
 				.append(VcfConstants.DELIMITER).append(variant.getCoordinate().getPosition())
 				.append(VcfConstants.DELIMITER).append(join(variant.getIdentifiers()))
 				.append(VcfConstants.DELIMITER).append(join(variant.getReferences()))
