@@ -126,10 +126,8 @@ public class Variant {
 	 */
 	public Info getSampleInfo(int position) {
 		final List<Info> samples = sampleInfo.getValue();
-		if (samples.size() > position) return samples.get(position);
-		if (header.getSamples().size() > position)
-			while (samples.size() < header.getSamples().size())
-				samples.add(new Info(header, VcfConstants.EMPTY_VALUE));
+		while (samples.size() <= position)
+			samples.add(new Info(header, VcfConstants.EMPTY_VALUE));
 		return samples.get(position);
 	}
 
