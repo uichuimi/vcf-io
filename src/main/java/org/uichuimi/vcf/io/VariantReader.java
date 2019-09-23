@@ -171,7 +171,7 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 			if (compare == 0) variants.add(nextVariant);
 			nextVariant = null;
 		}
-		return variants;
+		return Collections.unmodifiableList(variants);
 	}
 
 	/**
