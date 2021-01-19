@@ -46,6 +46,7 @@ public class HeaderReader {
 	private static final Pattern COMPLEX_HEADER = Pattern.compile("<(.*)>");
 	private static final Pattern FIELDS_LINE = Pattern.compile("#CHROM(.*)");
 
+	private HeaderReader(){}
 	private static void addHeader(VcfHeader header, String line) {
 		final Matcher metaLine = HEADER_LINE.matcher(line);
 		if (metaLine.matches()) addMetaLine(header, metaLine);
@@ -72,14 +73,11 @@ public class HeaderReader {
 	}
 
 	private static ComplexHeaderLine getComplexHeaderLine(String key, Map<String, String> map) {
-		switch (key) {
-			case "INFO":
-				return new InfoHeaderLine(map);
-			case "FORMAT":
-				return new FormatHeaderLine(map);
-			default:
-				return new ComplexHeaderLine(key, map);
-		}
+		return switch (key) {
+			case "INFO" -> new InfoHeaderLine(map);
+			case "FORMAT" -> new FormatHeaderLine(map);
+			default -> new ComplexHeaderLine(key, map);
+		};
 	}
 
 	private static void addFormatLine(VcfHeader header, String line) {

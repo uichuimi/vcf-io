@@ -1,9 +1,12 @@
 package org.uichuimi.vcf.variant;
 
 import org.jetbrains.annotations.NotNull;
+import org.uichuimi.vcf.header.ComplexHeaderLine;
+import org.uichuimi.vcf.header.VcfHeader;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A reference sequence for human. Each chromosome has a different name in each namespace.
@@ -194,10 +197,36 @@ public class Chromosome implements Comparable<Chromosome> {
 			}
 		};
 
+		public static Namespace guess(VcfHeader vcfHeader) {
+			final Map<Namespace, Integer> guesses = new HashMap<>();
+			final Set<String> headerChroms = vcfHeader.getComplexLines().get("contig").values().stream().map(ComplexHeaderLine::getId).collect(Collectors.toSet());
+			for (Chromosome chromosome : chromosomes) {
+				for (Namespace namespace : Namespace.values()) {
+					if (headerChroms.contains(namespace.getName(chromosome))) {
+						guesses.merge(namespace, 0, Integer::sum);
+					}
+				}
+			}
+			final Map<Namespace, Integer> sorted = sortByValue(guesses, Comparator.comparing(Integer::intValue).reversed());
+			return sorted.entrySet().iterator().next().getKey();
+		}
+
 		public abstract String getName(Chromosome chromosome);
 
 		public static Namespace getDefault() {
 			return GRCH;
 		}
+	}
+
+	public static  <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map, Comparator<V> comparator) {
+		List<Map.Entry<K, V>> list = new ArrayList<>(map.entrySet());
+		list.sort(Map.Entry.comparingByValue(comparator));
+
+		Map<K, V> result = new LinkedHashMap<>();
+		for (Map.Entry<K, V> entry : list) {
+			result.put(entry.getKey(), entry.getValue());
+		}
+
+		return result;
 	}
 }

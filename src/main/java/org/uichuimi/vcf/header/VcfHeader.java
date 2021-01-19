@@ -24,6 +24,7 @@
 
 package org.uichuimi.vcf.header;
 
+import org.uichuimi.vcf.variant.Chromosome;
 import org.uichuimi.vcf.variant.VcfConstants;
 
 import java.util.*;
@@ -201,6 +202,10 @@ public class VcfHeader {
 		headerLines.forEach(headerLine -> joiner.add(headerLine.toString()));
 		joiner.add(getColumnsLine());
 		return joiner.toString();
+	}
+
+	public Chromosome.Namespace getNamespace() {
+		return Chromosome.Namespace.guess(this);
 	}
 
 	private String getColumnsLine() {
