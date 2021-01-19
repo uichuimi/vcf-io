@@ -1,5 +1,6 @@
 # VCF IO
-Manage VCF files. This project allow programmers to easily load VCF files into memory:
+Tiny library to manage VCF files. For an official library, please visit https://github.com/samtools/htsjdk.
+
 ```java
 VariantSet variantSet = VariantSetFactory.createFromFile(new File("my_vcf.vcf"));
 ```
