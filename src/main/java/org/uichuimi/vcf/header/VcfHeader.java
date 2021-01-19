@@ -63,6 +63,25 @@ public class VcfHeader {
 		headerLines.add(new SimpleHeaderLine("fileformat", fileformat));
 	}
 
+	public VcfHeader(VcfHeader header) {
+		samples.addAll(header.samples);
+		headerLines.addAll(header.headerLines);
+		headerLines.stream()
+				.filter(FormatHeaderLine.class::isInstance)
+				.map(FormatHeaderLine.class::cast)
+				.forEach(line -> formatLines.put(line.getId(), line));
+		headerLines.stream()
+				.filter(InfoHeaderLine.class::isInstance)
+				.map(InfoHeaderLine.class::cast)
+				.forEach(line -> infoLines.put(line.getId(), line));
+		headerLines.stream()
+				.filter(ComplexHeaderLine.class::isInstance)
+				.map(ComplexHeaderLine.class::cast)
+				.forEach(line -> complexLines
+						.computeIfAbsent(line.getKey(), k -> new TreeMap<>())
+						.put(line.getId(), line));
+	}
+
 	/**
 	 * Get an unmodifiable list of header lines. To modify this list use {@link
 	 * VcfHeader#addHeaderLine(HeaderLine)} or {@link VcfHeader#addHeaderLine(HeaderLine, boolean)}

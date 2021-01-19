@@ -2,10 +2,7 @@ package org.uichuimi.vcf.variant;
 
 import org.uichuimi.vcf.header.VcfHeader;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
@@ -155,5 +152,13 @@ public class Info {
 		return keys.computeIfAbsent(key, k -> NEXT_INDEX.getAndIncrement());
 	}
 
-
+	@Override
+	public String toString() {
+		final StringJoiner joiner = new StringJoiner(";");
+		keys.keySet().stream().sorted().forEach(key -> {
+			final Object val = get(key);
+			if (val != null) joiner.add(key + "=" + val);
+		});
+		return joiner.toString();
+	}
 }

@@ -17,7 +17,7 @@ import java.util.function.Consumer;
  *
  * @author Lorente-Arencibia, Pascual (pasculorente@gmail.com)
  */
-public class VariantWriter implements AutoCloseable {
+public class VariantWriter implements VariantOutput {
 
 	private final BufferedWriter writer;
 	private VcfHeader vcfHeader;

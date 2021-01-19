@@ -66,6 +66,7 @@ class VariantFormatter {
 	}
 
 	private static void addSampleData(Variant variant, StringBuilder builder) {
+		if (variant.getHeader().getSamples().isEmpty()) return;
 		// We are going to collect the sample data in a matrix, ignoring those FORMAT tags that do not contain
 		// information for any sample. After that, we are going to generate the string by sample.
 		final List<String[]> sampleData = new ArrayList<>();

@@ -24,7 +24,7 @@ public class AlternativeMerger implements DataMerger {
 	@Override
 	public void accept(Variant target, Info targetInfo, Variant source, Info sourceInfo, DataFormatLine formatLine) {
 		final List s = sourceInfo.get(formatLine.getId(), List.class);
-		if (s == null) return;  // Nothing to merge
+		if (s == null || s.isEmpty()) return;  // Nothing to merge
 		List t = getOrCreate(targetInfo, formatLine);
 
 		final int alternativeAlleles = target.getAlternatives().size();

@@ -10,6 +10,7 @@ import java.util.function.Function;
 /**
  * Representation of a line in a VCF file. A variant actually can store more than one genetic
  * variation, as far as they share the same coordinate.
+ * Variants are mostly immutable,
  */
 public class Variant {
 
@@ -17,7 +18,6 @@ public class Variant {
 	private CoordinateProperty coordinate;
 	private ListProperty<String> references;
 	private ListProperty<String> alternatives;
-	private List<String> alleles;
 	private ListProperty<String> identifiers;
 	private ListProperty<String> filters;
 	private DoubleProperty quality;
@@ -63,6 +63,10 @@ public class Variant {
 		sampleInfo = new SampleInfoProperty(header, new String[0]);
 	}
 
+	public Variant(Variant variant) {
+		this(variant.getHeader(), variant.getCoordinate(), variant.getReferences(), variant.getAlternatives());
+	}
+
 	public VcfHeader getHeader() {
 		return header;
 	}
@@ -86,7 +90,7 @@ public class Variant {
 	 */
 	@NotNull
 	public List<String> getAlleles() {
-		alleles = new ArrayList<>(getReferences().size() + getAlternatives().size());
+		final List<String> alleles = new ArrayList<>(getReferences().size() + getAlternatives().size());
 		alleles.addAll(getReferences());
 		alleles.addAll(getAlternatives());
 		return alleles;

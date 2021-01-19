@@ -28,6 +28,8 @@ public class SampleInfoProperty extends LazyProperty<List<Info>> {
 		final List<Info> infos = new ArrayList<>(samples);
 		for (int s = 0; s < samples; s++)
 			infos.add(new SampleInfo(header, fields, data[9 + s]));
+		data = null;
+		header = null;
 		return infos;
 	}
 }

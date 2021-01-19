@@ -59,6 +59,9 @@ public class Chromosome implements Comparable<Chromosome> {
 		this.ucsc = ucsc;
 	}
 
+	/**
+	 * Gets the name of the chromosome using the GRCH namespace.
+	 */
 	public String getName() {
 		return name;
 	}
@@ -103,6 +106,18 @@ public class Chromosome implements Comparable<Chromosome> {
 		return ucsc;
 	}
 
+	/**
+	 * Gets, or creates, the instance of the corresponding chromosome with name under namespace. If
+	 * name is not in namespace, tries to find name in other namespaces. If name is not under any
+	 * namespace, a new synthetic Chromosome instance will be created under <em>unknown</em>
+	 * namespace.
+	 *
+	 * @param name
+	 * 		name of the chromosome
+	 * @param namespace
+	 * 		namespace for the name
+	 * @return best match of the chromosome
+	 */
 	public static Chromosome get(String name, Chromosome.Namespace namespace) {
 		Chromosome chr = index.get(namespace).get(name);
 		if (chr != null) return chr;
@@ -122,6 +137,13 @@ public class Chromosome implements Comparable<Chromosome> {
 		return chr;
 	}
 
+	/**
+	 * Shortcut for {@code Chromosome.get(Namespace.getDefault()}
+	 *
+	 * @param name
+	 * 		chromosome name
+	 * @see Chromosome#get(String, Namespace)
+	 */
 	public static Chromosome get(String name) {
 		return index.get(Chromosome.Namespace.getDefault()).get(name);
 	}

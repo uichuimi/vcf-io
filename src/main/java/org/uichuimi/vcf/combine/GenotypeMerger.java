@@ -25,7 +25,7 @@ public class GenotypeMerger implements DataMerger {
 	@Override
 	public void accept(Variant target, Info targetInfo, Variant source, Info sourceInfo, DataFormatLine formatLine) {
 		final List s = sourceInfo.get(formatLine.getId());
-		if (s == null) return;  // Nothing to merge
+		if (s == null || s.isEmpty()) return;  // Nothing to merge
 		List t = getOrCreate(targetInfo, formatLine);
 		while (t.size() < target.getNumberOfGenotypes()) t.add(null);
 

@@ -1,12 +1,13 @@
 package org.uichuimi.vcf.variant;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
 /**
  * Contains a list of values separated by commas (,). The value is a list of elements which are
- * parsed by a parse function.
+ * parsed by a parse function. Returned list is immutable.
  *
  * @param <T> type of list content
  */
@@ -35,6 +36,6 @@ public class ListProperty<T> extends LazyProperty<List<T>> {
 		final String[] data = raw.split(VcfConstants.ARRAY_DELIMITER);
 		final List<T> ts = new ArrayList<>(data.length);
 		for (String datum : data) ts.add(parser.apply(datum));
-		return ts;
+		return Collections.unmodifiableList(ts);
 	}
 }

@@ -9,6 +9,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 
 	private final String id;
 	private final VcfType type;
+	private final String typeName;
 	private final String description;
 	private final String number;
 	private final DataMerger merger;
@@ -23,6 +24,7 @@ public class DataFormatLine extends ComplexHeaderLine {
 		if (id == null || number == null || description == null || type == null)
 			throw new IllegalArgumentException("Missing keys");
 		this.type = VcfType.getInstance(type);
+		this.typeName = type;
 		this.array = !number.equals("0") && !number.equals("1");
 		this.merger = getMerger();
 	}
@@ -78,6 +80,10 @@ public class DataFormatLine extends ComplexHeaderLine {
 
 	public VcfType getType() {
 		return type;
+	}
+
+	public String getTypeName() {
+		return typeName;
 	}
 
 	public void mergeInto(Variant target, Info targetInfo, Variant source, Info sourceInfo) {
