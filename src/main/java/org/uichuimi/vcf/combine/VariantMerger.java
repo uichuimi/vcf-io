@@ -31,9 +31,7 @@ import org.uichuimi.vcf.variant.Coordinate;
 import org.uichuimi.vcf.variant.Info;
 import org.uichuimi.vcf.variant.Variant;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class VariantMerger {
@@ -42,10 +40,8 @@ public class VariantMerger {
 	 * Returns a new Variant using information from all variants using header as the header of the
 	 * newly created variant.
 	 *
-	 * @param variants
-	 * 		list of variants to merge, all of them must have the same Coordinate
-	 * @param header
-	 * 		header for the new Variant
+	 * @param variants list of variants to merge, all of them must have the same Coordinate
+	 * @param header   header for the new Variant
 	 * @return a new Variant containing all the INFO and FORMAT information of the variants list
 	 */
 	public static Variant merge(Collection<Variant> variants, VcfHeader header) {
@@ -102,35 +98,42 @@ public class VariantMerger {
 				.flatMap(v -> v.getReferences().stream())
 				.distinct()
 				.collect(Collectors.toList());
-		if (references.size() > 1) {
+		// This should not happen, but VCF specification is not clear whether one can put more than one reference or
+		// not. This merger allows only one reference per line.
+		final List<String> alternates;
+		final List<String> reference;
+		if (references.size() == 1) {
+			alternates = variants.stream()
+					.flatMap(variant -> variant.getAlternatives().stream())
+					.distinct()
+					.sorted(Comparator.comparingInt(String::length))
+					.collect(Collectors.toList());
+			reference = List.of(references.get(0));
+		} else {
 			final String ref = references.stream().max(Comparator.comparingInt(String::length)).orElse(null);
-			// 1) ABC -> AB,     ABCD -> ? (ABD)
-			// 2) ABC -> ABD,    ABCD -> ? (ABDD)
-			// 3) ABC -> ABCD,   ABCD -> ? (ABCDD)
+			Objects.requireNonNull(ref);
+			reference = List.of(ref);
+			final Set<String> alts = new TreeSet<>(Comparator.comparingInt(String::length));
 			for (Variant variant : variants) {
-				if (variant.getReferences().get(0).equals(ref)) continue;
 				final String oref = variant.getReferences().get(0);
-				variant.getReferences().set(0, ref);
-				final List<String> variantAlternatives = variant.getAlternatives();
-				for (int i = 0; i < variantAlternatives.size(); i++) {
-					String alternative = variantAlternatives.get(i);
+				for (String alternative : variant.getAlternatives()) {
 					final String alt;
-					if (alternative.length() < oref.length())       // 1)
+					if (alternative.length() < oref.length()) {
+						// 1)  deletion:  ABC -> AB,     ABCD -> ? (ABD)
 						alt = ref.replaceFirst(oref, alternative);
-					else if (alternative.length() == oref.length()) // 2)
+					} else if (alternative.length() == oref.length()) {
+						// 2)       snv:  ABC -> ABD,    ABCD -> ? (ABDD)
 						alt = ref.replaceFirst(oref, alternative);
-					else alt = alternative.replaceFirst(oref, ref); // 3)
-					variantAlternatives.set(i, alt);
+					} else {
+						// 3) insertion:  ABC -> ABCD,   ABCD -> ? (ABCDD)
+						alt = alternative.replaceFirst(oref, ref);
+					}
+					alts.add(alt);
 				}
 			}
-			references.retainAll(List.of(ref));
+			alternates = new ArrayList<>(alts);
 		}
-		final List<String> alternatives = variants.stream()
-				.flatMap(v -> v.getAlternatives().stream())
-				.distinct()
-				.sorted(Comparator.comparingInt(String::length))
-				.collect(Collectors.toList());
-		return new Variant(header, coordinate, references, alternatives);
+		return new Variant(header, coordinate, reference, alternates);
 	}
 
 }

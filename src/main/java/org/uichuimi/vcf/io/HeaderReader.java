@@ -47,7 +47,7 @@ public class HeaderReader {
 	private static final Pattern FIELDS_LINE = Pattern.compile("#CHROM(.*)");
 
 	private HeaderReader(){}
-	private static void addHeader(VcfHeader header, String line) {
+	public static void addHeader(VcfHeader header, String line) {
 		final Matcher metaLine = HEADER_LINE.matcher(line);
 		if (metaLine.matches()) addMetaLine(header, metaLine);
 		else addFormatLine(header, line);

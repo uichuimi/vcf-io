@@ -23,7 +23,7 @@ import java.util.stream.StreamSupport;
  * lowest coordinate read. This class is ideal to merge VCF files.
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class MultipleVariantReader implements AutoCloseable, Iterator<Collection<Variant>>, Iterable<Collection<Variant>> {
+public class MultipleVariantReader implements VariantInputReader {
 
 	private final Collection<VariantReader> readers;
 	private final VcfHeader header = new VcfHeader();
@@ -79,6 +79,7 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 		return new MultipleVariantReader(is, namespace);
 	}
 
+	@Override
 	public VcfHeader getHeader() {
 		return header;
 	}
@@ -161,8 +162,7 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 	}
 
 	// --------------------------  Iterator  ---------------------------- //
-	@Override
-	public Collection<Variant> next() {
+	public Collection<Variant> nextVariants() {
 		final Coordinate coordinate = nextCoordinate();
 		return readers.stream()
 				.map(reader -> reader.next(coordinate))
@@ -175,8 +175,9 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 	 *
 	 * @return the next variants merged into one
 	 */
-	public Variant nextMerged() {
-		return VariantMerger.merge(next(), header);
+	@Override
+	public Variant next() {
+		return VariantMerger.merge(nextVariants(), header);
 	}
 
 	@Override
@@ -185,13 +186,7 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 	}
 
 	// --------------------------  Iterable  ---------------------------- //
-	@NotNull
-	@Override
-	public Iterator<Collection<Variant>> iterator() {
-		return this;
-	}
-
-	public Iterator<Variant> mergedIterator() {
+	public Iterator<Collection<Variant>> iteratorOfVariants() {
 		return new Iterator<>() {
 			@Override
 			public boolean hasNext() {
@@ -199,22 +194,28 @@ public class MultipleVariantReader implements AutoCloseable, Iterator<Collection
 			}
 
 			@Override
-			public Variant next() {
-				return nextMerged();
+			public Collection<Variant> next() {
+				return MultipleVariantReader.this.nextVariants();
 			}
 		};
 	}
 
+	@NotNull
+	@Override
+	public Iterator<Variant> iterator() {
+		return this;
+	}
+
 	// --------------------------   Stream   ---------------------------- //
 	@SuppressWarnings("unused")
-	public final Stream<Collection<Variant>> stream() {
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
+	public final Stream<Collection<Variant>> streamOfVariants() {
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iteratorOfVariants(),
 				Spliterator.NONNULL | Spliterator.ORDERED), true);
 	}
 
 	@SuppressWarnings("unused")
 	public final Stream<Variant> mergedStream() {
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(mergedIterator(),
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this,
 				Spliterator.NONNULL | Spliterator.ORDERED), true);
 	}
 

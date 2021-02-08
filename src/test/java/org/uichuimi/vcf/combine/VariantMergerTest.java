@@ -20,7 +20,7 @@ public class VariantMergerTest {
 		final InputStream a = getClass().getResourceAsStream("/files/combine/differentReferenceAllelesA.vcf");
 		final InputStream b = getClass().getResourceAsStream("/files/combine/differentReferenceAllelesB.vcf");
 		try (MultipleVariantReader reader = new MultipleVariantReader(List.of(a, b), Chromosome.Namespace.UCSC)) {
-			final Variant variant = reader.nextMerged();
+			final Variant variant = reader.next();
 			Assertions.assertEquals(1, variant.getReferences().size());
 			Assertions.assertEquals("CCACACA", variant.getReferences().get(0));
 			Assertions.assertEquals(List.of("C", "CCA", "CCACA", "CCACACACA"), variant.getAlternatives());

@@ -14,7 +14,7 @@ public class FailingVcfTest {
 		final InputStream resource = getClass().getResourceAsStream("/failing.vcf");
 		try (MultipleVariantReader reader = new MultipleVariantReader(List.of(resource))) {
 			while (reader.hasNext()) {
-				final Variant variant = reader.nextMerged();
+				final Variant variant = reader.next();
 				System.out.println(variant);
 			}
 		} catch (Exception e) {

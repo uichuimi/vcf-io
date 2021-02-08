@@ -20,21 +20,19 @@ import java.util.stream.StreamSupport;
  * does not enforce to capture this exceptions, iterating over a reader may produce {@link
  * IOException} as normal readers.
  */
-public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable<Variant> {
+public class VariantReader implements VariantInputReader {
 
-	private VcfHeader header;
+	private final VcfHeader header;
 	private final BufferedReader reader;
-	private Chromosome.Namespace namespace;
+	private final Chromosome.Namespace namespace;
 	private Variant nextVariant;
 
 	/**
 	 * Creates a reader from a file. File can be zipped or gzipped. If file is zipped, it is read to
 	 * place the reader into the first byte of the first file.
 	 *
-	 * @param file
-	 * 		input file
-	 * @throws IOException
-	 * 		if file is unreachable or unreadable
+	 * @param file input file
+	 * @throws IOException if file is unreachable or unreadable
 	 */
 	public VariantReader(File file) throws IOException {
 		this(FileUtils.getInputStream(file));
@@ -43,19 +41,19 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 	/**
 	 * Creates a reader from an input stream. Header is read.
 	 *
-	 * @param input
-	 * 		input stream
-	 * @throws IOException
-	 * 		if input is unreadable
+	 * @param input input stream
+	 * @throws IOException if input is unreadable
 	 */
 	public VariantReader(InputStream input) throws IOException {
-		this(input, Chromosome.Namespace.getDefault());
+		this(input, null);
 	}
 
 	public VariantReader(InputStream input, Chromosome.Namespace namespace) throws IOException {
-		this.namespace = namespace;
 		reader = new BufferedReader(new InputStreamReader(input));
 		header = HeaderReader.readHeader(reader);
+		this.namespace = namespace == null
+				? Chromosome.Namespace.guess(header)
+				: namespace;
 	}
 
 	/**
@@ -63,6 +61,7 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 	 *
 	 * @return file header
 	 */
+	@Override
 	public VcfHeader getHeader() {
 		return header;
 	}
@@ -140,8 +139,7 @@ public class VariantReader implements AutoCloseable, Iterator<Variant>, Iterable
 	 * with coordinate less than <em>coordinate</em> will be skipped. Next variant returned by
 	 * {@link VariantReader#next()} will have coordinate greater than <em>coordinate</em>.
 	 *
-	 * @param coordinate
-	 * 		coordinate of the next variant to return
+	 * @param coordinate coordinate of the next variant to return
 	 * @return a variant matching coordinate or null
 	 */
 	public Variant next(Coordinate coordinate) {
