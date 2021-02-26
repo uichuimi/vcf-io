@@ -48,8 +48,12 @@ class VariantFormatter {
 			if (line.getNumber().equals("0")) infoBuilder.add(key);
 			else if (line.getNumber().equals("1")) {
 				infoBuilder.add(key + VcfConstants.KEY_VALUE_DELIMITER + toString(value));
-			} else {
-				final String v = ((List<?>) value).stream()
+			}
+			// List (one of A,G,.,2,3,4...)
+			else {
+				final List<?> list = (List<?>) value;
+				if (list.isEmpty()) return;
+				final String v = list.stream()
 						.map(VariantFormatter::toString)
 						.collect(Collectors.joining(VcfConstants.ARRAY_DELIMITER));
 				infoBuilder.add(key + VcfConstants.KEY_VALUE_DELIMITER + v);

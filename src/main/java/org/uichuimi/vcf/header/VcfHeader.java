@@ -24,6 +24,7 @@
 
 package org.uichuimi.vcf.header;
 
+import org.uichuimi.vcf.io.HeaderReader;
 import org.uichuimi.vcf.variant.Chromosome;
 import org.uichuimi.vcf.variant.VcfConstants;
 
@@ -155,6 +156,10 @@ public class VcfHeader {
 
 	public void addHeaderLine(HeaderLine headerLine) {
 		addHeaderLine(headerLine, false);
+	}
+
+	public void addHeaderLine(String line) {
+		HeaderReader.addHeader(this, line);
 	}
 
 	/**

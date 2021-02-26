@@ -199,7 +199,8 @@ public class Chromosome implements Comparable<Chromosome> {
 
 		public static Namespace guess(VcfHeader vcfHeader) {
 			final Map<Namespace, Integer> guesses = new HashMap<>();
-			final Set<String> headerChroms = vcfHeader.getComplexLines().get("contig").values().stream().map(ComplexHeaderLine::getId).collect(Collectors.toSet());
+			final Set<String> headerChroms = vcfHeader.getComplexLines().getOrDefault("contig", Collections.emptyMap())
+					.values().stream().map(ComplexHeaderLine::getId).collect(Collectors.toSet());
 			for (Chromosome chromosome : chromosomes) {
 				for (Namespace namespace : Namespace.values()) {
 					if (headerChroms.contains(namespace.getName(chromosome))) {
@@ -207,6 +208,8 @@ public class Chromosome implements Comparable<Chromosome> {
 					}
 				}
 			}
+			// Can't do anything to guess
+			if (headerChroms.isEmpty()) return getDefault();
 			final Map<Namespace, Integer> sorted = sortByValue(guesses, Comparator.comparing(Integer::intValue).reversed());
 			return sorted.entrySet().iterator().next().getKey();
 		}

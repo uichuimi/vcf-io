@@ -1,0 +1,4 @@
+##fileformat=VCFv4.2
+##INFO=<ID=A,Type=String,Number=.,Description="A">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	1	.	A	T	1	.	.

@@ -115,7 +115,7 @@ class VariantMergerTest {
 	@Test
 	public void testOne() {
 		try (MultipleVariantReader reader = new MultipleVariantReader(Collections.singletonList(getClass().getResourceAsStream("/files/MergeTestHeader.vcf")))) {
-			final Variant variant = reader.iterator().next().iterator().next();
+			final Variant variant = reader.iteratorOfVariants().next().iterator().next();
 			Assertions.assertEquals(37, variant.<Integer>getInfo("DP"));
 		} catch (Exception e) {
 			e.printStackTrace();
